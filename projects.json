@@ -24,6 +24,14 @@
       "repository": "https://github.com/zjzj1206/discrete-review",
       "sourceCommit": "bb25128e0e9862077092b5e89cf663ff75af74a7",
       "status": "live"
+    },
+    {
+      "id": "transfer",
+      "title": "文件直传",
+      "path": "/transfer/",
+      "repository": "https://github.com/zjzj1206/transfer-site",
+      "private": true,
+      "status": "live"
     }
   ],
   "hosting": "Cloudflare Pages: zjzj-study-hub"
