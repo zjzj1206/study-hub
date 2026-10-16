@@ -27,7 +27,7 @@
     },
     {
       "id": "transfer",
-      "title": "文件直传",
+      "title": "文件中转站",
       "path": "/transfer/",
       "repository": "https://github.com/zjzj1206/transfer-site",
       "private": true,
