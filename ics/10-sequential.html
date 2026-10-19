@@ -27,7 +27,7 @@
 <tr>
 <td><code>srcA/srcB</code></td>
 <td>本周期实际读端口的寄存器编号</td>
-<td>pop/ret 都需读 rsp</td>
+<td>pop/ret 都需读 <code>%rsp</code></td>
 </tr>
 <tr>
 <td><code>valA/valB</code></td>
@@ -47,7 +47,7 @@
 <tr>
 <td><code>valE</code></td>
 <td>ALU 输出</td>
-<td>可能是算术结果，也可能是有效地址或新 rsp</td>
+<td>可能是算术结果，也可能是有效地址或新的 <code>%rsp</code> 值</td>
 </tr>
 <tr>
 <td><code>valM</code></td>
@@ -77,7 +77,7 @@
 <li>以下步骤表假设指令与地址有效；故障状态需走后面的状态控制。</li>
 </ul>
 <h2 id="section-3">每类指令的六阶段操作<a class="anchor" href="#section-3" aria-label="链接到本节">#</a></h2>
-<p>共同取指规则：首字节分成 <code>icode:ifun</code>；需要寄存器字节时从 PC+1 读取；常数字段从 PC+1 或 PC+2 开始读取。记 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi><mo>=</mo><mi>R</mi><mo stretchy="false">[</mo><mi mathvariant="normal">%</mi><mi>r</mi><mi>s</mi><mi>p</mi><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">s=R[\%rsp]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal">s</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="mopen">[</span><span class="mord">%</span><span class="mord mathnormal" style="margin-right:0.0278em;">r</span><span class="mord mathnormal">s</span><span class="mord mathnormal">p</span><span class="mclose">]</span></span></span></span></span> 为该指令执行前的栈指针。</p>
+<p>共同取指规则：首字节分成 <code>icode:ifun</code>；需要寄存器字节时从 PC+1 读取；常数字段从 PC+1 或 PC+2 开始读取。下表直接用 <code>R[%rsp]</code> 表示该指令执行前的栈指针值。</p>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -157,37 +157,37 @@
 <tr>
 <td><code>pushq</code></td>
 <td><code>PC+2</code></td>
-<td><code>valA=R[rA]</code>；<code>valB=s</code></td>
+<td><code>valA=R[rA]</code>；<code>valB=R[%rsp]</code></td>
 <td><code>valE=valB−8</code></td>
 <td><code>M8[valE]=valA</code></td>
-<td><code>R[rsp]=valE</code></td>
+<td><code>R[%rsp]=valE</code></td>
 <td><code>PC ← valP</code></td>
 </tr>
 <tr>
 <td><code>popq</code></td>
 <td><code>PC+2</code></td>
-<td><code>valA=s</code>；<code>valB=s</code></td>
+<td><code>valA=R[%rsp]</code>；<code>valB=R[%rsp]</code></td>
 <td><code>valE=valB+8</code></td>
 <td><code>valM=M8[valA]</code></td>
-<td><code>R[rsp]=valE</code>；<code>R[rA]=valM</code></td>
+<td><code>R[%rsp]=valE</code>；<code>R[rA]=valM</code></td>
 <td><code>PC ← valP</code></td>
 </tr>
 <tr>
 <td><code>call</code></td>
 <td><code>PC+9</code>，作为返回地址压栈</td>
-<td><code>valB=s</code></td>
+<td><code>valB=R[%rsp]</code></td>
 <td><code>valE=valB−8</code></td>
 <td><code>M8[valE]=valP</code></td>
-<td><code>R[rsp]=valE</code></td>
+<td><code>R[%rsp]=valE</code></td>
 <td><code>PC ← valC</code>（被调函数入口）</td>
 </tr>
 <tr>
 <td><code>ret</code></td>
 <td><code>PC+1</code>，本指令不使用该顺序地址</td>
-<td><code>valA=s</code>；<code>valB=s</code></td>
+<td><code>valA=R[%rsp]</code>；<code>valB=R[%rsp]</code></td>
 <td><code>valE=valB+8</code></td>
 <td><code>valM=M8[valA]</code></td>
-<td><code>R[rsp]=valE</code></td>
+<td><code>R[%rsp]=valE</code></td>
 <td><code>PC ← valM</code>（栈中的返回地址）</td>
 </tr>
 </tbody>
@@ -212,19 +212,19 @@
 <p><code>pushq/call</code> 先形成新栈顶地址 valE，向它写；<code>popq/ret</code> 从旧栈顶 valA 读。新旧地址是两套信号，不能用统一“栈地址”代替。</p>
 </li>
 <li>
-<p><code>popq</code> 需要两个写回。若 <code>rA=rsp</code>，M 端口写入的弹出值优先于 E 端口的递增值，最终栈指针等于弹出的字。</p>
+<p><code>popq</code> 需要两个写回。若 <code>rA=%rsp</code>，M 端口写入的弹出值优先于 E 端口的递增值，最终栈指针等于弹出的字。</p>
 </li>
 <li>
 <p><code>cmovXX</code> 即使条件假也可计算 valE，只把 dstE 置为 RNONE；<code>jXX</code> 不写寄存器，只选择新 PC。两者都使用此前 CC，而非本指令 ALU 的新结果。</p>
 </li>
 <li>
-<p><code>call</code> 与 push 共用 rsp−8，但写数据分别为 valP 和 valA；<code>ret</code> 与 pop 共用从旧栈顶读，但读出值分别流向 PC 和寄存器。</p>
+<p><code>call</code> 与 push 共用 <code>R[%rsp]−8</code>，但写数据分别为 valP 和 valA；<code>ret</code> 与 pop 共用从旧栈顶读，但读出值分别流向 PC 和寄存器。</p>
 </li>
 </ul>
 <h3 id="section-4">数值追踪：pop、call、ret<a class="anchor" href="#section-4" aria-label="链接到本节">#</a></h3>
 <ul>
 <li><strong>pop</strong>：设 <code>%rsp=0x200</code>，<code>M8[0x200]=0x1234</code>。<code>popq %rax</code> 读得 valA=valB=0x200，valE=0x208，valM=0x1234，写回 <code>%rsp=0x208,%rax=0x1234</code>。</li>
-<li><strong>pop rsp</strong>：同样初值执行 <code>popq %rsp</code>，最终 <code>%rsp=0x1234</code>；不能写成 0x208。</li>
+<li><strong>popq %rsp</strong>：同样初值执行 <code>popq %rsp</code>，最终 <code>%rsp=0x1234</code>；不能写成 0x208。</li>
 <li><strong>call</strong>：地址 <code>0x100</code> 的 <code>call 0x300</code>，原 <code>%rsp=0x200</code>，有 valP=0x109、valE=0x1f8，故 <code>M8[0x1f8]=0x109</code>、新 <code>%rsp=0x1f8</code>、新 PC=0x300。</li>
 <li><strong>ret</strong>：被调过程保持该返回栈布局时，ret 读出 0x109，恢复 <code>%rsp=0x200</code>，转回 0x109。返回地址是完整 call 后继，不是 call 首地址加 1。</li>
 </ul>
@@ -275,7 +275,7 @@
 <span class="tok-p">];</span>
 </code></pre>
 <ul>
-<li>选择 srcA 是因为需要“被存数据/运算 A/旧栈顶”，选择 srcB 是因为需要“运算 B/基址/旧 rsp”。按数据用途推导，而非死记集合。</li>
+<li>选择 srcA 是因为需要“被存数据/运算 A/旧栈顶”，选择 srcB 是因为需要“运算 B/基址/旧的 <code>%rsp</code> 值”。按数据用途推导，而非死记集合。</li>
 <li><code>call</code> 的写内存数据来自 valP，因此不需要为它读 srcA。</li>
 <li><code>mrmovq</code> 只写 dstM；<code>popq</code> 同时写 dstE 和 dstM；<code>rmmovq/jXX</code> 均不写寄存器。</li>
 <li><code>IRRMOVQ</code> 包括条件传送，其 dstE 由 Cnd 使能。RNONE 是抑制端口的编号，不是“向某个假寄存器写零”。</li>
@@ -404,7 +404,7 @@
 <li><strong>写回</strong>：dstE=rB、dstM=RNONE。</li>
 <li><strong>访存</strong>：不加入 mem_read 或 mem_write；不因它有常数字段就误当作数据内存访问。</li>
 <li><strong>PC</strong>：普通顺序路径选择 valP，不需增加分支项。</li>
-<li><strong>测试</strong>：正数、负立即数、零结果、有符号溢出以及 <code>rB=rsp</code> 都应核对；每种测试分别看结果、标志和 PC。</li>
+<li><strong>测试</strong>：正数、负立即数、零结果、有符号溢出以及 <code>rB=%rsp</code> 都应核对；每种测试分别看结果、标志和 PC。</li>
 </ul>
 <h2 id="section-13">性能边界与课件勘误<a class="anchor" href="#section-13" aria-label="链接到本节">#</a></h2>
 <ul>
