@@ -1,5 +1,5 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>10 · 小班拓展、边角知识与作业路线 · ZJZJ / ICS</title><meta name="description" content="北京大学 ICS 复习手册：课程知识、公式推导、边界情况、小班拓展与往年题导航。"><link rel="stylesheet" href="katex/katex.min.css"><link rel="stylesheet" href="style.css"><link rel="icon" href="favicon.svg" type="image/svg+xml"></head><body><a class="skip" href="#main">跳到正文</a><header><a class="brand" href="index.html">ZJZJ<span> / ICS NOTES</span></a><div class="header-right"><a href="https://blog.zjzj.work/">学习空间</a><a href="all.html">整本阅读</a><button type="button" onclick="window.print()">打印</button><button id="menu" aria-expanded="false" aria-controls="chapters">目录</button></div></header><div class="layout"><nav id="chapters" aria-label="章节目录"><div class="nav-label">2026 · 复习手册</div><a  href="00-guide.html">复习范围与使用说明</a><a  href="01-overview.html">01 · 系统概述与基本模型</a><a  href="02-integers.html">02 · 位、字节与整数</a><a  href="03-floating-point.html">03 · 浮点表示、舍入与运算</a><a  href="04-assembly-basics.html">04 · 机器级编程基础</a><a  href="05-control.html">05 · 条件码、分支、循环与 switch</a><a  href="06-procedures.html">06 · 过程调用、栈与 ABI</a><a  href="07-data.html">07 · 数组、结构体、指针与浮点汇编</a><a  href="08-advanced.html">08 · 机器级进阶与内存安全</a><a  href="12-past-papers.html">09 · 往年题导航与勘误</a><a aria-current=page href="13-seminars.html">10 · 小班拓展、边角知识与作业路线</a><a  href="14-coverage.html">11 · 课件覆盖索引与来源</a><div class="nav-foot">依据本地课件与公开题库<br>更新于 2026.10.03</div></nav><main id="main"><div class="eyebrow">COMPUTER SYSTEMS · PEKING UNIVERSITY</div><h1>10 · 小班拓展、边角知识与作业路线</h1>
-<p>逐项归并本地第 2～7 讲研讨主题；本章保留课堂提出的开放讨论与术语，不把它们伪装成只有唯一标准答案的计算题。</p>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>13 · 小班拓展、边角知识与作业路线 · ZJZJ / ICS</title><meta name="description" content="北京大学 ICS 复习手册：课程知识、公式推导、边界情况、小班拓展与往年题导航。"><link rel="stylesheet" href="katex/katex.min.css"><link rel="stylesheet" href="style.css"><link rel="icon" href="favicon.svg" type="image/svg+xml"></head><body><a class="skip" href="#main">跳到正文</a><header><a class="brand" href="index.html">ZJZJ<span> / ICS NOTES</span></a><div class="header-right"><a href="https://blog.zjzj.work/">学习空间</a><a href="all.html">整本阅读</a><button type="button" onclick="window.print()">打印</button><button id="menu" aria-expanded="false" aria-controls="chapters">目录</button></div></header><div class="layout"><nav id="chapters" aria-label="章节目录"><div class="nav-label">2026 · 复习手册</div><a  href="00-guide.html">复习范围与使用说明</a><a  href="01-overview.html">01 · 系统概述与基本模型</a><a  href="02-integers.html">02 · 位、字节与整数</a><a  href="03-floating-point.html">03 · 浮点表示、舍入与运算</a><a  href="04-assembly-basics.html">04 · 机器级编程基础</a><a  href="05-control.html">05 · 条件码、分支、循环与 switch</a><a  href="06-procedures.html">06 · 过程调用、栈与 ABI</a><a  href="07-data.html">07 · 数组、结构体、指针与浮点汇编</a><a  href="08-advanced.html">08 · 机器级进阶与内存安全</a><a  href="09-isa-logic.html">09 · Y86-64 指令集与逻辑设计</a><a  href="10-sequential.html">10 · SEQ 顺序处理器与 HCL 控制</a><a  href="11-quiz01.html">11 · 2026 第一次测验：答案回查与复盘</a><a  href="12-past-papers.html">12 · 往年题导航与勘误</a><a aria-current=page href="13-seminars.html">13 · 小班拓展、边角知识与作业路线</a><a  href="14-coverage.html">14 · 课件覆盖索引与来源</a><div class="nav-foot">依据本地课件与公开题库<br>更新于 2026.10.19</div></nav><main id="main"><div class="eyebrow">COMPUTER SYSTEMS · PEKING UNIVERSITY</div><h1>13 · 小班拓展、边角知识与作业路线</h1>
+<p>逐项归并本地第 2～7、9～10 讲研讨主题；本章保留课堂提出的开放讨论与术语，不把它们伪装成只有唯一标准答案的计算题。</p>
 <h2 id="section-1">第 2 讲：表示与整数<a class="anchor" href="#section-1" aria-label="链接到本节">#</a></h2>
 <p>研讨 1 的进制转换、位运算/逻辑运算、短路与移位见第 02 章。补充的设计问题：二进制容易用两种稳定物理状态表示，数字电路有噪声容限；十六进制是在不损失位边界的前提下缩短书写。8 位字节有历史、字符表示、寻址与硬件生态原因，不是数学上唯一最优方案。字更长能表示更大范围/地址，也提高存储、传输和硬件成本；嵌入式设备可采用不同取舍。</p>
 <p>研讨 2 的原码/反码比较、补码取负证明、混合类型比较、扩展截断、三类加法溢出、常数乘法和大小端均见第 02 章。补码取负证明：w 位下 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∼</mi><mi>x</mi><mo>=</mo><msup><mn>2</mn><mi>w</mi></msup><mo>−</mo><mn>1</mn><mo>−</mo><mi>x</mi></mrow><annotation encoding="application/x-tex">\mathord{\sim}x=2^w-1-x</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord"><span class="mrel">∼</span></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7477em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0269em;">w</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal">x</span></span></span></span></span>，所以 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∼</mi><mi>x</mi><mo>+</mo><mn>1</mn><mo>≡</mo><mo>−</mo><mi>x</mi><mspace></mspace><mspace width="0.4444em"/><mo stretchy="false">(</mo><mrow><mi mathvariant="normal">m</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">d</mi></mrow><mspace width="0.3333em"/><msup><mn>2</mn><mi>w</mi></msup><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\mathord{\sim}x+1\equiv-x\pmod{2^w}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mrel">∼</span></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≡</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord">−</span><span class="mord mathnormal">x</span><span class="mspace allowbreak"></span><span class="mspace" style="margin-right:0.4444em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord"><span class="mord"><span class="mord mathrm">mod</span></span></span><span class="mspace" style="margin-right:0.3333em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0269em;">w</span></span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span>；其位向量意义对所有 x 成立。</p>
@@ -71,7 +71,223 @@
 <p>各种元素宽度的数组图、数组表达式、二维行优先、多级间接、VLA、结构体与混合参数见第 07 章。Fortran 常用列优先，C 用行优先；二维存储次序是语言/库约定，和 CPU 的大小端是两个不同维度。第三方数组库还可能使用视图和可变 stride。</p>
 <p>Windows x64 采用 LLP64，long 与 Linux LP64 不同；结构体布局同时受类型大小、ABI、编译器扩展和 packing 控制。通过 <code>sizeof/offsetof/_Alignof</code> 核验，比从操作系统名字猜全部偏移可靠。</p>
 <p>SIMD 是一条指令对多个数据元素做同类运算；标量 XMM 指令不因寄存器宽 128 位就自动处理四个 float。浮点地址仍由通用寄存器形成，数值计算在浮点寄存器进行。</p>
-<h2 id="section-8">指定教材作业：题号与应掌握的方法<a class="anchor" href="#section-8" aria-label="链接到本节">#</a></h2>
+<h2 id="section-8">第 9 讲研讨 1：体系结构设计（逐项路线）<a class="anchor" href="#section-8" aria-label="链接到本节">#</a></h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>小问</th>
+<th>应完成的内容</th>
+<th>正文位置与检查</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>列出一个 ISA 必须规定的状态、操作、编码和错误</td>
+<td>09：ISA 与机器状态；区分 ISA 和实现</td>
+</tr>
+<tr>
+<td>2</td>
+<td>逐类说明 Y86 指令，把 cmovXX、OPq、jXX 展开</td>
+<td>09：完整类别表、功能码与条件表</td>
+</tr>
+<tr>
+<td>3</td>
+<td>每类选一个编码实例，三组指令各选两个</td>
+<td>09：机器字节表；8 字节常数小端</td>
+</tr>
+<tr>
+<td>4</td>
+<td>比较 x86 跳转寻址和 Y86 绝对地址</td>
+<td>09：直接近跳转、间接跳转与教学取舍</td>
+</tr>
+<tr>
+<td>5</td>
+<td>将已有 C/x86 例子改写为 Y86</td>
+<td>09：零结尾 long 数组长度；常数寄存器和显式 load</td>
+</tr>
+<tr>
+<td>6</td>
+<td>运行汇编器与模拟器，展示地址、字节、最终状态</td>
+<td>09 的完整 len.ys；在命令行运行 yas/yis</td>
+</tr>
+<tr>
+<td>7</td>
+<td>分析 CISC/RISC 各自优势</td>
+<td>09：编码密度、译码、兼容性、实现与负载</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>编码时先确认“哪些字节存在”，再放寄存器半字节与小端常数；不要把立即数写进基础 OPq。</li>
+<li>程序对比先检查返回结果与访存语义等价，再比较指令数量。单纯逐行照抄 x86 的比例寻址、cmp 或立即数加法并不是合法 Y86 程序。</li>
+<li>原题要求选前面课件中的例子；正文选用与本讲 len 示例一致的零结尾 long 数组遍历，并提供完整入口、数据与栈初始化，方便先复现实验方法。</li>
+</ul>
+<h2 id="section-9">第 9 讲研讨 2：逻辑设计（逐项路线）<a class="anchor" href="#section-9" aria-label="链接到本节">#</a></h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>小问</th>
+<th>应完成的内容</th>
+<th>正文位置与检查</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>根据输入波形画 OR 输出</td>
+<td>09：逻辑门真值表与传播延迟；理想输出在任一输入为 1 时为 1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>逐门推导 bit equality，再推广 word equality</td>
+<td>09：两条 AND 支路、OR、64 位对应位合取</td>
+</tr>
+<tr>
+<td>3</td>
+<td>枚举 a、b、s，推导 MUX</td>
+<td>09：s=1 选 a，s=0 选 b；两种 s 各核验四组 a/b</td>
+</tr>
+<tr>
+<td>4</td>
+<td>讲解 HCL 语法</td>
+<td>09：bool/int、比较、in、按首个真条件选择的 case</td>
+</tr>
+<tr>
+<td>5</td>
+<td>分析 ALU 的 X&amp;Y 通路</td>
+<td>09：每位 AND、整字输出选择及 ZF/SF/OF</td>
+</tr>
+<tr>
+<td>6</td>
+<td>逐周期追踪第 51 页累加器</td>
+<td>09：Load 的两条递推式及 x0 到 x5 的输出序列</td>
+</tr>
+<tr>
+<td>7</td>
+<td>分析寄存器堆的读写时序</td>
+<td>09：异步读、上升沿写、写后读传播</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>OR 波形不能从 AND 波形简单逐位取反；应对相同输入使用 OR 真值表，并考虑题设的上升/下降延迟。</li>
+<li>累加器先标每个采样沿上的 In、Load 和旧状态，再计算新状态；不要把沿之间的输入变化当成立即写寄存器。</li>
+<li>HCL 三数最小值在并列输入下也要核验；课件严格比较版本不能覆盖 A=B&lt;C，正文已给出修正。</li>
+</ul>
+<h2 id="section-10">第 10 讲研讨 1：指令操作分解（逐项路线）<a class="anchor" href="#section-10" aria-label="链接到本节">#</a></h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>小问</th>
+<th>需要画出的信号流</th>
+<th>第 10 章中的对应说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 OPq</td>
+<td>rA/rB→读端口→ALU→dstE，同时形成 CC</td>
+<td>六阶段总表、ALU/CC</td>
+</tr>
+<tr>
+<td>2 rmmovq</td>
+<td>rA→valA→写数据；rB 与 valC→ALU→地址</td>
+<td>地址和待存数据是两条不同通路</td>
+</tr>
+<tr>
+<td>3 mrmovq</td>
+<td>基址+位移→访存地址→valM→dstM</td>
+<td>目的寄存器不是接 valE</td>
+</tr>
+<tr>
+<td>4 pushq</td>
+<td>rA→valA，rsp→valB→减 8→valE</td>
+<td>新栈顶地址写入旧源值；对照 pop 的旧地址读取</td>
+</tr>
+<tr>
+<td>5 cmov/JXX</td>
+<td>CC 与 ifun→Cnd→写回使能或 PC 选择</td>
+<td>条件传送不更新 PC 为目标，跳转不写目的寄存器</td>
+</tr>
+<tr>
+<td>6 call/ret</td>
+<td>valP→栈，valC→PC；旧栈顶→valM→PC</td>
+<td>call 与 push、ret 与 pop 的共用和差异</td>
+</tr>
+<tr>
+<td>7 信号含义</td>
+<td>icode/ifun、rA/rB、valA/B/C/P/E/M、Cnd</td>
+<td>信号表：编号、数据、地址、状态分开</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>每道题都按“取指→读寄存器→执行→访存→写回→PC”列操作；没有操作的阶段明确写“无”，不凭阶段名字强行安排一次读写。</li>
+<li>以 call 为例，写入的是 valP 而不是 valC；以 ret 为例，新 PC 来自 valM 而不是 valP。这是最容易接错的两条线。</li>
+</ul>
+<h2 id="section-11">第 10 讲研讨 2：SEQ 部件设计（逐项路线）<a class="anchor" href="#section-11" aria-label="链接到本节">#</a></h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>小问</th>
+<th>应给出的控制逻辑</th>
+<th>关键检查</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 Fetch 灰框</td>
+<td>icode/ifun、instr_valid、need_regids、need_valC、valP</td>
+<td>第 10 章 Fetch；常数起点随寄存器字节变化</td>
+</tr>
+<tr>
+<td>2 Decode 信号</td>
+<td>srcA/B、valA/B、dstE/M、valE/M</td>
+<td>读编号、读数据和写回目的分别解释</td>
+</tr>
+<tr>
+<td>3 srcA/srcB</td>
+<td>两个选择器完整 HCL</td>
+<td>push/pop/call/ret 的 srcB 为 RRSP</td>
+</tr>
+<tr>
+<td>4 dstE/dstM</td>
+<td>两个写回选择器完整 HCL</td>
+<td>cmov 条件假为 RNONE，pop 有两个目的</td>
+</tr>
+<tr>
+<td>5 ALU A/B</td>
+<td>两输入选择器完整 HCL</td>
+<td>传送加 0，地址加位移，栈用 ±8</td>
+</tr>
+<tr>
+<td>6 Memory 信号</td>
+<td>地址、数据、读使能、写使能、错误、valM</td>
+<td>有地址信号不等于使能了访问</td>
+</tr>
+<tr>
+<td>7 Memory Data/Write</td>
+<td>mem_data 与 mem_write HCL</td>
+<td>call 存 valP，store/push 存 valA</td>
+</tr>
+<tr>
+<td>8 PC update</td>
+<td>call、taken JXX、ret、默认四条路径</td>
+<td>ret 选 valM，未跳转选 valP</td>
+</tr>
+<tr>
+<td>9 周期时序</td>
+<td>旧状态→组合传播→时钟沿提交→下一周期</td>
+<td>第 10 章五周期表及正常指令状态更新</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>完成 iaddq 扩展时检查所有受影响的控制器；只增加 opcode 和 ALU 加法而漏掉取常数、寄存器读写或 CC 都不能正确执行。</li>
+<li>本次课程到 SEQ 顺序实现为止，后续流水线实验另按新课件补充。</li>
+</ul>
+<h2 id="section-12">指定教材作业：题号与应掌握的方法<a class="anchor" href="#section-12" aria-label="链接到本节">#</a></h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -111,10 +327,20 @@
 <td>3.66、3.67、3.68</td>
 <td>数组维度、聚合类型传参/返回、结构布局反推</td>
 </tr>
+<tr>
+<td>9</td>
+<td>p.327：4.47、4.48、4.49</td>
+<td>按教材题文编写并修改 Y86 程序，核对编码、循环边界和模拟状态</td>
+</tr>
+<tr>
+<td>10</td>
+<td>p.328：4.51</td>
+<td>把 iaddq 加入 SEQ 的取指、译码、ALU、写回和 CC 控制</td>
+</tr>
 </tbody>
 </table></div>
 <p>只列题号与方法，不复刻教材完整题文。不同版次/国际版的题号可能不一致，作者官网也专门提醒国际版习题存在差异。以本地中文版作业单指定页面和题文为准。</p>
-<h2 id="section-9">最后一次边界检查清单<a class="anchor" href="#section-9" aria-label="链接到本节">#</a></h2>
+<h2 id="section-13">最后一次边界检查清单<a class="anchor" href="#section-13" aria-label="链接到本节">#</a></h2>
 <ul>
 <li>int/long/指针的宽度是否写清？普通 char 是否有符号？</li>
 <li>小整数是否先提升？signed 与 unsigned 是否发生类型变化？</li>
@@ -128,4 +354,4 @@
 <li>结构体内部与末尾 padding、union 共享存储是否都算了？</li>
 <li>旧题是否切换 IA-32/Y86-32？修改后的机器是否仍能套原公式？</li>
 </ul>
-<div class="pager"><a href="12-past-papers.html">上一章<br>09 · 往年题导航与勘误</a><a href="14-coverage.html">下一章<br>11 · 课件覆盖索引与来源</a></div><footer>理解表示，追踪执行。<span><a href="14-coverage.html">资料来源与覆盖范围</a></span></footer></main><aside aria-label="本页目录"><div class="nav-label">本页内容</div><a href="#section-1">第 2 讲：表示与整数</a><a href="#section-2">第 3 讲：浮点的术语与设计</a><a href="#section-3">两个事故案例及应当学到什么</a><a href="#section-4">第 4 讲：硬件与指令拓展</a><a href="#section-5">第 5 讲：控制流拓展</a><a href="#section-6">第 6 讲：ABI 与递归拓展</a><a href="#section-7">第 7 讲：数组、对齐与浮点拓展</a><a href="#section-8">指定教材作业：题号与应掌握的方法</a><a href="#section-9">最后一次边界检查清单</a><a href="#main">回到顶部 ↑</a></aside></div><script src="app.js"></script></body></html>
+<div class="pager"><a href="12-past-papers.html">上一章<br>12 · 往年题导航与勘误</a><a href="14-coverage.html">下一章<br>14 · 课件覆盖索引与来源</a></div><footer>理解表示，追踪执行。<span><a href="14-coverage.html">资料来源与覆盖范围</a></span></footer></main><aside aria-label="本页目录"><div class="nav-label">本页内容</div><a href="#section-1">第 2 讲：表示与整数</a><a href="#section-2">第 3 讲：浮点的术语与设计</a><a href="#section-3">两个事故案例及应当学到什么</a><a href="#section-4">第 4 讲：硬件与指令拓展</a><a href="#section-5">第 5 讲：控制流拓展</a><a href="#section-6">第 6 讲：ABI 与递归拓展</a><a href="#section-7">第 7 讲：数组、对齐与浮点拓展</a><a href="#section-8">第 9 讲研讨 1：体系结构设计（逐项路线）</a><a href="#section-9">第 9 讲研讨 2：逻辑设计（逐项路线）</a><a href="#section-10">第 10 讲研讨 1：指令操作分解（逐项路线）</a><a href="#section-11">第 10 讲研讨 2：SEQ 部件设计（逐项路线）</a><a href="#section-12">指定教材作业：题号与应掌握的方法</a><a href="#section-13">最后一次边界检查清单</a><a href="#main">回到顶部 ↑</a></aside></div><script src="app.js"></script></body></html>

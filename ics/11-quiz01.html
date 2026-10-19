@@ -1,0 +1,271 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>11 · 2026 第一次测验：答案回查与复盘 · ZJZJ / ICS</title><meta name="description" content="北京大学 ICS 复习手册：课程知识、公式推导、边界情况、小班拓展与往年题导航。"><link rel="stylesheet" href="katex/katex.min.css"><link rel="stylesheet" href="style.css"><link rel="icon" href="favicon.svg" type="image/svg+xml"></head><body><a class="skip" href="#main">跳到正文</a><header><a class="brand" href="index.html">ZJZJ<span> / ICS NOTES</span></a><div class="header-right"><a href="https://blog.zjzj.work/">学习空间</a><a href="all.html">整本阅读</a><button type="button" onclick="window.print()">打印</button><button id="menu" aria-expanded="false" aria-controls="chapters">目录</button></div></header><div class="layout"><nav id="chapters" aria-label="章节目录"><div class="nav-label">2026 · 复习手册</div><a  href="00-guide.html">复习范围与使用说明</a><a  href="01-overview.html">01 · 系统概述与基本模型</a><a  href="02-integers.html">02 · 位、字节与整数</a><a  href="03-floating-point.html">03 · 浮点表示、舍入与运算</a><a  href="04-assembly-basics.html">04 · 机器级编程基础</a><a  href="05-control.html">05 · 条件码、分支、循环与 switch</a><a  href="06-procedures.html">06 · 过程调用、栈与 ABI</a><a  href="07-data.html">07 · 数组、结构体、指针与浮点汇编</a><a  href="08-advanced.html">08 · 机器级进阶与内存安全</a><a  href="09-isa-logic.html">09 · Y86-64 指令集与逻辑设计</a><a  href="10-sequential.html">10 · SEQ 顺序处理器与 HCL 控制</a><a aria-current=page href="11-quiz01.html">11 · 2026 第一次测验：答案回查与复盘</a><a  href="12-past-papers.html">12 · 往年题导航与勘误</a><a  href="13-seminars.html">13 · 小班拓展、边角知识与作业路线</a><a  href="14-coverage.html">14 · 课件覆盖索引与来源</a><div class="nav-foot">依据本地课件与公开题库<br>更新于 2026.10.19</div></nav><main id="main"><div class="eyebrow">COMPUTER SYSTEMS · PEKING UNIVERSITY</div><h1>11 · 2026 第一次测验：答案回查与复盘</h1>
+<p>本章依据本地 <code>ICS2026-测验1-v2.0-纯答案.pdf</code>，共 5 页，卷名为“ICS2026 第一次阶段测试”。它提供答案和部分解析，<strong>不含完整题干、指令序列与选项</strong>。下面按原题号整理考点、答案与能够核验的推导；字母答案不能脱离原题理解，不凭答案补造缺失题目。</p>
+<h2 id="section-1">卷面范围与编号说明<a class="anchor" href="#section-1" aria-label="链接到本节">#</a></h2>
+<ul>
+<li>覆盖第 2～8 讲；卷面各讲分值为 8、16、16、16、16、14、14，合计 100 分。第 9、10 讲为后续课程内容。</li>
+<li>第 4 讲出现两个“4.2”，分别为寻址方式与汇编程序，本站用题目名称区分。</li>
+<li>第 7 讲注明缺一道 2 分题并默认给 2 分；缺题不算已恢复或已解析。</li>
+<li>答案版说明：要求十六进制时省略 <code>0x</code>、寄存器省略 <code>%</code>、含义明确时省略指令 <code>q</code> 后缀不扣分。这是本卷评分约定，规范书写仍应保留。</li>
+</ul>
+<h2 id="section-2">第 2 讲：位运算、移位与无符号转换（PDF p.1）<a class="anchor" href="#section-2" aria-label="链接到本节">#</a></h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>题号</th>
+<th>答案版记录</th>
+<th>应回查的规则</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2.1 位运算</td>
+<td><code>0x06</code>；<code>0x26</code></td>
+<td>按位与/或/异或逐位算；缺原表达式，不能仅据结果还原运算</td>
+</tr>
+<tr>
+<td>2.2 移位</td>
+<td><code>00101101</code>；<code>11101101</code></td>
+<td>逻辑右移高位补零；算术右移复制符号位</td>
+</tr>
+<tr>
+<td>2.3 整数</td>
+<td><code>a=0</code>；<code>b=1</code></td>
+<td>比较和加法都先进行通常算术转换</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>2.3 中给定 <code>count=3</code>、<code>change=-5</code>，参与比较时 change 转为 32 位 unsigned，值为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mn>32</mn></msup><mo>−</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">2^{32}-5</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">32</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">5</span></span></span></span></span>，大于 3，因此第一空为 0。</li>
+<li><code>count+change</code> 的 unsigned 结果为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mn>3</mn><mo>−</mo><mn>5</mn><mo stretchy="false">)</mo><mtext> </mtext><mo lspace="0.22em" rspace="0.22em"><mrow><mi mathvariant="normal">m</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">d</mi></mrow></mo><mtext> </mtext><msup><mn>2</mn><mn>32</mn></msup><mo>=</mo><msup><mn>2</mn><mn>32</mn></msup><mo>−</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">(3-5)\bmod2^{32}=2^{32}-2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">3</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">5</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.0556em;"></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin"><span class="mord"><span class="mord mathrm">mod</span></span></span><span class="mspace" style="margin-right:0.0556em;"></span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">32</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">32</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">2</span></span></span></span></span>，它大于原 count，故第二空为 1。不能在 unsigned 表达式中继续按数学负数比较。</li>
+<li>对应：<a href="02-integers.html">整数与位运算</a>。</li>
+</ul>
+<h2 id="section-3">第 3 讲：浮点编码、舍入与运算（PDF pp.1–2）<a class="anchor" href="#section-3" aria-label="链接到本节">#</a></h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>题号</th>
+<th>答案版记录</th>
+<th>核验方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3.1 IEEE 754</td>
+<td>实际指数 2；数值 −7.0</td>
+<td>Exp=129，E=129−127=2；M=1.11₂=1.75</td>
+</tr>
+<tr>
+<td>3.2 特殊值</td>
+<td>负无穷；NaN</td>
+<td>全 1 阶码下，小数域零/非零区分无穷与 NaN</td>
+</tr>
+<tr>
+<td>3.3 舍入</td>
+<td><code>10.10</code>；<code>11.01</code></td>
+<td>第一问是中点取偶，第二问取较近值；缺原输入不伪造舍入位串</td>
+</tr>
+<tr>
+<td>3.4 自定义格式</td>
+<td><code>0x52</code></td>
+<td>按 1 位符号、4 位阶码、3 位 fraction，bias=7 复算</td>
+</tr>
+<tr>
+<td>3.5 运算</td>
+<td><code>0.0</code>；<code>1.0</code></td>
+<td>有效精度与不同加法次序；原表达式未提供</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>3.1：<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mo>=</mo><mo stretchy="false">(</mo><mo>−</mo><mn>1</mn><msup><mo stretchy="false">)</mo><mn>1</mn></msup><mo>×</mo><mn>1.75</mn><mo>×</mo><msup><mn>2</mn><mn>2</mn></msup><mo>=</mo><mo>−</mo><mn>7</mn></mrow><annotation encoding="application/x-tex">V=(-1)^1\times1.75\times2^2=-7</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.2222em;">V</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">−</span><span class="mord">1</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1.75</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">−</span><span class="mord">7</span></span></span></span></span>。</li>
+<li>3.4 的精确乘积为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mn>1.100</mn><mn>2</mn></msub><mo>×</mo><msub><mn>1.110</mn><mn>2</mn></msub><mo>×</mo><msup><mn>2</mn><mn>2</mn></msup><mo>=</mo><msub><mn>1.0101</mn><mn>2</mn></msub><mo>×</mo><msup><mn>2</mn><mn>3</mn></msup><mo>=</mo><mn>10.5</mn></mrow><annotation encoding="application/x-tex">1.100_2\times1.110_2\times2^2=1.0101_2\times2^3=10.5</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7944em;vertical-align:-0.15em;"></span><span class="mord">1.10</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7944em;vertical-align:-0.15em;"></span><span class="mord">1.11</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7944em;vertical-align:-0.15em;"></span><span class="mord">1.010</span><span class="mord"><span class="mord">1</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">10.5</span></span></span></span></span>。</li>
+<li>3 位 fraction 下，邻近可表示值为 10 和 11，中点 10.5 选择最低保留位为偶数的 10；规格化为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mn>1.010</mn><mn>2</mn></msub><mo>×</mo><msup><mn>2</mn><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">1.010_2\times2^3</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7944em;vertical-align:-0.15em;"></span><span class="mord">1.01</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span></span></span></span></span>。</li>
+<li>阶码为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>+</mo><mn>7</mn><mo>=</mo><mn>10</mn><mo>=</mo><msub><mn>1010</mn><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">3+7=10=1010_2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">3</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">7</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">10</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7944em;vertical-align:-0.15em;"></span><span class="mord">101</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>，拼接 <code>0 1010 010</code> 得 <code>0x52</code>。先乘后舍入，而非先把精确结果错误截断后再称为取偶。</li>
+<li>3.5 只能依据原式逐步确定各次舍入；“浮点加法不结合”解释错误来源，不直接替代计算。</li>
+<li>对应：<a href="03-floating-point.html">浮点表示与舍入</a>。</li>
+</ul>
+<h2 id="section-4">第 4 讲：指令、地址与数据流（PDF pp.2–3）<a class="anchor" href="#section-4" aria-label="链接到本节">#</a></h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>题号与题名</th>
+<th>答案版记录</th>
+<th>解题检查</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4.1 机器指令</td>
+<td>4；8</td>
+<td>反汇编中连续指令首地址之差给长度；具体地址需原题</td>
+</tr>
+<tr>
+<td>4.2 寻址方式</td>
+<td><code>0x1030</code></td>
+<td><code>0x1000+3*8+0x18</code>，区分地址与读出的值</td>
+</tr>
+<tr>
+<td>4.2 汇编程序</td>
+<td>C；B</td>
+<td>先得到 3x，再乘 4，最后减 x，形成 11x；选项缺失</td>
+</tr>
+<tr>
+<td>4.3 汇编程序</td>
+<td>−5；17</td>
+<td>源/目的顺序、寄存器值与内存值需逐条追踪</td>
+</tr>
+<tr>
+<td>4.4 汇编程序</td>
+<td>11；12</td>
+<td>先读取 11，再算 11+2×4=19，减 7 后写回 12</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>4.2 的比例因子 8 只参与地址计算；使用 <code>movq</code> 后才从最终有效地址读 8 字节数据。</li>
+<li>4.4 的最终写地址为 <code>0x1008</code>。必须分别记录有效地址和该地址内的数据；不能拿 12 当地址。</li>
+<li>对应：<a href="04-assembly-basics.html">汇编基础</a>。</li>
+</ul>
+<h2 id="section-5">第 5 讲：条件码、循环与跳转表（PDF p.3）<a class="anchor" href="#section-5" aria-label="链接到本节">#</a></h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>题号</th>
+<th>答案版记录</th>
+<th>关键步骤</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5.1 条件码</td>
+<td>ZF=0；<code>%rax=0x2A</code></td>
+<td><code>0x2A &amp; 0x08=0x08</code> 非零，test 不写回结果</td>
+</tr>
+<tr>
+<td>5.2 条件跳转</td>
+<td><code>cmpq %rsi,%rdi</code>；<code>jle .Ldone</code></td>
+<td>比较 x−y，x≤y 时保留默认 x+5</td>
+</tr>
+<tr>
+<td>5.3 循环</td>
+<td><code>x &amp; 3</code>；6</td>
+<td>每次累加低两位，再逻辑右移两位</td>
+</tr>
+<tr>
+<td>5.4 跳转表</td>
+<td>11；3；0</td>
+<td>分别追踪 x=1、x=5、x=−1 的实际目标及穿透</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>5.2：默认值为 x+5，只有 x&gt;y 才改成 y−2，因此跳过改写的条件是 x≤y。</li>
+<li>5.3：<code>0x1B=00011011₂</code>，从低到高两位组为 3、2、1，和为 6；这里是按 4 进制位求和，不是逐位 popcount。</li>
+<li>5.4：给定 y=4，x=1 跳到 <code>.L1</code> 算 2y 后进入 <code>.Lplus</code> 加 3，得 11；x=5 走 <code>.L45</code> 算 y−1，得 3。</li>
+<li>x=−1 在范围检查的 unsigned <code>ja</code> 中按 64 位无符号值解释，超过 5，进入默认分支返回 0。</li>
+<li>对应：<a href="05-control.html">控制流</a>。</li>
+</ul>
+<h2 id="section-6">第 6 讲：调用、寄存器保存与局部变量（PDF pp.3–4）<a class="anchor" href="#section-6" aria-label="链接到本节">#</a></h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>题号</th>
+<th>答案版记录</th>
+<th>必须同时说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>6.1 栈操作</td>
+<td><code>0x2FF8</code>；<code>0x35</code></td>
+<td>push 的新 rsp、pop 所读旧栈顶及 rsp 恢复</td>
+</tr>
+<tr>
+<td>6.2 调用</td>
+<td><code>movq %rsi,%rdi</code>；<code>addq %rbx,%rax</code></td>
+<td>将 y 作为第一个参数；调用后用保存的 x</td>
+</tr>
+<tr>
+<td>6.3 栈帧</td>
+<td><code>leaq 8(%rsp),%rdi</code>；<code>addq 8(%rsp),%rax</code>；<code>addq %rbx,%rax</code>；23</td>
+<td>地址传参、旧返回值、更新后局部量、跨调用保存</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>6.2：twice(y) 的第一个参数必须放在 rdi；x 先保存在被调用者保存寄存器 rbx 中，twice 返回后还能使用。combine 自身修改 rbx，也必须为自己的调用者保存/恢复原值。</li>
+<li>6.3：x=4、y=3 时，local 初值为 2x=8；increase 返回旧值 8，却把内存中的 local 更新为 11。最后累加旧返回值 8、新 local 11、原 x 4，得 23。</li>
+<li><code>leaq</code> 传入 local 的地址；若改成 <code>movq 8(%rsp),%rdi</code>，传入的是数值而非指针。</li>
+<li>对应：<a href="06-procedures.html">过程与栈帧</a>。</li>
+</ul>
+<h2 id="section-7">第 7 讲：数组与结构布局（PDF pp.4–5）<a class="anchor" href="#section-7" aria-label="链接到本节">#</a></h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>题号</th>
+<th>答案版记录</th>
+<th>核验</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>7.1 数组</td>
+<td><code>0x3024</code>；17</td>
+<td>二维数组行优先；row 是行指针的重排</td>
+</tr>
+<tr>
+<td>7.2 结构体</td>
+<td>4；24；<code>0x1038</code>；36</td>
+<td>成员偏移、尾部对齐、结构体数组步长和指针下标</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>7.1：每行 4 个 int，<code>&amp;m[2][1]</code> 地址为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mi>x</mi><mn>3000</mn><mo>+</mo><mo stretchy="false">(</mo><mn>2</mn><mo>×</mo><mn>4</mn><mo>+</mo><mn>1</mn><mo stretchy="false">)</mo><mo>×</mo><mn>4</mn><mo>=</mo><mn>0</mn><mi>x</mi><mn>3024</mn></mrow><annotation encoding="application/x-tex">0x3000+(2\times4+1)\times4=0x3024</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">0</span><span class="mord mathnormal">x</span><span class="mord">3000</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">2</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">4</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">4</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">0</span><span class="mord mathnormal">x</span><span class="mord">3024</span></span></span></span></span>。原 PDF 文本抽取出现替换字符，数值按可见版面和运算核对。</li>
+<li><code>row[0][1]=m[2][1]=10</code>，<code>row[2][2]=m[1][2]=7</code>，和为 17；row 本身存的是指针，不能当成紧邻的二维整数块。</li>
+<li>7.2：tag 偏移 0、占 1 字节，填充 3 字节；v 三个 int 在偏移 4、8、12；sum 在偏移 16、占 8 字节，总大小 24，满足 8 字节对齐。</li>
+<li>数组元素 a[2] 的 v[1] 地址：<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mi>x</mi><mn>1000</mn><mo>+</mo><mn>2</mn><mo>×</mo><mn>24</mn><mo>+</mo><mn>4</mn><mo>+</mo><mn>1</mn><mo>×</mo><mn>4</mn><mo>=</mo><mn>0</mn><mi>x</mi><mn>1038</mn></mrow><annotation encoding="application/x-tex">0x1000+2\times24+4+1\times4=0x1038</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">0</span><span class="mord mathnormal">x</span><span class="mord">1000</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">2</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">24</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">4</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">4</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">0</span><span class="mord mathnormal">x</span><span class="mord">1038</span></span></span></span></span>。</li>
+<li>p 指向 a[1] 时，<code>p[1].sum</code> 访问 a[2].sum=30；q 指向 a[1].v 时，q[2]=6，故结果为 36。</li>
+<li>对应：<a href="07-data.html">数组、结构体与指针</a>。</li>
+</ul>
+<h2 id="section-8">第 8 讲：union 与安全防护（PDF p.5）<a class="anchor" href="#section-8" aria-label="链接到本节">#</a></h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>题号</th>
+<th>答案版记录</th>
+<th>资料边界</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>8.1 结构与联合</td>
+<td>A、B、D</td>
+<td>无选项正文，不能重建各选项真伪</td>
+</tr>
+<tr>
+<td>8.2 防御技术</td>
+<td>A、B、D</td>
+<td>答案附有 NX、ROP、金丝雀的边界解释</td>
+</tr>
+<tr>
+<td>8.3 缓冲区攻击</td>
+<td><code>0x11E8</code>；31；<code>0x401200</code>；否</td>
+<td>缺栈图、程序和输入约束，无法独立复算覆盖偏移与地址</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li><strong>NX</strong>限制页面执行权限，不阻止向栈的数据区域越界写入。</li>
+<li><strong>ROP</strong>复用已有可执行代码片段，不能仅凭“栈不可执行”断言它失效。</li>
+<li><strong>栈金丝雀</strong>能检测部分覆盖路径，不等于所有越界都可检测；未经过检查点或未覆盖 canary 的错误需要另外分析。</li>
+<li>8.3 的地址、31 和“否”保持为答案记录；拿到完整题干后，依次核对缓冲区首址、返回地址槽、输入终止符和限制字节，再验证攻击是否成功。</li>
+<li>对应：<a href="08-advanced.html">机器级进阶与安全</a>。</li>
+</ul>
+<h2 id="section-9">复盘清单<a class="anchor" href="#section-9" aria-label="链接到本节">#</a></h2>
+<ul>
+<li>把“公式不会”和“地址/值弄混”分开记录；本卷既测位级表示，也测跨调用数据流与布局。</li>
+<li>做完第 2～8 讲复盘后，再学习新授第 9、10 讲；新授内容不追溯算作本次测验考点。</li>
+<li>本章是答案驱动的回查资料；缺少原题的地方明确标出，不将未恢复题干标作完整逐题解答。</li>
+</ul>
+<div class="pager"><a href="10-sequential.html">上一章<br>10 · SEQ 顺序处理器与 HCL 控制</a><a href="12-past-papers.html">下一章<br>12 · 往年题导航与勘误</a></div><footer>理解表示，追踪执行。<span><a href="14-coverage.html">资料来源与覆盖范围</a></span></footer></main><aside aria-label="本页目录"><div class="nav-label">本页内容</div><a href="#section-1">卷面范围与编号说明</a><a href="#section-2">第 2 讲：位运算、移位与无符号转换（PDF p.1）</a><a href="#section-3">第 3 讲：浮点编码、舍入与运算（PDF pp.1–2）</a><a href="#section-4">第 4 讲：指令、地址与数据流（PDF pp.2–3）</a><a href="#section-5">第 5 讲：条件码、循环与跳转表（PDF p.3）</a><a href="#section-6">第 6 讲：调用、寄存器保存与局部变量（PDF pp.3–4）</a><a href="#section-7">第 7 讲：数组与结构布局（PDF pp.4–5）</a><a href="#section-8">第 8 讲：union 与安全防护（PDF p.5）</a><a href="#section-9">复盘清单</a><a href="#main">回到顶部 ↑</a></aside></div><script src="app.js"></script></body></html>

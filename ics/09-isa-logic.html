@@ -1,0 +1,502 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>09 · Y86-64 指令集与逻辑设计 · ZJZJ / ICS</title><meta name="description" content="北京大学 ICS 复习手册：课程知识、公式推导、边界情况、小班拓展与往年题导航。"><link rel="stylesheet" href="katex/katex.min.css"><link rel="stylesheet" href="style.css"><link rel="icon" href="favicon.svg" type="image/svg+xml"></head><body><a class="skip" href="#main">跳到正文</a><header><a class="brand" href="index.html">ZJZJ<span> / ICS NOTES</span></a><div class="header-right"><a href="https://blog.zjzj.work/">学习空间</a><a href="all.html">整本阅读</a><button type="button" onclick="window.print()">打印</button><button id="menu" aria-expanded="false" aria-controls="chapters">目录</button></div></header><div class="layout"><nav id="chapters" aria-label="章节目录"><div class="nav-label">2026 · 复习手册</div><a  href="00-guide.html">复习范围与使用说明</a><a  href="01-overview.html">01 · 系统概述与基本模型</a><a  href="02-integers.html">02 · 位、字节与整数</a><a  href="03-floating-point.html">03 · 浮点表示、舍入与运算</a><a  href="04-assembly-basics.html">04 · 机器级编程基础</a><a  href="05-control.html">05 · 条件码、分支、循环与 switch</a><a  href="06-procedures.html">06 · 过程调用、栈与 ABI</a><a  href="07-data.html">07 · 数组、结构体、指针与浮点汇编</a><a  href="08-advanced.html">08 · 机器级进阶与内存安全</a><a aria-current=page href="09-isa-logic.html">09 · Y86-64 指令集与逻辑设计</a><a  href="10-sequential.html">10 · SEQ 顺序处理器与 HCL 控制</a><a  href="11-quiz01.html">11 · 2026 第一次测验：答案回查与复盘</a><a  href="12-past-papers.html">12 · 往年题导航与勘误</a><a  href="13-seminars.html">13 · 小班拓展、边角知识与作业路线</a><a  href="14-coverage.html">14 · 课件覆盖索引与来源</a><div class="nav-foot">依据本地课件与公开题库<br>更新于 2026.10.19</div></nav><main id="main"><div class="eyebrow">COMPUTER SYSTEMS · PEKING UNIVERSITY</div><h1>09 · Y86-64 指令集与逻辑设计</h1>
+<p>依据第 9 讲 2026-10-15 课件全部 64 页和第 9 讲小班研讨单。先规定机器“应该做什么”，再用逻辑门、组合电路和存储元件实现它；<a href="10-sequential.html">第 10 章</a>进一步构造 SEQ。第 9、10 讲是第一次测验之后的新授内容。</p>
+<h2 id="section-1">ISA：软件与硬件共同遵守的约定<a class="anchor" href="#section-1" aria-label="链接到本节">#</a></h2>
+<ul>
+<li>**ISA（指令集体系结构）**规定程序可见状态、指令语义与编码、寻址方式及停止/错误状态。它说明执行前后哪些状态如何变化。</li>
+<li><strong>微体系结构</strong>规定用什么数据通路、控制逻辑和时钟组织实现 ISA。同一 ISA 可以有不同实现。</li>
+<li><strong>Y86-64 的程序状态</strong>：15 个 64 位通用寄存器、<code>ZF/SF/OF</code>、PC、程序状态 Stat 和按字节编址的内存。没有 <code>%r15</code>，也没有这里可供 unsigned 条件使用的 CF。</li>
+<li><strong>内存与字</strong>：每个地址对应一个字节；64 位字占 8 字节，多字节常数、位移和数据按小端存储。指令的第一个字节本身由两个半字节组成，不把它们倒置。</li>
+<li><strong>PC</strong>：标识当前要执行的指令；顺序执行后更新到下一条。取指得到的 <code>valP</code> 是顺序后继地址，不保证最终 PC 就等于它。</li>
+</ul>
+<h3 id="section-2">寄存器编号与 RNONE<a class="anchor" href="#section-2" aria-label="链接到本节">#</a></h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>编号</th>
+<th>寄存器</th>
+<th>编号</th>
+<th>寄存器</th>
+<th>编号</th>
+<th>寄存器</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td><code>%rax</code></td>
+<td>5</td>
+<td><code>%rbp</code></td>
+<td>A</td>
+<td><code>%r10</code></td>
+</tr>
+<tr>
+<td>1</td>
+<td><code>%rcx</code></td>
+<td>6</td>
+<td><code>%rsi</code></td>
+<td>B</td>
+<td><code>%r11</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>%rdx</code></td>
+<td>7</td>
+<td><code>%rdi</code></td>
+<td>C</td>
+<td><code>%r12</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>%rbx</code></td>
+<td>8</td>
+<td><code>%r8</code></td>
+<td>D</td>
+<td><code>%r13</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>%rsp</code></td>
+<td>9</td>
+<td><code>%r9</code></td>
+<td>E</td>
+<td><code>%r14</code></td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>四位编号 <code>F</code> 表示“无寄存器”，硬件常量名为 <code>RNONE</code>，不是第 16 个可读写寄存器。</li>
+<li>寄存器字节的高半字节为 <code>rA</code>，低半字节为 <code>rB</code>。有些指令不使用其中一侧，规定在该位置填 <code>F</code>。</li>
+</ul>
+<h2 id="section-3">指令格式、语义与长度<a class="anchor" href="#section-3" aria-label="链接到本节">#</a></h2>
+<p>以下 <code>R[r]</code> 表示寄存器值，<code>M8[a]</code> 表示从地址 <code>a</code> 开始的 8 字节字；<code>Cnd</code> 为用当前 CC 和 <code>ifun</code> 判断出的布尔条件。指令首字节是 <code>icode:ifun</code>，其中每部分各 4 位。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>指令</th>
+<th>字节布局（空格分字段）</th>
+<th>长度</th>
+<th>核心语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>halt</code></td>
+<td><code>00</code></td>
+<td>1</td>
+<td>停止，状态变为 HLT</td>
+</tr>
+<tr>
+<td><code>nop</code></td>
+<td><code>10</code></td>
+<td>1</td>
+<td>不改数据，PC 顺序前进</td>
+</tr>
+<tr>
+<td><code>rrmovq rA,rB</code></td>
+<td><code>20 rArB</code></td>
+<td>2</td>
+<td><code>R[rB] ← R[rA]</code></td>
+</tr>
+<tr>
+<td><code>cmovXX rA,rB</code></td>
+<td><code>2f rArB</code></td>
+<td>2</td>
+<td>条件真才传送；条件假保留目的寄存器</td>
+</tr>
+<tr>
+<td><code>irmovq V,rB</code></td>
+<td><code>30 FrB V</code></td>
+<td>10</td>
+<td><code>R[rB] ← V</code>，V 占 8 字节</td>
+</tr>
+<tr>
+<td><code>rmmovq rA,D(rB)</code></td>
+<td><code>40 rArB D</code></td>
+<td>10</td>
+<td><code>M8[R[rB]+D] ← R[rA]</code></td>
+</tr>
+<tr>
+<td><code>mrmovq D(rB),rA</code></td>
+<td><code>50 rArB D</code></td>
+<td>10</td>
+<td><code>R[rA] ← M8[R[rB]+D]</code></td>
+</tr>
+<tr>
+<td><code>OPq rA,rB</code></td>
+<td><code>6f rArB</code></td>
+<td>2</td>
+<td><code>R[rB] ← R[rB] OP R[rA]</code>，并更新 CC</td>
+</tr>
+<tr>
+<td><code>jXX Dest</code></td>
+<td><code>7f Dest</code></td>
+<td>9</td>
+<td>条件真转到绝对地址 Dest，否则顺序前进</td>
+</tr>
+<tr>
+<td><code>call Dest</code></td>
+<td><code>80 Dest</code></td>
+<td>9</td>
+<td>压入顺序后继地址，再转到 Dest</td>
+</tr>
+<tr>
+<td><code>ret</code></td>
+<td><code>90</code></td>
+<td>1</td>
+<td>从栈读返回地址，再更新 PC</td>
+</tr>
+<tr>
+<td><code>pushq rA</code></td>
+<td><code>A0 rAF</code></td>
+<td>2</td>
+<td>栈指针减 8，再存入源寄存器原值</td>
+</tr>
+<tr>
+<td><code>popq rA</code></td>
+<td><code>B0 rAF</code></td>
+<td>2</td>
+<td>从旧栈顶取值，更新栈指针，并写目的寄存器</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>编码长度由首字节所表示的指令类别确定。寄存器字节可选，8 字节常数字段可选，因此长度为 1、2、9 或 10 字节。</li>
+<li><code>rrmovq</code> 与条件传送共用 <code>icode=2</code>；不是另开一套 opcode。</li>
+<li>基础 Y86-64 不直接提供 <code>cmpq</code>、<code>testq</code>、<code>leaq</code>、立即数 <code>addq</code>、比例索引寻址、硬件乘除法。翻译 x86 程序时必须展开。</li>
+<li><code>subq rA,rB</code> 计算的是目的减源；load 的目的寄存器编码在 <code>rA</code>，不能按汇编文字顺序猜 <code>rB</code>。</li>
+</ul>
+<h3 id="section-4">OPq 与条件功能码<a class="anchor" href="#section-4" aria-label="链接到本节">#</a></h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>OPq 的 ifun</th>
+<th>指令</th>
+<th>运算</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td><code>addq</code></td>
+<td><code>rB + rA</code></td>
+</tr>
+<tr>
+<td>1</td>
+<td><code>subq</code></td>
+<td><code>rB - rA</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>andq</code></td>
+<td>逐位与</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>xorq</code></td>
+<td>逐位异或</td>
+</tr>
+</tbody>
+</table></div>
+<p>令 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>=</mo><mi>S</mi><mi>F</mi><mo lspace="0.22em" rspace="0.22em">⊕</mo><mi>O</mi><mi>F</mi></mrow><annotation encoding="application/x-tex">L=SF\mathbin{\oplus}OF</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal">L</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mord mathnormal" style="margin-right:0.1389em;">F</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin"><span class="mord">⊕</span></span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0278em;">O</span><span class="mord mathnormal" style="margin-right:0.1389em;">F</span></span></span></span></span>。条件传送和跳转共用下表的条件含义；无条件功能码对应 <code>rrmovq</code> 或 <code>jmp</code>。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>ifun</th>
+<th>后缀</th>
+<th>条件 Cnd</th>
+<th>有符号比较含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>无条件</td>
+<td>真</td>
+<td>总是执行</td>
+</tr>
+<tr>
+<td>1</td>
+<td><code>le</code></td>
+<td><span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>∨</mo><mi>Z</mi><mi>F</mi></mrow><annotation encoding="application/x-tex">L\lor ZF</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal">L</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∨</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0715em;">Z</span><span class="mord mathnormal" style="margin-right:0.1389em;">F</span></span></span></span></span></td>
+<td>小于等于</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>l</code></td>
+<td><span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi></mrow><annotation encoding="application/x-tex">L</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal">L</span></span></span></span></span></td>
+<td>小于</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>e</code></td>
+<td><span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Z</mi><mi>F</mi></mrow><annotation encoding="application/x-tex">ZF</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0715em;">Z</span><span class="mord mathnormal" style="margin-right:0.1389em;">F</span></span></span></span></span></td>
+<td>等于</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>ne</code></td>
+<td><span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">¬</mi><mi>Z</mi><mi>F</mi></mrow><annotation encoding="application/x-tex">\neg ZF</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord">¬</span><span class="mord mathnormal" style="margin-right:0.0715em;">Z</span><span class="mord mathnormal" style="margin-right:0.1389em;">F</span></span></span></span></span></td>
+<td>不等于</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>ge</code></td>
+<td><span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">¬</mi><mi>L</mi></mrow><annotation encoding="application/x-tex">\neg L</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord">¬</span><span class="mord mathnormal">L</span></span></span></span></span></td>
+<td>大于等于</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>g</code></td>
+<td><span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">¬</mi><mi>L</mi><mo>∧</mo><mi mathvariant="normal">¬</mi><mi>Z</mi><mi>F</mi></mrow><annotation encoding="application/x-tex">\neg L\land\neg ZF</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord">¬</span><span class="mord mathnormal">L</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∧</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord">¬</span><span class="mord mathnormal" style="margin-right:0.0715em;">Z</span><span class="mord mathnormal" style="margin-right:0.1389em;">F</span></span></span></span></span></td>
+<td>大于</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>“比较含义”以之前执行的减法为依据。例如先计算 <code>x-y</code>，再用 <code>jl</code> 判断 <code>x&lt;y</code>。</li>
+<li>加减按 64 位截断。ZF 表示结果为零，SF 为结果最高位；加法同号输入得到异号结果、减法异号输入得到与被减数异号结果时，OF 为 1。</li>
+<li><code>andq/xorq</code> 按结果设置 ZF、SF，并清 OF。<code>cmovXX/jXX</code> 读取 CC，不更新 CC；地址加法、栈指针加减也不更新 CC。</li>
+</ul>
+<h3 id="section-5">编码练习：从字段到字节<a class="anchor" href="#section-5" aria-label="链接到本节">#</a></h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>指令实例</th>
+<th>完整机器字节</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>halt</code>；<code>nop</code>；<code>ret</code></td>
+<td>分别为 <code>00</code>；<code>10</code>；<code>90</code></td>
+</tr>
+<tr>
+<td><code>rrmovq %rsp,%rbx</code></td>
+<td><code>20 43</code></td>
+</tr>
+<tr>
+<td><code>cmovle %rax,%rbx</code>；<code>cmovne %rcx,%rdx</code></td>
+<td>分别为 <code>21 03</code>；<code>24 12</code></td>
+</tr>
+<tr>
+<td><code>irmovq $0xabcd,%rdx</code></td>
+<td><code>30 f2 cd ab 00 00 00 00 00 00</code></td>
+</tr>
+<tr>
+<td><code>rmmovq %rsi,0x41c(%rsp)</code></td>
+<td><code>40 64 1c 04 00 00 00 00 00 00</code></td>
+</tr>
+<tr>
+<td><code>mrmovq -12(%rbp),%rcx</code></td>
+<td><code>50 15 f4 ff ff ff ff ff ff ff</code></td>
+</tr>
+<tr>
+<td><code>addq %rax,%rsi</code>；<code>subq %rcx,%rbx</code></td>
+<td>分别为 <code>60 06</code>；<code>61 13</code></td>
+</tr>
+<tr>
+<td><code>jmp 0x100</code></td>
+<td><code>70 00 01 00 00 00 00 00 00</code></td>
+</tr>
+<tr>
+<td><code>jne 0x100</code></td>
+<td><code>74 00 01 00 00 00 00 00 00</code></td>
+</tr>
+<tr>
+<td><code>call 0x100</code></td>
+<td><code>80 00 01 00 00 00 00 00 00</code></td>
+</tr>
+<tr>
+<td><code>pushq %rax</code>；<code>popq %rcx</code></td>
+<td>分别为 <code>a0 0f</code>；<code>b0 1f</code></td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>先写首字节，再按 rA/rB 放半字节，最后将 64 位常数字段按小端展开。</li>
+<li>负位移 <code>-12</code> 的 64 位补码是 <code>0xfffffffffffffff4</code>；内存字节先 <code>f4</code> 后 7 个 <code>ff</code>。</li>
+<li>反汇编时先由 opcode 判断后续字段是否存在，再确定下一条指令起点。不要把常数中的 <code>00</code> 当成独立 halt。</li>
+</ul>
+<h2 id="section-6">栈、调用与程序状态<a class="anchor" href="#section-6" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>栈向低地址增长</strong>：若原 <code>%rsp=s</code>，push 后的新栈顶为 <code>s-8</code>；栈顶不是“最高地址”。第 18 页中与此相反的英文小句应按图与实际操作纠正。</li>
+<li><strong>push</strong>：保存原源值，计算新 <code>%rsp=s-8</code>，将原源值写到 <code>M8[s-8]</code>。<code>pushq %rsp</code> 存的是旧 s。</li>
+<li><strong>pop</strong>：从 <code>M8[s]</code> 取得 valM，再形成 <code>s+8</code>；<code>popq %rsp</code> 的目的写回优先，最终 <code>%rsp=valM</code>，不能简单断言总增加 8。</li>
+<li><strong>call</strong>：如果指令位于 p，则顺序后继地址为 <code>p+9</code>。把这个地址压栈，再转到编码中的 Dest。</li>
+<li><strong>ret</strong>：读取旧栈顶作为下一 PC，栈指针通常增加 8。它没有编码中的 Dest。</li>
+<li><strong>AOK=1</strong> 为正常执行；<strong>HLT=2</strong> 为 halt 停止；<strong>ADR=3</strong> 为指令或数据地址错误；<strong>INS=4</strong> 为非法指令。后三者使模拟器停止。Y86 的 halt 是教学模拟指令，不能等同于普通用户态可随意执行的 x86 <code>hlt</code>。</li>
+</ul>
+<h3 id="section-7">Y86 的绝对跳转与 x86 的相对跳转<a class="anchor" href="#section-7" aria-label="链接到本节">#</a></h3>
+<ul>
+<li>Y86 <code>jXX/call</code> 的 8 字节字段直接装目标地址，硬件可直接选择 <code>valC</code>。</li>
+<li>x86-64 的常见<strong>直接近跳转</strong>和直接相对 call 编码的是相对下一条指令的位移；目标为“顺序后继 RIP + 符号扩展位移”。</li>
+<li>x86 也存在通过寄存器或内存操作数的<strong>间接</strong> jmp/call；不能把“PC 相对”概括成所有控制转移。常见 Jcc 没有对应的通用寄存器间接条件跳转形式。</li>
+<li>Y86 的设计简化了变长偏移选择、目标形成和教学译码，代价是每个跳转都占 9 字节，也没有自动获得 PC 相对编码的紧凑性与位置无关便利。</li>
+</ul>
+<h2 id="section-8">从 C 翻译为 Y86：一个可运行的完整例子<a class="anchor" href="#section-8" aria-label="链接到本节">#</a></h2>
+<p>目标是遍历以零结尾的 <code>long</code> 数组，返回零之前的元素数；本例采用 LP64，<code>long</code> 为 8 字节。</p>
+<pre><code class="language-c">long len(long *p) {
+    long n = 0;
+    while (*p != 0) { ++n; ++p; }
+    return n;
+}
+</code></pre>
+<ul>
+<li>x86 可用 <code>addq $1,%rax</code>、<code>addq $8,%rdi</code> 和 <code>cmpq $0,(%rdi)</code>。</li>
+<li>Y86 先把常数装进寄存器，以寄存器加法替代立即数加法；用 load 加 <code>andq %rdx,%rdx</code> 替代内存比较。</li>
+<li>以下程序使用标签、<code>.pos</code>、<code>.align</code>、<code>.quad</code>；这些是汇编器指示，不是 CPU 执行的指令。</li>
+</ul>
+<pre><code class="language-asm">.pos 0
+    irmovq stack,%rsp
+    irmovq array,%rdi
+    call len
+    halt
+.align 8
+array:
+    .quad 0x123
+    .quad 0x456
+    .quad 0x789
+    .quad 0
+len:
+    irmovq $1,%r8
+    irmovq $8,%r9
+    xorq %rax,%rax
+    mrmovq 0(%rdi),%rdx
+    andq %rdx,%rdx
+    je done
+loop:
+    addq %r8,%rax
+    addq %r9,%rdi
+    mrmovq 0(%rdi),%rdx
+    andq %rdx,%rdx
+    jne loop
+done:
+    ret
+.pos 0x200
+stack:
+</code></pre>
+<ul>
+<li>程序从地址 0 开始，显式初始化栈指针；数据区、代码区和栈空间要避免重叠。</li>
+<li>用 CS:APP 的 <code>yas len.ys</code> 汇编为 <code>len.yo</code>，再用 <code>yis len.yo</code> 执行；汇编输出给出地址与字节，模拟结果给出状态与寄存器变化。</li>
+<li>下载：<a href="len.ys">len.ys 源码</a>、<a href="len.yo">len.yo 汇编结果</a>、<a href="len-simulation.txt">官方 yis 实测输出</a>。已在本机命令行执行 <code>yas</code> 与 <code>yis</code>，并验证空数组与单元素变式。</li>
+<li>本例正常结束应为 HLT，<code>%rax=3</code>，<code>%rdi=array+24</code>，<code>%rsp=0x200</code>。空数组测试应返回 0，不能先递增再检查。</li>
+<li>编译器未必按源代码外形生成相同汇编；第 25 页的例子说明手写指针形式仍可能被优化成比例索引形式。编译结果需按目标 ISA 重新改写。</li>
+</ul>
+<h2 id="section-9">CISC、RISC 与课件中的 MIPS 例子<a class="anchor" href="#section-9" aria-label="链接到本节">#</a></h2>
+<ul>
+<li>CISC 常有较多指令形式、复杂寻址、变长编码；代码密度和兼容性可有优势，但译码与实现更复杂。</li>
+<li>典型 RISC 采用较规则的编码、较多寄存器和 load/store 风格，算术主要在寄存器之间完成，便于规则的数据通路设计；同一任务可能需要更多指令。</li>
+<li>课件的 MIPS 有 32 个寄存器，<code>$0</code> 固定为零；其示例 <code>add rd,rs,rt</code> 为三操作数，<code>lw/sw</code> 使用基址加位移。这些是 MIPS 约定，不能移植为 Y86 规则。</li>
+<li>两类都能采用流水线、预测、乱序等技术；实际性能还依赖实现、编译器、缓存与工作负载，不能仅凭类别判断快慢。Y86 同时保留 x86 风格状态、变长指令和简化的操作数形式。</li>
+</ul>
+<h2 id="section-10">数字信号、逻辑门与组合电路<a class="anchor" href="#section-10" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>数字信号</strong>用电压范围代表 0/1，中间留出容限区；实际电压连续变化，并非只能取两个精确电压。</li>
+<li><strong>组合电路</strong>是无环逻辑网络；输出在传播延迟后由当前输入决定，没有在某一时钟沿才统一计算的要求。</li>
+<li><strong>传播延迟</strong>：输入变化到输出稳定需要时间。多级路径延迟会累积；时序图中先算理想布尔结果，再按门延迟移动变化时刻。</li>
+<li><strong>逻辑与/或/非</strong>分别实现 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>∧</mo><mi>b</mi></mrow><annotation encoding="application/x-tex">a\land b</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.5556em;"></span><span class="mord mathnormal">a</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∧</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6944em;"></span><span class="mord mathnormal">b</span></span></span></span></span>、<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>∨</mo><mi>b</mi></mrow><annotation encoding="application/x-tex">a\lor b</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.5556em;"></span><span class="mord mathnormal">a</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∨</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6944em;"></span><span class="mord mathnormal">b</span></span></span></span></span>、<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">¬</mi><mi>a</mi></mrow><annotation encoding="application/x-tex">\neg a</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord">¬</span><span class="mord mathnormal">a</span></span></span></span></span>；布尔输入是单比特，勿混同 C 的任意整数非零判断或整字逐位运算。</li>
+</ul>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>a</th>
+<th>b</th>
+<th>与</th>
+<th>或</th>
+<th>异或</th>
+<th>相等 XNOR</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li><strong>单比特相等</strong>：<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>e</mi><mi>q</mi><mo>=</mo><mo stretchy="false">(</mo><mi>a</mi><mo>∧</mo><mi>b</mi><mo stretchy="false">)</mo><mo>∨</mo><mo stretchy="false">(</mo><mi mathvariant="normal">¬</mi><mi>a</mi><mo>∧</mo><mi mathvariant="normal">¬</mi><mi>b</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">eq=(a\land b)\lor(\neg a\land\neg b)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">e</span><span class="mord mathnormal" style="margin-right:0.0359em;">q</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathnormal">a</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∧</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">b</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∨</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">¬</span><span class="mord mathnormal">a</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∧</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">¬</span><span class="mord mathnormal">b</span><span class="mclose">)</span></span></span></span></span>。两条 AND 支路分别检测“都为 1”和“都为 0”，OR 汇总。</li>
+<li><strong>字相等</strong>：<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mi>q</mi><mo>=</mo><msubsup><mo>⋀</mo><mrow><mi>i</mi><mo>=</mo><mn>0</mn></mrow><mn>63</mn></msubsup><mo stretchy="false">(</mo><msub><mi>A</mi><mi>i</mi></msub><mo>↔</mo><msub><mi>B</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">Eq=\bigwedge_{i=0}^{63}(A_i\leftrightarrow B_i)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">E</span><span class="mord mathnormal" style="margin-right:0.0359em;">q</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1.2537em;vertical-align:-0.2997em;"></span><span class="mop"><span class="mop op-symbol small-op" style="position:relative;top:0em;">⋀</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.954em;"><span style="top:-2.4003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">i</span><span class="mrel mtight">=</span><span class="mord mtight">0</span></span></span></span><span style="top:-3.2029em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">63</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2997em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">A</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">↔</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0502em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span>。必须所有对应位都相等，HCL 可简写 <code>A == B</code>。</li>
+<li><strong>一位选择器</strong>：<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>o</mi><mi>u</mi><mi>t</mi><mo>=</mo><mo stretchy="false">(</mo><mi>s</mi><mo>∧</mo><mi>a</mi><mo stretchy="false">)</mo><mo>∨</mo><mo stretchy="false">(</mo><mi mathvariant="normal">¬</mi><mi>s</mi><mo>∧</mo><mi>b</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">out=(s\land a)\lor(\neg s\land b)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6151em;"></span><span class="mord mathnormal">o</span><span class="mord mathnormal">u</span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∧</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∨</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">¬</span><span class="mord mathnormal">s</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∧</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">b</span><span class="mclose">)</span></span></span></span></span>，s=1 选 a，s=0 选 b；共有 8 种输入，按 s 分两组即可逐一验算。</li>
+<li><strong>字选择器</strong>：给每一位复制相同的选择规则，共用选择信号 s；它选择完整输入字，不进行算术运算。</li>
+<li><strong>ALU</strong>：按功能选择加、减、与、异或结果；逐位 AND 可由 64 个 AND 门并行形成，再通过选择器选择。加减还需进位结构，并由结果/输入计算标志。</li>
+</ul>
+<h2 id="section-11">HCL：声明逻辑关系，不是按行执行的 C<a class="anchor" href="#section-11" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><code>bool</code> 为布尔信号，<code>int</code> 为字信号；HCL 的 int 并不自行规定“C 语言 32 位 int”，具体字宽由硬件对象决定。</li>
+<li>布尔运算、比较、集合成员关系产生布尔值；字 case 表达式产生数据字。</li>
+<li><code>A in {B,C,D}</code> 表示 A 等于其中至少一个值；<code>[ 条件:值; ... ]</code> 按从上到下的<strong>第一条真条件</strong>选值，末尾 <code>1:</code> 提供默认值。</li>
+<li>case 的优先级描述选择关系，不表示硬件必须像软件一样跨多个周期逐条试条件；网络仍可由组合逻辑实现。</li>
+</ul>
+<pre><code class="language-text">bool eq = (a &amp;&amp; b) || (!a &amp;&amp; !b);
+int Out = [ s : A; 1 : B; ];
+bool hit = code in { OP1, OP2, OP3 };
+int Out4 = [
+    !s1 &amp;&amp; !s0 : D0;
+    !s1        : D1;
+    !s0        : D2;
+    1          : D3;
+];
+int Min3 = [
+    A &lt;= B &amp;&amp; A &lt;= C : A;
+    B &lt;= A &amp;&amp; B &lt;= C : B;
+    1               : C;
+];
+</code></pre>
+<ul>
+<li>四选一对应 <code>(s1,s0)=00/01/10/11</code> 依次选 D0/D1/D2/D3。后面条件之所以省略一部分，是前面已排除了其他情况。</li>
+<li><strong>第 47 页的最小值例子有边界遗漏</strong>：原式两行都用严格 <code>&lt;</code>，A=B&lt;C 时会落入默认 C，得不到最小值；上面改用 <code>&lt;=</code>，覆盖并列最小的情况。</li>
+</ul>
+<h2 id="section-12">时序电路：寄存器、寄存器堆与状态机<a class="anchor" href="#section-12" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>硬件寄存器</strong>存一个字，在指定时钟沿采样输入，沿之间保持输出；程序寄存器 <code>%rax</code> 等是 ISA 名称，物理上由寄存器堆实现。</li>
+<li><strong>寄存器堆</strong>有读地址 srcA/srcB、读输出 valA/valB，以及写地址、写值和写使能。课程模型异步读、在时钟上升沿写；选择读地址后不必等待下一拍才读出。</li>
+<li><strong>写后读</strong>：时钟沿写入完成后，若读地址选中该寄存器，读端在组合延迟后反映新值；“写入”和“输出变化”不应画成提前发生。</li>
+<li><strong>RAM</strong>通过地址选取存储位置。本课程模型的数据读为组合路径的一部分，写入在时钟沿更新；这不代表所有实际内存器件都采用相同时序接口。</li>
+<li><strong>状态机</strong>由状态寄存器和组合逻辑组成。用当前状态 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Q</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">Q_t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span> 与输入 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">I_t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">I</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span> 计算候选 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mi>t</mi></msub><mo>=</mo><mi>f</mi><mo stretchy="false">(</mo><msub><mi>Q</mi><mi>t</mi></msub><mo separator="true">,</mo><msub><mi>I</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">D_t=f(Q_t,I_t)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0278em;">D</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">I</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span>，到边沿才有 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Q</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>D</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">Q_{t+1}=D_t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8917em;vertical-align:-0.2083em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0278em;">D</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>。</li>
+<li>第 51 页累加器：Load=1 时 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Q</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mi>I</mi><msub><mi>n</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">Q_{t+1}=In_t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8917em;vertical-align:-0.2083em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord mathnormal" style="margin-right:0.0785em;">I</span><span class="mord"><span class="mord mathnormal">n</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>，Load=0 时 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Q</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>Q</mi><mi>t</mi></msub><mo>+</mo><mi>I</mi><msub><mi>n</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">Q_{t+1}=Q_t+In_t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8917em;vertical-align:-0.2083em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord mathnormal" style="margin-right:0.0785em;">I</span><span class="mord"><span class="mord mathnormal">n</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>。课件时序输出依次为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mn>0</mn></msub><mo separator="true">,</mo><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><msub><mi>x</mi><mn>1</mn></msub><mo separator="true">,</mo><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><msub><mi>x</mi><mn>1</mn></msub><mo>+</mo><msub><mi>x</mi><mn>2</mn></msub><mo separator="true">,</mo><msub><mi>x</mi><mn>3</mn></msub><mo separator="true">,</mo><msub><mi>x</mi><mn>3</mn></msub><mo>+</mo><msub><mi>x</mi><mn>4</mn></msub><mo separator="true">,</mo><msub><mi>x</mi><mn>3</mn></msub><mo>+</mo><msub><mi>x</mi><mn>4</mn></msub><mo>+</mo><msub><mi>x</mi><mn>5</mn></msub></mrow><annotation encoding="application/x-tex">x_0,x_0+x_1,x_0+x_1+x_2,x_3,x_3+x_4,x_3+x_4+x_5</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">4</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">4</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">5</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>；第三次累计后重新加载 x3，不继续加到旧和。</li>
+</ul>
+<h3 id="section-13">附加材料：一位存储、锁存器与边沿触发<a class="anchor" href="#section-13" aria-label="链接到本节">#</a></h3>
+<ul>
+<li><strong>双稳态</strong>：反馈电路有两种稳定状态，分别保存 0 和 1；中间平衡点可能不稳定或出现亚稳状态，不能把模拟电压曲线理解成第三种可靠逻辑值。</li>
+<li><strong>课件的 NOR 型 R-S 锁存器</strong>：R=S=0 保持；R=1、S=0 复位 Q=0；R=0、S=1 置位 Q=1；R=S=1 为禁用组合，不应用来表示正常数据。</li>
+<li><strong>D 锁存器</strong>通过互补信号限制 R/S 同时置位。图中 C=1 时透明，输出经过延迟跟随 D；C=0 时保持。它是电平敏感，不是整个高电平期间只采样一次。</li>
+<li><strong>边沿触发存储</strong>仅在上升沿附近短暂采样，之后保持；需要满足采样窗口附近的建立与保持时间。该节解释寄存器如何“记住”，不要求把所有模拟晶体管细节当成 ISA 定义。</li>
+</ul>
+<h2 id="section-14">自测与来源边界<a class="anchor" href="#section-14" aria-label="链接到本节">#</a></h2>
+<ul>
+<li>手工编码一条 2 字节和一条 10 字节指令，并从字节反解 rA/rB 与常数。</li>
+<li>比较 <code>cmovle</code> 和 <code>jle</code>：读同一类条件，但前者选择目的写回，后者选择 PC。</li>
+<li>给出输入时序，分别画组合 OR 的延迟输出、D 锁存器的透明区间和边沿寄存器的保持区间。</li>
+<li>第 12 页把功能码描述为“4 bytes”的英文应读作 <strong>4 bits</strong>；基础 Y86 CC 不包含 CF，不能把第 48 页 ALU 示意中的通用标志标签直接当作 Y86 新增状态。</li>
+</ul>
+<p>原始来源：本地第 9 讲课件 pp.1–64、第 9 讲研讨单 pp.1–2；工具与模型参见 <a href="https://csapp.cs.cmu.edu/3e/sim/README">CS:APP 作者的 Y86-64 模拟器资料</a> 与教材第 4 章。</p>
+<div class="pager"><a href="08-advanced.html">上一章<br>08 · 机器级进阶与内存安全</a><a href="10-sequential.html">下一章<br>10 · SEQ 顺序处理器与 HCL 控制</a></div><footer>理解表示，追踪执行。<span><a href="14-coverage.html">资料来源与覆盖范围</a></span></footer></main><aside aria-label="本页目录"><div class="nav-label">本页内容</div><a href="#section-1">ISA：软件与硬件共同遵守的约定</a><a href="#section-2">寄存器编号与 RNONE</a><a href="#section-3">指令格式、语义与长度</a><a href="#section-4">OPq 与条件功能码</a><a href="#section-5">编码练习：从字段到字节</a><a href="#section-6">栈、调用与程序状态</a><a href="#section-7">Y86 的绝对跳转与 x86 的相对跳转</a><a href="#section-8">从 C 翻译为 Y86：一个可运行的完整例子</a><a href="#section-9">CISC、RISC 与课件中的 MIPS 例子</a><a href="#section-10">数字信号、逻辑门与组合电路</a><a href="#section-11">HCL：声明逻辑关系，不是按行执行的 C</a><a href="#section-12">时序电路：寄存器、寄存器堆与状态机</a><a href="#section-13">附加材料：一位存储、锁存器与边沿触发</a><a href="#section-14">自测与来源边界</a><a href="#main">回到顶部 ↑</a></aside></div><script src="app.js"></script></body></html>

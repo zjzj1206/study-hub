@@ -1,0 +1,28 @@
+.pos 0
+    irmovq stack,%rsp
+    irmovq array,%rdi
+    call len
+    halt
+.align 8
+array:
+    .quad 0x123
+    .quad 0x456
+    .quad 0x789
+    .quad 0
+len:
+    irmovq $1,%r8
+    irmovq $8,%r9
+    xorq %rax,%rax
+    mrmovq 0(%rdi),%rdx
+    andq %rdx,%rdx
+    je done
+loop:
+    addq %r8,%rax
+    addq %r9,%rdi
+    mrmovq 0(%rdi),%rdx
+    andq %rdx,%rdx
+    jne loop
+done:
+    ret
+.pos 0x200
+stack:

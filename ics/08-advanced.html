@@ -1,16 +1,321 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>08 · 机器级进阶与内存安全 · ZJZJ / ICS</title><meta name="description" content="北京大学 ICS 复习手册：课程知识、公式推导、边界情况、小班拓展与往年题导航。"><link rel="stylesheet" href="katex/katex.min.css"><link rel="stylesheet" href="style.css"><link rel="icon" href="favicon.svg" type="image/svg+xml"></head><body><a class="skip" href="#main">跳到正文</a><header><a class="brand" href="index.html">ZJZJ<span> / ICS NOTES</span></a><div class="header-right"><a href="https://blog.zjzj.work/">学习空间</a><a href="all.html">整本阅读</a><button type="button" onclick="window.print()">打印</button><button id="menu" aria-expanded="false" aria-controls="chapters">目录</button></div></header><div class="layout"><nav id="chapters" aria-label="章节目录"><div class="nav-label">2026 · 复习手册</div><a  href="00-guide.html">复习范围与使用说明</a><a  href="01-overview.html">01 · 系统概述与基本模型</a><a  href="02-integers.html">02 · 位、字节与整数</a><a  href="03-floating-point.html">03 · 浮点表示、舍入与运算</a><a  href="04-assembly-basics.html">04 · 机器级编程基础</a><a  href="05-control.html">05 · 条件码、分支、循环与 switch</a><a  href="06-procedures.html">06 · 过程调用、栈与 ABI</a><a  href="07-data.html">07 · 数组、结构体、指针与浮点汇编</a><a aria-current=page href="08-advanced.html">08 · 机器级进阶与内存安全</a><a  href="12-past-papers.html">09 · 往年题导航与勘误</a><a  href="13-seminars.html">10 · 小班拓展、边角知识与作业路线</a><a  href="14-coverage.html">11 · 课件覆盖索引与来源</a><div class="nav-foot">依据本地课件与公开题库<br>更新于 2026.10.03</div></nav><main id="main"><div class="eyebrow">COMPUTER SYSTEMS · PEKING UNIVERSITY</div><h1>08 · 机器级进阶与内存安全</h1>
-<p><strong>补充章：本地尚无第 8 讲课件</strong>。依据课程日程中的 Machine Prog: Advanced、CS:APP §3.9～3.10 和 2025 第一次阶段测验第 23～24 题整理。最终范围、例子和课堂拓展需拿到第 8 讲后核对。</p>
-<h2 id="section-1">union：共享存储而非转换数值<a class="anchor" href="#section-1" aria-label="链接到本节">#</a></h2>
-<p>union 所有成员从相同偏移开始共享存储，总大小至少容纳最大成员，并按最严格成员对齐要求取整。写某个成员会改变其他成员所看到的底层字节。</p>
-<pre><code class="language-c">union U { unsigned char c[8]; unsigned int i[2]; };
-/* 本平台常见 sizeof(U)=8，alignment=4 */
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>08 · 机器级进阶与内存安全 · ZJZJ / ICS</title><meta name="description" content="北京大学 ICS 复习手册：课程知识、公式推导、边界情况、小班拓展与往年题导航。"><link rel="stylesheet" href="katex/katex.min.css"><link rel="stylesheet" href="style.css"><link rel="icon" href="favicon.svg" type="image/svg+xml"></head><body><a class="skip" href="#main">跳到正文</a><header><a class="brand" href="index.html">ZJZJ<span> / ICS NOTES</span></a><div class="header-right"><a href="https://blog.zjzj.work/">学习空间</a><a href="all.html">整本阅读</a><button type="button" onclick="window.print()">打印</button><button id="menu" aria-expanded="false" aria-controls="chapters">目录</button></div></header><div class="layout"><nav id="chapters" aria-label="章节目录"><div class="nav-label">2026 · 复习手册</div><a  href="00-guide.html">复习范围与使用说明</a><a  href="01-overview.html">01 · 系统概述与基本模型</a><a  href="02-integers.html">02 · 位、字节与整数</a><a  href="03-floating-point.html">03 · 浮点表示、舍入与运算</a><a  href="04-assembly-basics.html">04 · 机器级编程基础</a><a  href="05-control.html">05 · 条件码、分支、循环与 switch</a><a  href="06-procedures.html">06 · 过程调用、栈与 ABI</a><a  href="07-data.html">07 · 数组、结构体、指针与浮点汇编</a><a aria-current=page href="08-advanced.html">08 · 机器级进阶与内存安全</a><a  href="09-isa-logic.html">09 · Y86-64 指令集与逻辑设计</a><a  href="10-sequential.html">10 · SEQ 顺序处理器与 HCL 控制</a><a  href="11-quiz01.html">11 · 2026 第一次测验：答案回查与复盘</a><a  href="12-past-papers.html">12 · 往年题导航与勘误</a><a  href="13-seminars.html">13 · 小班拓展、边角知识与作业路线</a><a  href="14-coverage.html">14 · 课件覆盖索引与来源</a><div class="nav-foot">依据本地课件与公开题库<br>更新于 2026.10.19</div></nav><main id="main"><div class="eyebrow">COMPUTER SYSTEMS · PEKING UNIVERSITY</div><h1>08 · 机器级进阶与内存安全</h1>
+<p>来源：2026-10-08 第 8 讲 <code>ICS08-machine-advanced-20261008.pdf</code>，共 53 页；教材 §3.9～3.10；2025 第一次阶段测验第 23～24 题。课件主线为 <strong>union、内存布局、缓冲区溢出及防护</strong>。下文用课件页码定位，并单列此前保留的指针与调试补充。</p>
+<h2 id="section-1">union 的分配与位重解释（pp.3～4）<a class="anchor" href="#section-1" aria-label="链接到本节">#</a></h2>
+<p>union 各成员从相同偏移开始，共享存储；总大小至少容纳最大成员，并按最严格成员对齐要求取整。struct 则依声明顺序为每个成员分配独立空间，中间和末尾可能有填充。</p>
+<pre><code class="language-c">union U1 { char c; int i[2]; double v; };
+struct S1 { char c; int i[2]; double v; };
 </code></pre>
-<p>若 c 依次写 C0 C1 C2 C3 C4 C5 C6 C7：大端下 i[0]=C0C1C2C3，小端下 i[0]=C3C2C1C0。<code>(int)float_value</code> 进行数值转换；以整数解释 float 的原位串通常是完全不同的数。C 与 C++ 对读取非活动 union 成员的语言规则也不同，不能把课上的位重解释练习泛化成跨语言保证。</p>
-<p>需要检查 float 对象的位时，使用等大小的无符号整数和 memcpy 可避免通过不兼容指针别名直接读取的问题。IEEE 格式和端序仍须明确。</p>
-<h2 id="section-2">C 指针的完整概念<a class="anchor" href="#section-2" aria-label="链接到本节">#</a></h2>
+<p>在课件的 int 为 4 字节、double 为 8 字节且按 8 对齐的平台：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>成员偏移</th>
+<th>对齐</th>
+<th>总大小</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>union U1</td>
+<td>c、i、v 全为 0</td>
+<td>8</td>
+<td>8</td>
+</tr>
+<tr>
+<td>struct S1</td>
+<td>c 为 0；i 为 4；v 为 16</td>
+<td>8</td>
+<td>24</td>
+</tr>
+</tbody>
+</table></div>
+<p>struct 中 c 后有 3 字节填充，i[2] 占 8 字节，之后再填充 4 字节才能放 double。union 没有为各成员累加空间；写入一个成员，会改变其他成员覆盖到的底层字节。“一次使用一个字段”是其通常的使用方式，不代表写入后其他字段也保存了各自独立的值。</p>
+<p>课件用含 <code>float f</code> 与 <code>unsigned u</code> 的 union 实现 <code>bit2float</code>、<code>float2bit</code>。核心是 <strong>原位串重解释，不是数值转换</strong>：若 unsigned 的位串为 <code>0x3f800000</code>，在 binary32 下按 float 解释是 1.0；<code>(float)u</code> 则转换整数 1065353216 的数值。反过来，1.0f 的位串为 <code>0x3f800000</code>，而 <code>(unsigned)1.0f</code> 为 1。</p>
+<p>这些例子须明确数据宽度与浮点格式。C 与 C++ 对读取非活动 union 成员的规则不同；需要检查对象位串时，可在大小相等的对象之间使用 <code>memcpy</code>，避免直接通过不兼容类型指针读取。不要将课堂的位重解释练习当成任意语言、任意类型均可用的保证。</p>
+<h2 id="section-2">端序与数据模型（pp.5～10）<a class="anchor" href="#section-2" aria-label="链接到本节">#</a></h2>
+<p>大端把最高有效字节放在最低地址，小端相反。端序决定多字节数值如何解释，<strong>不改变字符数组按地址递增排列的顺序</strong>。课件列举传统 Sun/SPARC 大端、x86 小端和可配置端序的 ARM；具体平台模式须看题目条件，网络字节序采用大端。</p>
+<pre><code class="language-c">union {
+    unsigned char c[8];
+    unsigned short s[4];
+    unsigned int i[2];
+    unsigned long l[1];
+} dw;
+/* 按地址递增写入：f0 f1 f2 f3 f4 f5 f6 f7 */
+</code></pre>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>读取成员</th>
+<th>IA32 小端，long 4 字节</th>
+<th>课件 Sun 大端，long 4 字节</th>
+<th>Linux x86-64 小端，long 8 字节</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>c[0]～c[7]</td>
+<td>f0 f1 f2 f3 f4 f5 f6 f7</td>
+<td>f0 f1 f2 f3 f4 f5 f6 f7</td>
+<td>f0 f1 f2 f3 f4 f5 f6 f7</td>
+</tr>
+<tr>
+<td>s[0]～s[3]</td>
+<td>f1f0、f3f2、f5f4、f7f6</td>
+<td>f0f1、f2f3、f4f5、f6f7</td>
+<td>f1f0、f3f2、f5f4、f7f6</td>
+</tr>
+<tr>
+<td>i[0]、i[1]</td>
+<td>f3f2f1f0、f7f6f5f4</td>
+<td>f0f1f2f3、f4f5f6f7</td>
+<td>f3f2f1f0、f7f6f5f4</td>
+</tr>
+<tr>
+<td>l[0]</td>
+<td>f3f2f1f0</td>
+<td>f0f1f2f3</td>
+<td>f7f6f5f4f3f2f1f0</td>
+</tr>
+</tbody>
+</table></div>
+<p>表中均为十六进制。作答顺序是先确定 <code>sizeof</code>，再圈出成员覆盖的字节，最后按端序组成数值。64 位机器不保证 long 一定为 8 字节，例如 Windows x64 使用另一种数据模型。交换二进制文件时，既要约定端序，也要约定字段宽度与布局。</p>
+<h2 id="section-3">数组、结构体和联合的对照（p.11）<a class="anchor" href="#section-3" aria-label="链接到本节">#</a></h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>空间组织</th>
+<th>必须注意</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数组</td>
+<td>同类型元素连续存储，步长为元素大小</td>
+<td>满足元素对齐；C 不自动检查下标边界</td>
+</tr>
+<tr>
+<td>结构体</td>
+<td>按声明顺序放不同成员</td>
+<td>成员间及末尾填充影响 sizeof 和结构体数组步长</td>
+</tr>
+<tr>
+<td>联合</td>
+<td>成员从同一地址重叠存放</td>
+<td>空间共享，不能同时保存各成员独立的值</td>
+</tr>
+</tbody>
+</table></div>
+<p>数组表达式在许多场景转换为首元素指针，但数组对象不是一个保存地址的指针变量；<code>sizeof 数组</code>、<code>&amp;数组</code> 等场景须另行分析。</p>
+<h2 id="section-4">Linux x86-64 进程内存布局（pp.13～15）<a class="anchor" href="#section-4" aria-label="链接到本节">#</a></h2>
+<p>课件图是<strong>虚拟地址空间示意，不按比例绘制</strong>。从较低地址到较高地址，可看到程序代码、静态数据、传统堆区域、共享库与大块分配映射、栈；并不意味着这些区域之间没有空洞或每次运行地址相同。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>区域</th>
+<th>典型内容</th>
+<th>生命周期与特征</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Text / 代码区</td>
+<td>main、普通函数的机器指令</td>
+<td>一般可读、可执行，不可写</td>
+</tr>
+<tr>
+<td>静态数据区域</td>
+<td>全局变量、static 对象</td>
+<td>随程序存在；未初始化或零初始化对象通常在 BSS，字符串常量通常在只读数据区</td>
+</tr>
+<tr>
+<td>Heap / 堆</td>
+<td>malloc、calloc、new 获取的动态对象</td>
+<td>需按分配接口管理释放；传统堆扩展通常朝高地址</td>
+</tr>
+<tr>
+<td>映射区域</td>
+<td>共享库、大块动态分配</td>
+<td>大块 malloc 可能走映射区域，不保证紧挨小块分配</td>
+</tr>
+<tr>
+<td>Stack / 栈</td>
+<td>返回地址、保存寄存器、需要内存的局部变量</td>
+<td>随调用变化，x86-64 栈通常向低地址增长</td>
+</tr>
+</tbody>
+</table></div>
+<p>课件中的 8 MB 栈限制、约 47 位用户地址范围及 <code>0x400000</code> 一带代码地址都是示例环境条件，不是 C 语言或所有 x86-64 系统的固定保证。地址随机化、PIE、系统配置和分配器策略都会改变实际布局。局部变量也可能被优化进寄存器。</p>
+<p>第 14 页例子中：全局 <code>big_array[1L&lt;&lt;24]</code> 为 16 MiB，<code>huge_array[1L&lt;&lt;31]</code> 为 2 GiB，均属于静态存储；<code>global</code> 也是全局对象。<code>main</code> 内的 <code>local</code> 与局部指针变量通常在栈上，但 <strong>指针变量的位置不等于它所指向内存的位置</strong>。两次 256 B malloc 在示例中落入普通堆，两次 256 MiB / 4 GiB malloc 落入较高地址映射区域，函数地址位于代码区。分配尺寸是请求量，不保证分配成功，使用前须检查返回值。</p>
+<h2 id="section-5">递归耗尽栈空间（p.16）<a class="anchor" href="#section-5" aria-label="链接到本节">#</a></h2>
+<p>每层递归若有 <code>int a[1&lt;&lt;15]</code>，在 int 为 4 字节时，仅数组就占 128 KiB。8 MiB / 128 KiB = 64，只是忽略其他开销的粗略估算；实际还有返回地址、保存状态、对齐、已有调用栈等，不能据此保证可递归 64 层。</p>
+<p>课件地址每层相差 <code>0x20010</code>，即 128 KiB 加 16 字节，最终访问栈界限之外触发段错误。<code>return recurse(x-1)-1</code> 在递归返回后还需减 1，不能当成普通尾调用直接认定会消除栈帧。<strong>栈空间耗尽</strong>与<strong>写越某个栈数组边界</strong>是两种问题，虽然都可能表现为崩溃。</p>
+<h2 id="section-6">越界不一定立即崩溃（pp.18～20）<a class="anchor" href="#section-6" aria-label="链接到本节">#</a></h2>
+<p>课件结构体含 <code>int a[2]</code> 和 <code>double d</code>，先令 d=3.14，再执行 <code>a[i]=1073741824</code>。在该布局下，a[0]、a[1] 合法；偏移 8 和 12 字节的位置正好覆盖 d 的两个 32 位部分。1073741824 的位串是 <code>0x40000000</code>，写到 d 的一半会改变浮点解释。</p>
+<p>例中 i=2、3 得到约 3.1399998665、2.0000006104；更远越界可能损坏金丝雀、返回地址或其他状态。第 18、19 页展示的更远下标结果并不相同，正是为了说明 <strong>结果依具体系统与编译布局而变</strong>。这些访问在 C 中已经越界，属于未定义行为，不能把某个输出背成语言规定；<code>volatile</code> 也不提供边界保护。</p>
+<p>错误可能先破坏数据，到函数返回或后续调用时才暴露；也可能暂时看不出影响。“输出正常”“没有段错误”都不能证明访问合法。</p>
+<h2 id="section-7">字符串输入为什么容易越界（pp.21～22、41）<a class="anchor" href="#section-7" aria-label="链接到本节">#</a></h2>
+<p>课件中的 gets 示例循环读取到换行或 EOF，依次写字符，最后追加 <code>\0</code>，但没有容量参数，因此不能保证不越界。把数组加大只能推迟问题。历史 gets 已不应在实际代码中使用。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>操作</th>
+<th>问题或正确使用条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>gets(buf)</td>
+<td>无法传入容量；不要使用</td>
+</tr>
+<tr>
+<td>strcpy、strcat</td>
+<td>需自行确保目标足以容纳全部内容及结尾 NUL；strcat 还要计入已有字符串</td>
+</tr>
+<tr>
+<td>不带字段宽度的 scanf %s</td>
+<td>输入长度不受目标数组容量约束</td>
+</tr>
+<tr>
+<td>fgets(buf, sizeof buf, stdin)</td>
+<td>对于有效且容量足够的数组，至多存容量减 1 个输入字符，再加 NUL；需检查返回值、换行和截断</td>
+</tr>
+<tr>
+<td>scanf 的 %ns</td>
+<td>n 为最大输入字符数；目标至少 n+1 字节，如 buf[4] 对应 %3s</td>
+</tr>
+<tr>
+<td>strncpy(dst, src, n)</td>
+<td>源长度不小于 n 时可能不写结尾 NUL；短源会补零，不能简单视为“自动安全版 strcpy”</td>
+</tr>
+</tbody>
+</table></div>
+<p>关于 <code>strncpy</code> 的终止符与补零行为，可对照 <a href="https://www.gnu.org/software/c-intro-and-ref/manual/html_node/Strings.html">GNU C 手册</a>。</p>
+<p><code>sizeof buf</code> 只有在这里的 buf 确实是数组时才能代表整个容量；函数形参 <code>char *buf</code> 或退化后的数组参数，其 sizeof 是指针大小。<code>fgets</code> 遇到换行会保留它，<code>puts</code> 又追加换行；读取失败时不能盲目把未初始化缓冲区当字符串打印。</p>
+<h2 id="section-8">从汇编推导越界位置（pp.23～27）<a class="anchor" href="#section-8" aria-label="链接到本节">#</a></h2>
+<p>课件未保护版本为 <code>char buf[4]</code>，但函数入口执行 <code>sub $0x18,%rsp</code>，共留出 24 字节；随后 <code>mov %rsp,%rdi</code> 把缓冲区起点作为 gets 的参数。以减栈后的地址 S 为基准：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>相对 S 的字节偏移</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0～3</td>
+<td>buf[4]</td>
+</tr>
+<tr>
+<td>4～23</td>
+<td>本例中未使用的 20 字节</td>
+</tr>
+<tr>
+<td>24～31</td>
+<td>echo 的 8 字节返回地址</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>call echo</code> 位于 <code>0x4006f1</code>，下一条指令地址为 <code>0x4006f6</code>，所以压入的返回地址是后者。小端内存从低地址到高地址为 <code>f6 06 40 00 00 00 00 00</code>。执行尾声 <code>add $0x18,%rsp</code> 恢复栈指针，<code>ret</code> 再读取返回地址并弹栈。</p>
+<ul>
+<li>输入 23 个普通字符时，NUL 写在偏移 23：已经远超 buf[4] 的合法范围，但课件这次没有破坏返回地址，因此还能正常返回。</li>
+<li>输入 24 个普通字符时，NUL 写在偏移 24：返回地址最低字节 f6 被改为 00，变成 <code>0x400600</code>，示例随后崩溃。</li>
+<li>buf[4] 最多容纳 3 个普通字符加 NUL；不能把本例“23 字符未崩溃”当成安全长度。</li>
+</ul>
+<p>通用做法是从汇编求缓冲区基址、栈分配量和保存区偏移，再按字节数推导；不能固定背“数组长度加 8 就到返回地址”。栈向低地址增长，但从数组起点向递增下标写入，地址向高处移动，两者不矛盾。</p>
+<h2 id="section-9">控制流破坏与代码注入（pp.28～34）<a class="anchor" href="#section-9" aria-label="链接到本节">#</a></h2>
+<p>正常情况下，Q 返回到调用者 P 中 call 后的指令。若越界写改掉 Q 的保存返回地址，ret 就会把被改后的值送入指令指针。课件先演示转到已有的 smash 函数，再展示返回到缓冲区内机器指令的代码注入。</p>
+<p>分析课堂输入布局时，将其拆为“到保存返回地址之前的填充”和“按端序编码的目标地址”。课件使用十六进制转换工具把可打印十六进制表示转换为实际字节，因为地址可能包含 NUL 等不可打印字节；文本字符“40”不等于一个数值为 0x40 的字节。第 29～30 页与第 31 页的目标地址来自不同示例构建，不能混用。具体偏移与目标都须以当前反汇编为准。</p>
+<p>代码注入要求控制流确实到达放入数据区的指令，且相应内存可执行。输入成功写入字节，不代表这些字节一定能执行。这里复习的是课内程序的控制流和防护原理。</p>
+<h2 id="section-10">历史案例与术语（pp.34～39）<a class="anchor" href="#section-10" aria-label="链接到本节">#</a></h2>
+<p>课件列举 1988 年 Internet worm：fingerd 的不受限输入是其利用的漏洞之一，说明单机的内存错误可能成为网络传播的入口。另一组案例是 1999 年 MSN/AIM 互通争议：课件描述 AOL 利用自身客户端的越界漏洞取得特征值来区分客户端，双方反复调整；第 38 页邮件作为历史材料展示，并注明后来被发现来自微软内部。Wii Twilight hack 也被列为案例，但课件未展开细节。</p>
+<p>按课件定义，worm（蠕虫）能独立运行并传播自己的完整副本；virus（病毒）把代码附着到其他程序，依赖宿主运行。两者都可能传播和造成破坏，但传播方式不是同一个概念。课件关于漏洞“排名第一”的表述用于强调严重性，不应当作当前年度安全统计。</p>
+<h2 id="section-11">三层防护与各自限制（pp.40～47）<a class="anchor" href="#section-11" aria-label="链接到本节">#</a></h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>机制</th>
+<th>主要作用</th>
+<th>限制与前提</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>源码层边界检查、正确限制输入长度</td>
+<td>避免发生越界写</td>
+<td>需正确计算容量与终止符，处理输入失败和截断</td>
+</tr>
+<tr>
+<td>ASLR / 栈地址随机化</td>
+<td>让目标地址更难预测；不同运行栈地址不同</td>
+<td>不修复越界，不能保证所有代码地址都随机</td>
+</tr>
+<tr>
+<td>NX / XD / DEP</td>
+<td>通过内存执行权限阻止把数据区内容当代码执行</td>
+<td>需硬件与 OS 支持；不阻止覆盖数据或复用已有代码</td>
+</tr>
+<tr>
+<td>栈金丝雀（canary）</td>
+<td>函数退出前发现哨兵被改变，调用失败处理</td>
+<td>依赖编译插桩与布局；不阻止所有越界，也不是写入发生时立刻拦截</td>
+</tr>
+<tr>
+<td>PIE（相关补充）</td>
+<td>让主程序可被随机装载</td>
+<td>与 ASLR 配合；不能认定所有程序默认具有此属性</td>
+</tr>
+</tbody>
+</table></div>
+<p>第 42 页通过栈偏移随机化说明 ASLR 思想。第 43 页对比传统 x86 权限与支持不可执行数据页的环境。2025 试题据此区分：安全输入通常要改源码并重编译；栈随机化通常不需重编译普通用户程序；金丝雀通常需重编译但不必改源码；NX 依赖 CPU 支持。已有支持的机器不需为了启用 NX 再“换 CPU”。</p>
+<h3 id="section-12">金丝雀汇编逐步读（pp.44～47）<a class="anchor" href="#section-12" aria-label="链接到本节">#</a></h3>
+<p>课件介绍 <code>-fstack-protector</code>；是否默认启用、保护哪些函数取决于工具链和构建选项。第 45 页的关键流程为：</p>
+<pre><code class="language-asm">sub $0x18, %rsp
+mov %fs:0x28, %rax
+mov %rax, 0x8(%rsp)    # 保存参考金丝雀的副本
+xor %eax, %eax        # 清除寄存器副本，不是清除栈中金丝雀
+# 输入与输出操作
+mov 0x8(%rsp), %rax
+xor %fs:0x28, %rax    # 相同则结果为 0，ZF=1
+je normal_return
+call __stack_chk_fail
+# normal_return: 恢复 rsp 并 ret
+</code></pre>
+<p><code>0x28</code> 是十进制 40，所以 <code>%fs:0x28</code> 与 <code>%fs:40</code> 表示同一偏移；FS 段基址参与寻址，<strong>不是访问普通绝对地址 0x28</strong>。在该 Linux ABI 实现中，它用于取得线程相关区域的参考金丝雀。单凭 FS 寻址语法不能推出该区域一定只读，课件的旁注不应推广成 x86 指令规则。</p>
+<p>本例栈中 buf 位于 0～3，4～7 是填充，金丝雀位于 8～15，16～23 是剩余空间，返回地址位于 24～31。7 个普通字符加 NUL 写到偏移 7，虽已越界但尚未碰金丝雀；8 个字符的 NUL 到达偏移 8。课件展示后者报错，但<strong>接触不等于必然改变值</strong>：若覆盖字节恰与原字节相同，比较可能仍通过。例如 glibc 的初始化实现会清除金丝雀的一个字节，参见 <a href="https://sourceware.org/legacy-ml/libc-alpha/2012-03/msg00321.html">glibc 官方源码补丁记录</a>。判断检测是否触发，要看保存值是否真的发生变化，不能只看输入长度。金丝雀检查也不会让前面已经发生的未定义行为变合法。</p>
+<h2 id="section-13">ROP：复用已有指令（pp.48～53）<a class="anchor" href="#section-13" aria-label="链接到本节">#</a></h2>
+<p>ROP（Return-Oriented Programming）将已有可执行代码中的短片段 gadget 串起来。课件的片段以 ret 结尾，普通近返回 ret 编码是 <code>0xc3</code>。执行 ret 时，从当前栈顶读出下一地址作为 RIP，同时 RSP 增加 8；如果片段还有 pop 等指令，也会额外消耗栈槽。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>课件片段</th>
+<th>从该入口解码的指令</th>
+<th>效果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>第 49 页函数尾部，0x4004d4</td>
+<td><code>lea (%rdi,%rdx,1),%rax</code>；<code>ret</code></td>
+<td>rax ← rdi + rdx；跳过原函数前面的乘法</td>
+</tr>
+<tr>
+<td>第 50 页指令中间，0x4004dc</td>
+<td><code>movq %rax,%rdi</code>；<code>ret</code></td>
+<td>rdi ← rax</td>
+</tr>
+</tbody>
+</table></div>
+<p>第二个例子说明 x86 指令变长：同一串字节从不同起点解码可得到不同指令，gadget 不一定从原函数入口或原反汇编的指令边界开始。第 52 页按顺序组合两段后实现 rdi ← 原 rdi + 原 rdx。</p>
+<p>执行顺序要画出来：echo 的 ret 取第一个地址，第一段末尾 ret 取第二个地址，第二段末尾 ret 继续取后继地址。课件第 53 页的 “Goes off somewhere” 表示只给两段并不保证后续能正常返回；不是执行到第二段就自动结束。覆盖的地址槽依次向高地址排列。</p>
+<p>ROP 使用已经可执行的代码，因此不可执行栈本身无法阻止它；不执行栈上数据，也减少了对缓冲区具体地址的依赖。但它需要能改变控制流并知道可用代码地址，<strong>不自动绕过金丝雀或代码地址随机化</strong>。课件“代码位置固定”的假设适用于其示例，启用 PIE 和 ASLR 后不能照搬。</p>
+<h2 id="section-14">相关补充：指针、调试与对象寿命<a class="anchor" href="#section-14" aria-label="链接到本节">#</a></h2>
+<p>以下保留此前与教材对应的基础补充，不把它们算作新课件另有专页讲解的内容。</p>
+<h3 id="section-15">C 指针的完整概念<a class="anchor" href="#section-15" aria-label="链接到本节">#</a></h3>
 <p>指针类型决定解引用宽度和指针算术步长；强转类型不会移动对象，也不会自动创建目标对象。<code>void*</code> 可持有对象指针，但标准 C 不定义 void 的大小，因此 void* 算术不是可移植的标准写法；GCC 的相关扩展不能当成语言一般规则。</p>
 <p>函数指针指向可调用函数，类型还包含参数和返回类型。数组可以存函数指针；函数不能按普通对象数组直接存储。空指针、未初始化指针、悬空指针、越界指针是不同情况；只检查非空不足以保证可访问。</p>
-<h2 id="section-3">调试与反汇编<a class="anchor" href="#section-3" aria-label="链接到本节">#</a></h2>
+<h3 id="section-16">调试与反汇编<a class="anchor" href="#section-16" aria-label="链接到本节">#</a></h3>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -50,51 +355,18 @@
 </tbody>
 </table></div>
 <p>常见 x 显示宽度 b/h/w/g 是 1/2/4/8 字节；与 C 的 sizeof(long) 没有自动对应关系。打印地址时区分“地址值”和“该地址处的内容”。优化会让变量消失、合并或移到寄存器，调试器显示不出变量不一定是编译错误。</p>
-<h2 id="section-4">内存错误分类<a class="anchor" href="#section-4" aria-label="链接到本节">#</a></h2>
+<h3 id="section-17">内存错误与动态栈<a class="anchor" href="#section-17" aria-label="链接到本节">#</a></h3>
 <p>数组越界、错误的指针步长、未初始化读取、对象寿命结束后访问、释放后使用、重复释放、格式化字符串错误、错误分配大小都会导致问题。内存泄漏是已分配对象不再能被正常释放，和悬空指针不同；前者未必立即崩溃，后者可能指向已经无效的对象。</p>
-<p>从给定汇编研究栈上 char buf 的边界时，先画出 buf、填充、保存寄存器、返回地址的位置。布局依编译器、优化和保护选项变化，不能固定背“数组长度加 8 就到返回地址”。写入字符串还要计入结尾 NUL。</p>
-<h2 id="section-5">缓冲区越界与防护<a class="anchor" href="#section-5" aria-label="链接到本节">#</a></h2>
-<div class="table-scroll"><table>
-<thead>
-<tr>
-<th>机制</th>
-<th>主要作用</th>
-<th>限制</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>边界检查与正确长度的输入函数</td>
-<td>阻止越界写本身</td>
-<td>需要正确传入容量并处理截断/结尾</td>
-</tr>
-<tr>
-<td>ASLR</td>
-<td>让栈、堆、映射或代码位置更难预测</td>
-<td>是地址随机化，不修复越界</td>
-</tr>
-<tr>
-<td>NX / XD / DEP</td>
-<td>把数据页设置为不可执行</td>
-<td>依赖硬件页权限与 OS 配合，不阻止所有代码复用</td>
-</tr>
-<tr>
-<td>栈金丝雀</td>
-<td>在返回前检查哨兵是否变化</td>
-<td>需编译插桩，覆盖范围和检查时机有限</td>
-</tr>
-<tr>
-<td>PIE</td>
-<td>使可执行文件代码可被随机布置</td>
-<td>与 ASLR 配合，不能等同于所有程序自动随机化</td>
-</tr>
-</tbody>
-</table></div>
-<p>2025 试题把使用安全输入函数视为需改源码、需重编译；栈地址随机化通常无需重编译普通用户程序；金丝雀通常需重编译、不必改源码；执行权限位依赖 CPU 支持。试卷的“是否需要换 CPU”是在比较机制的硬件前提，现代已经支持 NX 的机器不需要为了启用它再换硬件。</p>
-<p><code>fgets(buf,sizeof buf,stdin)</code> 可限制读取量，但仍需要处理保留换行、EOF、截断和缓冲区剩余输入。“使用某个函数”不自动证明整个程序安全。</p>
-<h2 id="section-6">动态栈与特殊控制<a class="anchor" href="#section-6" aria-label="链接到本节">#</a></h2>
-<p>变长局部数组根据运行时 n 分配空间，通常按对齐向上取整后减少 rsp，可能需要保存稳定帧基址。退出作用域或函数时恢复栈指针。局部数组不因返回其指针而延长寿命。</p>
-<p>关于代码注入与代码复用，只需从体系结构角度理解：越界可能改变控制数据；不可执行栈限制执行数据；代码复用使用已有可执行指令，所以与 NX 解决的问题不同。实验中仍需按课程规则独立完成，不把现成攻击字符串当复习目标。</p>
-<h2 id="section-7">自检<a class="anchor" href="#section-7" aria-label="链接到本节">#</a></h2>
-<p>能计算 union 的大小与字节覆盖；能说明位重解释与强转不同；能分析一段栈图中的对象寿命和边界；能比较 ASLR、NX、金丝雀和边界检查各解决什么问题。第 8 讲课件到齐后，应优先用覆盖索引补差。</p>
-<div class="pager"><a href="07-data.html">上一章<br>07 · 数组、结构体、指针与浮点汇编</a><a href="12-past-papers.html">下一章<br>09 · 往年题导航与勘误</a></div><footer>理解表示，追踪执行。<span><a href="14-coverage.html">资料来源与覆盖范围</a></span></footer></main><aside aria-label="本页目录"><div class="nav-label">本页内容</div><a href="#section-1">union：共享存储而非转换数值</a><a href="#section-2">C 指针的完整概念</a><a href="#section-3">调试与反汇编</a><a href="#section-4">内存错误分类</a><a href="#section-5">缓冲区越界与防护</a><a href="#section-6">动态栈与特殊控制</a><a href="#section-7">自检</a><a href="#main">回到顶部 ↑</a></aside></div><script src="app.js"></script></body></html>
+<p>变长局部数组按运行时长度分配空间，通常按对齐向上取整后减少 rsp，并可能保存稳定帧基址；退出时恢复栈指针。返回局部数组指针不会延长它的寿命。</p>
+<h2 id="section-18">自检与易错点<a class="anchor" href="#section-18" aria-label="链接到本节">#</a></h2>
+<ol>
+<li>为什么课件 union 为 8 字节、对应 struct 为 24 字节？分别画出成员和填充。</li>
+<li>f0～f7 的字节序列按 short、int、long 读取分别得到什么？先注明数据模型和端序。</li>
+<li>局部指针、大块 malloc 对象、全局数组、函数各在什么区域？哪些地址可能变化？</li>
+<li>为什么每层 128 KiB、上限 8 MiB 不能保证递归 64 层？栈耗尽和数组越界有什么不同？</li>
+<li>为什么 4 字节数组输入 23 字符未崩溃仍是错误？第 24 个字符后的 NUL 改了返回地址哪一个字节？</li>
+<li>金丝雀位于 8(%rsp) 时，7、8 个字符分别写到哪里？“碰到金丝雀”是否必然使检查失败？</li>
+<li>源码边界检查、ASLR、NX、金丝雀各保护什么？为什么 NX 不能单独挡住 ROP？</li>
+<li>逐条跟踪课件两个 gadget 的寄存器变化和每次 ret 的 RSP；最后一次 ret 后为何不能保证正常结束？</li>
+</ol>
+<div class="pager"><a href="07-data.html">上一章<br>07 · 数组、结构体、指针与浮点汇编</a><a href="09-isa-logic.html">下一章<br>09 · Y86-64 指令集与逻辑设计</a></div><footer>理解表示，追踪执行。<span><a href="14-coverage.html">资料来源与覆盖范围</a></span></footer></main><aside aria-label="本页目录"><div class="nav-label">本页内容</div><a href="#section-1">union 的分配与位重解释（pp.3～4）</a><a href="#section-2">端序与数据模型（pp.5～10）</a><a href="#section-3">数组、结构体和联合的对照（p.11）</a><a href="#section-4">Linux x86-64 进程内存布局（pp.13～15）</a><a href="#section-5">递归耗尽栈空间（p.16）</a><a href="#section-6">越界不一定立即崩溃（pp.18～20）</a><a href="#section-7">字符串输入为什么容易越界（pp.21～22、41）</a><a href="#section-8">从汇编推导越界位置（pp.23～27）</a><a href="#section-9">控制流破坏与代码注入（pp.28～34）</a><a href="#section-10">历史案例与术语（pp.34～39）</a><a href="#section-11">三层防护与各自限制（pp.40～47）</a><a href="#section-12">金丝雀汇编逐步读（pp.44～47）</a><a href="#section-13">ROP：复用已有指令（pp.48～53）</a><a href="#section-14">相关补充：指针、调试与对象寿命</a><a href="#section-15">C 指针的完整概念</a><a href="#section-16">调试与反汇编</a><a href="#section-17">内存错误与动态栈</a><a href="#section-18">自检与易错点</a><a href="#main">回到顶部 ↑</a></aside></div><script src="app.js"></script></body></html>

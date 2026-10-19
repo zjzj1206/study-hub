@@ -1,7 +1,7 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>复习范围与使用说明 · ZJZJ / ICS</title><meta name="description" content="北京大学 ICS 复习手册：课程知识、公式推导、边界情况、小班拓展与往年题导航。"><link rel="stylesheet" href="katex/katex.min.css"><link rel="stylesheet" href="style.css"><link rel="icon" href="favicon.svg" type="image/svg+xml"></head><body><a class="skip" href="#main">跳到正文</a><header><a class="brand" href="index.html">ZJZJ<span> / ICS NOTES</span></a><div class="header-right"><a href="https://blog.zjzj.work/">学习空间</a><a href="all.html">整本阅读</a><button type="button" onclick="window.print()">打印</button><button id="menu" aria-expanded="false" aria-controls="chapters">目录</button></div></header><div class="layout"><nav id="chapters" aria-label="章节目录"><div class="nav-label">2026 · 复习手册</div><a aria-current=page href="00-guide.html">复习范围与使用说明</a><a  href="01-overview.html">01 · 系统概述与基本模型</a><a  href="02-integers.html">02 · 位、字节与整数</a><a  href="03-floating-point.html">03 · 浮点表示、舍入与运算</a><a  href="04-assembly-basics.html">04 · 机器级编程基础</a><a  href="05-control.html">05 · 条件码、分支、循环与 switch</a><a  href="06-procedures.html">06 · 过程调用、栈与 ABI</a><a  href="07-data.html">07 · 数组、结构体、指针与浮点汇编</a><a  href="08-advanced.html">08 · 机器级进阶与内存安全</a><a  href="12-past-papers.html">09 · 往年题导航与勘误</a><a  href="13-seminars.html">10 · 小班拓展、边角知识与作业路线</a><a  href="14-coverage.html">11 · 课件覆盖索引与来源</a><div class="nav-foot">依据本地课件与公开题库<br>更新于 2026.10.03</div></nav><main id="main"><div class="eyebrow">COMPUTER SYSTEMS · PEKING UNIVERSITY</div><h1>复习范围与使用说明</h1>
-<p>这份手册以 <strong>2026 年北京大学 ICS 本地课件和小班研讨题</strong>为主线，补充 CS:APP 第 3 版与公开往年题。既整理常考方法，也保留术语、历史背景、特殊边界和研讨拓展。默认平台是 <strong>x86-64、Linux、System V AMD64 ABI、AT&amp;T 汇编</strong>；其他平台会明确说明。</p>
-<h2 id="section-1">先确认：这次考什么<a class="anchor" href="#section-1" aria-label="链接到本节">#</a></h2>
-<p>本地 <code>ICS01-overview-20260907.pdf</code> <strong>第 9 页</strong>安排：2026-10-12 第一次阶段测验，范围为 <strong>第 1～8 课</strong>。同页注明教学安排可能调整，最终以教师通知为准。现有文件只到第 7 讲；第 8 讲“Machine Prog: Advanced”暂用教材第 3 章相关部分及 2025 第一次阶段测验补齐，尚不能声称覆盖未提供的课件全部细节。</p>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>复习范围与使用说明 · ZJZJ / ICS</title><meta name="description" content="北京大学 ICS 复习手册：课程知识、公式推导、边界情况、小班拓展与往年题导航。"><link rel="stylesheet" href="katex/katex.min.css"><link rel="stylesheet" href="style.css"><link rel="icon" href="favicon.svg" type="image/svg+xml"></head><body><a class="skip" href="#main">跳到正文</a><header><a class="brand" href="index.html">ZJZJ<span> / ICS NOTES</span></a><div class="header-right"><a href="https://blog.zjzj.work/">学习空间</a><a href="all.html">整本阅读</a><button type="button" onclick="window.print()">打印</button><button id="menu" aria-expanded="false" aria-controls="chapters">目录</button></div></header><div class="layout"><nav id="chapters" aria-label="章节目录"><div class="nav-label">2026 · 复习手册</div><a aria-current=page href="00-guide.html">复习范围与使用说明</a><a  href="01-overview.html">01 · 系统概述与基本模型</a><a  href="02-integers.html">02 · 位、字节与整数</a><a  href="03-floating-point.html">03 · 浮点表示、舍入与运算</a><a  href="04-assembly-basics.html">04 · 机器级编程基础</a><a  href="05-control.html">05 · 条件码、分支、循环与 switch</a><a  href="06-procedures.html">06 · 过程调用、栈与 ABI</a><a  href="07-data.html">07 · 数组、结构体、指针与浮点汇编</a><a  href="08-advanced.html">08 · 机器级进阶与内存安全</a><a  href="09-isa-logic.html">09 · Y86-64 指令集与逻辑设计</a><a  href="10-sequential.html">10 · SEQ 顺序处理器与 HCL 控制</a><a  href="11-quiz01.html">11 · 2026 第一次测验：答案回查与复盘</a><a  href="12-past-papers.html">12 · 往年题导航与勘误</a><a  href="13-seminars.html">13 · 小班拓展、边角知识与作业路线</a><a  href="14-coverage.html">14 · 课件覆盖索引与来源</a><div class="nav-foot">依据本地课件与公开题库<br>更新于 2026.10.19</div></nav><main id="main"><div class="eyebrow">COMPUTER SYSTEMS · PEKING UNIVERSITY</div><h1>复习范围与使用说明</h1>
+<p>本手册以 <strong>2026 年北京大学 ICS 本地课件和小班研讨题</strong>为主线，补充 CS:APP 第 3 版与公开往年题。按定义、操作、边界、例子与题目回查整理，不只保留常考口诀。机器级程序默认 <strong>x86-64、Linux、System V AMD64 ABI、AT&amp;T 汇编</strong>；第 09、10 章改用明确规定的 Y86-64 教学模型。</p>
+<h2 id="section-1">资料已经更新到哪里<a class="anchor" href="#section-1" aria-label="链接到本节">#</a></h2>
+<p>更新日期：<strong>2026-10-19</strong>。本地课件第 1～10 讲已齐；第 8 讲使用 2026-10-08 版 53 页，第 9 讲为 2026-10-15 版 64 页，第 10 讲为 2026-10-19 版 51 页。</p>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -12,44 +12,72 @@
 </thead>
 <tbody>
 <tr>
-<td>01～08 主线</td>
-<td>概述、整数、浮点、汇编基础、控制、过程、数据、机器级进阶</td>
-<td>01～07 有本地课件；08 是补充</td>
+<td><a href="01-overview.html">01～08 主线</a></td>
+<td>概述、整数、浮点、汇编基础、控制、过程、数据与机器级进阶</td>
+<td>第 1～8 讲本地课件</td>
 </tr>
 <tr>
-<td>09 真题与勘误</td>
-<td>2025 阶段卷逐题导航、范围内例题与答案辨析</td>
-<td>仅保留第 1～8 讲相关题型</td>
+<td><a href="09-isa-logic.html">09 ISA 与逻辑</a></td>
+<td>Y86 状态、完整编码与语义、逻辑门、HCL、寄存器、锁存器</td>
+<td>第 9 讲全部 64 页及研讨单</td>
 </tr>
 <tr>
-<td>10 小班与边角知识</td>
-<td>研讨拓展、教材作业题号、易遗漏概念</td>
-<td>覆盖现有第 2～7 讲研讨主题</td>
+<td><a href="10-sequential.html">10 SEQ</a></td>
+<td>六阶段、逐指令操作、控制器、时序与 iaddq 扩展</td>
+<td>第 10 讲全部 51 页及研讨单</td>
 </tr>
 <tr>
-<td>11 覆盖索引</td>
-<td>课件逐页主题清单、来源、核对边界</td>
-<td>用于查漏，不等于每页逐字复刻</td>
+<td><a href="11-quiz01.html">11 第一次测验</a></td>
+<td>2026 第一次测验逐题答案回查、推导与资料缺口</td>
+<td>v2.0 纯答案版 5 页，无完整题干</td>
+</tr>
+<tr>
+<td><a href="12-past-papers.html">12 往年题</a></td>
+<td>2025 阶段卷导航、早期题型与勘误</td>
+<td>历史题的机器、年份和范围另核对</td>
+</tr>
+<tr>
+<td><a href="13-seminars.html">13 小班研讨</a></td>
+<td>第 2～7、9～10 讲的研讨主题和作业题号</td>
+<td>8 份研讨单；第 9、10 讲逐小问对应</td>
+</tr>
+<tr>
+<td><a href="14-coverage.html">14 覆盖索引</a></td>
+<td>课件逐页主题与正文入口、来源和核对边界</td>
+<td>10 份课件及本次新增资料</td>
 </tr>
 </tbody>
 </table></div>
-<p><strong>完整性的边界</strong>：本手册不是只列“重点”的速记表，但也不复制课件、教材或试卷全文。每种知识类型配有解释与代表例子，原题中的每个不同数值、课堂口头补充和未提供的第 8 讲资料不可能凭空补齐。历史试卷范围随年份变化，例如 2012 期中还出现链接内容，不应据此扩大 2026 第一次阶段测验范围。</p>
-<h2 id="section-2">读题前的四项约定<a class="anchor" href="#section-2" aria-label="链接到本节">#</a></h2>
-<ol>
-<li><strong>先写位宽与类型。</strong><code>int</code> 和 <code>long</code>、无符号和有符号、C 表达式和机器指令的规则不同。</li>
-<li><strong>先区分值、位模式与字节顺序</strong>。数值转换改变表示；按位重解释保留位串；大小端只规定多字节对象的字节排列。</li>
-<li><strong>机器级模型与 C 标准分开</strong>。补码加法器会截断，但 C 有符号溢出不是可移植的“自动回绕”；负有符号数右移在本课程环境按算术右移分析。</li>
-<li><strong>先读题设再套模板</strong>。浮点格式、字长、端序和调用约定可能被题目修改，分析时以题设为准。</li>
-</ol>
-<h2 id="section-3">建议的复习顺序<a class="anchor" href="#section-3" aria-label="链接到本节">#</a></h2>
-<p>第一遍依次读 02～08，遇到公式手工算一个例子；第二遍做 2025 第一次阶段测验，按第 09 章回查弱项；第三遍用第 10、11 章查遗漏。资料范围限定在第 1～8 讲及对应小班内容。</p>
-<p>掌握的标准不是“看着懂”：应当能在不看答案的情况下，写出浮点编码推导、跟踪每条汇编的数据流、画出一次调用的栈变化，并说明所有类型与边界假设。</p>
-<h2 id="section-4">来源与版本<a class="anchor" href="#section-4" aria-label="链接到本节">#</a></h2>
-<p>整理日期：2026-10-01。课程 PDF 保留在项目的 <code>ICS/</code> 目录；公开参考资料保留在本地 <code>research/</code>，<strong>发布目录只包含原创整理和来源链接，不包含扫描教材、课件原件和试卷副本</strong>。</p>
+<h2 id="section-2">第一次测验范围与后续新课<a class="anchor" href="#section-2" aria-label="链接到本节">#</a></h2>
+<ul>
+<li>第 1 讲课件日程安排 2026-10-12 第一次阶段测验，范围为第 1～8 讲；本地收到的 2026 测验答案版按第 2～8 讲分组，总分 100。</li>
+<li>第 9、10 讲为测验之后的新授内容；本手册扩展到这些已提供的新课，不把它们追溯列为第一次测验考点。</li>
+<li>处理器正文只覆盖当前第 9 讲 ISA/逻辑和第 10 讲 SEQ；后续流水线、程序优化、缓存等内容待新课件提供后再整理。</li>
+<li>本次测验仅有答案及部分解析。缺失题干、选项、栈图或指令序列的小问保持为回查记录，不据答案虚构完整题目。</li>
+</ul>
+<h2 id="section-3">读题与复习约定<a class="anchor" href="#section-3" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>先写位宽与类型</strong>：C 的 int/long、signed/unsigned、机器位模式和数学整数遵守不同规则。</li>
+<li><strong>区分值、位模式与字节顺序</strong>：数值转换、按位重解释、大小端三者不能互换。</li>
+<li><strong>区分 C 标准与机器运算</strong>：硬件截断不代表 C 有符号溢出具有可移植回绕结果；负 signed 右移按课程环境分析。</li>
+<li><strong>区分 x86 与 Y86</strong>：Y86 的跳转是绝对目标、基础 OPq 无立即数、条件码没有 CF；按具体 ISA 跟踪执行。</li>
+<li><strong>区分组合传播与状态更新</strong>：SEQ 六阶段在一个周期内形成候选结果，正常指令到时钟沿更新状态。</li>
+<li><strong>原题优先</strong>：字长、端序、自定义浮点、错误处理及调用约定以题设为准；源码与题库的勘误单独说明。</li>
+</ul>
+<h2 id="section-4">建议学习路线<a class="anchor" href="#section-4" aria-label="链接到本节">#</a></h2>
+<ul>
+<li>复盘第一次测验：读 02～08，按第 11 章题号回查，再用第 12 章历史例题做变式。</li>
+<li>学习新课：先读 09 的状态、语义与编码，再读逻辑和 HCL；完成 10 的操作表后，用控制信号反查每条数据路径。</li>
+<li>做小班：用第 13 章逐小问核对自己是否给出规则、编码、信号流或时序；第 09 章提供可在命令行汇编和模拟的 Y86 例子。</li>
+<li>最后查漏：用第 14 章页码回到原课件；覆盖索引是查找入口，不等于每页逐字复刻。</li>
+</ul>
+<h2 id="section-5">来源与发布边界<a class="anchor" href="#section-5" aria-label="链接到本节">#</a></h2>
+<p>课程 PDF 保留在本地 <code>ICS/</code>。发布目录包含原创整理、示例程序与来源链接；不附完整扫描教材、课件原件或试卷副本。没有收到的课堂口头补充和缺失题目无法凭空恢复。</p>
 <ul>
 <li><a href="https://github.com/zhuozhiyongde/Introduction-to-Computer-System-2023Fall-PKU">指定参考仓库</a></li>
-<li><a href="https://csapp.cs.cmu.edu/3e/errata.html">CS:APP 作者维护的勘误</a></li>
+<li><a href="https://csapp.cs.cmu.edu/3e/errata.html">CS:APP 官方勘误</a></li>
+<li><a href="https://csapp.cs.cmu.edu/3e/sim/README">CS:APP 模拟器资料</a></li>
 <li><a href="https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html">Intel 指令与体系结构手册</a></li>
 </ul>
-<p>本地课件页码均指 PDF 的物理页序；教材题号以用户提供的中文版第 3 版、小班作业单为准。</p>
-<div class="pager"><span></span><a href="01-overview.html">下一章<br>01 · 系统概述与基本模型</a></div><footer>理解表示，追踪执行。<span><a href="14-coverage.html">资料来源与覆盖范围</a></span></footer></main><aside aria-label="本页目录"><div class="nav-label">本页内容</div><a href="#section-1">先确认：这次考什么</a><a href="#section-2">读题前的四项约定</a><a href="#section-3">建议的复习顺序</a><a href="#section-4">来源与版本</a><a href="#main">回到顶部 ↑</a></aside></div><script src="app.js"></script></body></html>
+<p>本地课件页码均指 PDF 的物理页序；教材题号按用户提供的中文第 3 版及小班作业单。网站正式入口为 https://blog.zjzj.work/ics/。</p>
+<div class="pager"><span></span><a href="01-overview.html">下一章<br>01 · 系统概述与基本模型</a></div><footer>理解表示，追踪执行。<span><a href="14-coverage.html">资料来源与覆盖范围</a></span></footer></main><aside aria-label="本页目录"><div class="nav-label">本页内容</div><a href="#section-1">资料已经更新到哪里</a><a href="#section-2">第一次测验范围与后续新课</a><a href="#section-3">读题与复习约定</a><a href="#section-4">建议学习路线</a><a href="#section-5">来源与发布边界</a><a href="#main">回到顶部 ↑</a></aside></div><script src="app.js"></script></body></html>

@@ -1,0 +1,384 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>10 · SEQ 顺序处理器与 HCL 控制 · ZJZJ / ICS</title><meta name="description" content="北京大学 ICS 复习手册：课程知识、公式推导、边界情况、小班拓展与往年题导航。"><link rel="stylesheet" href="katex/katex.min.css"><link rel="stylesheet" href="style.css"><link rel="icon" href="favicon.svg" type="image/svg+xml"></head><body><a class="skip" href="#main">跳到正文</a><header><a class="brand" href="index.html">ZJZJ<span> / ICS NOTES</span></a><div class="header-right"><a href="https://blog.zjzj.work/">学习空间</a><a href="all.html">整本阅读</a><button type="button" onclick="window.print()">打印</button><button id="menu" aria-expanded="false" aria-controls="chapters">目录</button></div></header><div class="layout"><nav id="chapters" aria-label="章节目录"><div class="nav-label">2026 · 复习手册</div><a  href="00-guide.html">复习范围与使用说明</a><a  href="01-overview.html">01 · 系统概述与基本模型</a><a  href="02-integers.html">02 · 位、字节与整数</a><a  href="03-floating-point.html">03 · 浮点表示、舍入与运算</a><a  href="04-assembly-basics.html">04 · 机器级编程基础</a><a  href="05-control.html">05 · 条件码、分支、循环与 switch</a><a  href="06-procedures.html">06 · 过程调用、栈与 ABI</a><a  href="07-data.html">07 · 数组、结构体、指针与浮点汇编</a><a  href="08-advanced.html">08 · 机器级进阶与内存安全</a><a  href="09-isa-logic.html">09 · Y86-64 指令集与逻辑设计</a><a aria-current=page href="10-sequential.html">10 · SEQ 顺序处理器与 HCL 控制</a><a  href="11-quiz01.html">11 · 2026 第一次测验：答案回查与复盘</a><a  href="12-past-papers.html">12 · 往年题导航与勘误</a><a  href="13-seminars.html">13 · 小班拓展、边角知识与作业路线</a><a  href="14-coverage.html">14 · 课件覆盖索引与来源</a><div class="nav-foot">依据本地课件与公开题库<br>更新于 2026.10.19</div></nav><main id="main"><div class="eyebrow">COMPUTER SYSTEMS · PEKING UNIVERSITY</div><h1>10 · SEQ 顺序处理器与 HCL 控制</h1>
+<p>依据第 10 讲 2026-10-19 课件全部 51 页及对应研讨单。<a href="09-isa-logic.html">第 09 章</a>规定 Y86 的行为，本章把每类指令拆成相同的六个逻辑阶段，再汇总成控制信号。<strong>SEQ 一条指令占一个长周期，六阶段不是六个时钟周期，也不是六级流水线。</strong></p>
+<h2 id="section-1">从机器状态到六个阶段<a class="anchor" href="#section-1" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>Fetch 取指</strong>：用 PC 读指令字节，得到 <code>icode/ifun</code>、可选 <code>rA/rB</code>、可选常数 valC，同时形成顺序后继 valP。</li>
+<li><strong>Decode 译码/读寄存器</strong>：控制 srcA/srcB 选择需要的寄存器，读出 valA/valB。</li>
+<li><strong>Execute 执行</strong>：选择 ALU 两个输入与运算，产生 valE；需要时计算条件 Cnd 和候选 CC。</li>
+<li><strong>Memory 访存</strong>：选择地址、读/写使能及写数据；读结果记为 valM。</li>
+<li><strong>Write back 写回</strong>：将 valE 写到 dstE、valM 写到 dstM；RNONE 表示该端口不写寄存器。</li>
+<li><strong>PC update 更新 PC</strong>：在 valP、valC、valM 中选择下一 PC。</li>
+</ul>
+<h3 id="section-2">信号不是同义词<a class="anchor" href="#section-2" aria-label="链接到本节">#</a></h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>信号</th>
+<th>含义</th>
+<th>易混点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rA/rB</code></td>
+<td>指令编码中的寄存器编号</td>
+<td>并非每条指令都直接读两者</td>
+</tr>
+<tr>
+<td><code>srcA/srcB</code></td>
+<td>本周期实际读端口的寄存器编号</td>
+<td>pop/ret 都需读 rsp</td>
+</tr>
+<tr>
+<td><code>valA/valB</code></td>
+<td>读端口输出的数据字</td>
+<td>与寄存器编号不同</td>
+</tr>
+<tr>
+<td><code>valC</code></td>
+<td>立即数、位移或目标地址</td>
+<td>具体含义由指令决定</td>
+</tr>
+<tr>
+<td><code>valP</code></td>
+<td>PC 加指令长度</td>
+<td>call 压入的返回地址</td>
+</tr>
+<tr>
+<td><code>valE</code></td>
+<td>ALU 输出</td>
+<td>可能是算术结果，也可能是有效地址或新 rsp</td>
+</tr>
+<tr>
+<td><code>valM</code></td>
+<td>数据内存读出的字</td>
+<td>load 的值、pop 的值或 ret 的返回地址</td>
+</tr>
+<tr>
+<td><code>dstE/dstM</code></td>
+<td>两个写回端口的目的编号</td>
+<td>与写回数据配对理解</td>
+</tr>
+<tr>
+<td><code>Cnd</code></td>
+<td><code>Cond(CC,ifun)</code> 的结果</td>
+<td>cmov 控制写回；jXX 控制下一 PC</td>
+</tr>
+<tr>
+<td><code>Stat</code></td>
+<td>正常、停止或错误状态</td>
+<td>不同于只描述算术结果的 CC</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>ALU 按 <code>valB OP valA</code> 组织。减法是 B−A，调换两侧会改变结果。</li>
+<li>数据通路中的“箭头”表示组合信号传播；架构状态在时钟沿才统一提交正常指令的结果。</li>
+<li>以下步骤表假设指令与地址有效；故障状态需走后面的状态控制。</li>
+</ul>
+<h2 id="section-3">每类指令的六阶段操作<a class="anchor" href="#section-3" aria-label="链接到本节">#</a></h2>
+<p>共同取指规则：首字节分成 <code>icode:ifun</code>；需要寄存器字节时从 PC+1 读取；常数字段从 PC+1 或 PC+2 开始读取。记 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi><mo>=</mo><mi>R</mi><mo stretchy="false">[</mo><mi mathvariant="normal">%</mi><mi>r</mi><mi>s</mi><mi>p</mi><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">s=R[\%rsp]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal">s</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="mopen">[</span><span class="mord">%</span><span class="mord mathnormal" style="margin-right:0.0278em;">r</span><span class="mord mathnormal">s</span><span class="mord mathnormal">p</span><span class="mclose">]</span></span></span></span></span> 为该指令执行前的栈指针。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>类别</th>
+<th>读寄存器</th>
+<th>执行</th>
+<th>访存</th>
+<th>写回</th>
+<th>下一 PC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>halt/nop</code></td>
+<td>无</td>
+<td>无有效 ALU 结果</td>
+<td>无</td>
+<td>无</td>
+<td>实现仍可形成 valP；halt 后不再执行下一条</td>
+</tr>
+<tr>
+<td><code>rrmovq/cmovXX</code></td>
+<td>valA=R[rA]</td>
+<td>valE=0+valA；计算 Cnd</td>
+<td>无</td>
+<td>条件真：R[rB]=valE；否则不写</td>
+<td>valP=PC+2</td>
+</tr>
+<tr>
+<td><code>irmovq</code></td>
+<td>无</td>
+<td>valE=0+valC</td>
+<td>无</td>
+<td>R[rB]=valE</td>
+<td>valP=PC+10</td>
+</tr>
+<tr>
+<td><code>rmmovq</code></td>
+<td>valA=R[rA]；valB=R[rB]</td>
+<td>valE=valB+valC</td>
+<td>M8[valE]=valA</td>
+<td>无</td>
+<td>valP=PC+10</td>
+</tr>
+<tr>
+<td><code>mrmovq</code></td>
+<td>valB=R[rB]</td>
+<td>valE=valB+valC</td>
+<td>valM=M8[valE]</td>
+<td>R[rA]=valM</td>
+<td>valP=PC+10</td>
+</tr>
+<tr>
+<td><code>OPq</code></td>
+<td>valA=R[rA]；valB=R[rB]</td>
+<td>valE=valB OP valA；更新 CC</td>
+<td>无</td>
+<td>R[rB]=valE</td>
+<td>valP=PC+2</td>
+</tr>
+<tr>
+<td><code>jXX</code></td>
+<td>无</td>
+<td>Cnd=Cond(CC,ifun)</td>
+<td>无</td>
+<td>无</td>
+<td>Cnd ? valC : valP；valP=PC+9</td>
+</tr>
+<tr>
+<td><code>pushq</code></td>
+<td>valA=R[rA]；valB=s</td>
+<td>valE=valB−8</td>
+<td>M8[valE]=valA</td>
+<td>R[rsp]=valE</td>
+<td>valP=PC+2</td>
+</tr>
+<tr>
+<td><code>popq</code></td>
+<td>valA=s；valB=s</td>
+<td>valE=valB+8</td>
+<td>valM=M8[valA]</td>
+<td>R[rsp]=valE；R[rA]=valM</td>
+<td>valP=PC+2</td>
+</tr>
+<tr>
+<td><code>call</code></td>
+<td>valB=s</td>
+<td>valE=valB−8</td>
+<td>M8[valE]=valP</td>
+<td>R[rsp]=valE</td>
+<td>valC；valP=PC+9</td>
+</tr>
+<tr>
+<td><code>ret</code></td>
+<td>valA=s；valB=s</td>
+<td>valE=valB+8</td>
+<td>valM=M8[valA]</td>
+<td>R[rsp]=valE</td>
+<td>valM；valP=PC+1</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li><code>rmmovq</code> 的 valA 是待写数据，valB 是基址；不能把两者都送去 ALU 相加而忘掉位移。</li>
+<li><code>mrmovq</code> 的目的写在 M 端口，ALU 的 valE 是地址，不是要写入目的寄存器的数据。</li>
+<li><code>pushq/call</code> 先形成新栈顶地址 valE，向它写；<code>popq/ret</code> 从旧栈顶 valA 读。新旧地址是两套信号，不能用统一“栈地址”代替。</li>
+<li><code>popq</code> 需要两个写回。若 <code>rA=rsp</code>，M 端口写入的弹出值优先于 E 端口的递增值，最终栈指针等于弹出的字。</li>
+<li><code>cmovXX</code> 即使条件假也可计算 valE，只把 dstE 置为 RNONE；<code>jXX</code> 不写寄存器，只选择新 PC。两者都使用此前 CC，而非本指令 ALU 的新结果。</li>
+<li><code>call</code> 与 push 共用 rsp−8，但写数据分别为 valP 和 valA；<code>ret</code> 与 pop 共用从旧栈顶读，但读出值分别流向 PC 和寄存器。</li>
+</ul>
+<h3 id="section-4">数值追踪：pop、call、ret<a class="anchor" href="#section-4" aria-label="链接到本节">#</a></h3>
+<ul>
+<li><strong>pop</strong>：设 <code>%rsp=0x200</code>，<code>M8[0x200]=0x1234</code>。<code>popq %rax</code> 读得 valA=valB=0x200，valE=0x208，valM=0x1234，写回 <code>%rsp=0x208,%rax=0x1234</code>。</li>
+<li><strong>pop rsp</strong>：同样初值执行 <code>popq %rsp</code>，最终 <code>%rsp=0x1234</code>；不能写成 0x208。</li>
+<li><strong>call</strong>：地址 <code>0x100</code> 的 <code>call 0x300</code>，原 <code>%rsp=0x200</code>，有 valP=0x109、valE=0x1f8，故 <code>M8[0x1f8]=0x109</code>、新 <code>%rsp=0x1f8</code>、新 PC=0x300。</li>
+<li><strong>ret</strong>：被调过程保持该返回栈布局时，ret 读出 0x109，恢复 <code>%rsp=0x200</code>，转回 0x109。返回地址是完整 call 后继，不是 call 首地址加 1。</li>
+</ul>
+<h2 id="section-5">Fetch：字段位置、长度和有效性<a class="anchor" href="#section-5" aria-label="链接到本节">#</a></h2>
+<pre><code class="language-text">int icode = [ imem_error : INOP; 1 : imem_icode; ];
+int ifun  = [ imem_error : FNONE; 1 : imem_ifun; ];
+bool need_regids = icode in {
+    IRRMOVQ, IIRMOVQ, IRMMOVQ, IMRMOVQ, IOPQ, IPUSHQ, IPOPQ
+};
+bool need_valC = icode in { IIRMOVQ, IRMMOVQ, IMRMOVQ, IJXX, ICALL };
+bool instr_valid = icode in {
+    IHALT, INOP, IRRMOVQ, IIRMOVQ, IRMMOVQ, IMRMOVQ,
+    IOPQ, IJXX, ICALL, IRET, IPUSHQ, IPOPQ
+};
+</code></pre>
+<ul>
+<li><code>need_regids</code> 控制是否解释 PC+1 为寄存器编号，不能总读它为 rA/rB；jmp 的 PC+1 已是目标地址第一个字节。</li>
+<li><code>need_valC</code> 控制是否取 8 字节常数。若两者都真，valC 从 PC+2 开始；只需常数时从 PC+1 开始。</li>
+<li>顺序后继为</li>
+</ul>
+<div class="math block">
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>v</mi><mi>a</mi><mi>l</mi><mi>P</mi><mo>=</mo><mi>P</mi><mi>C</mi><mo>+</mo><mn>1</mn><mo>+</mo><msub><mn mathvariant="bold">1</mn><mrow><mi>n</mi><mi>e</mi><mi>e</mi><mi>d</mi><mi mathvariant="normal">_</mi><mi>r</mi><mi>e</mi><mi>g</mi><mi>i</mi><mi>d</mi><mi>s</mi></mrow></msub><mo>+</mo><msub><mn mathvariant="bold">81</mn><mrow><mi>n</mi><mi>e</mi><mi>e</mi><mi>d</mi><mi mathvariant="normal">_</mi><mi>v</mi><mi>a</mi><mi>l</mi><mi>C</mi></mrow></msub><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">valP=PC+1+\mathbf1_{need\_regids}+8\mathbf1_{need\_valC}.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.0359em;">v</span><span class="mord mathnormal">a</span><span class="mord mathnormal" style="margin-right:0.0197em;">l</span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="mord mathnormal" style="margin-right:0.0715em;">C</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1.0114em;vertical-align:-0.367em;"></span><span class="mord"><span class="mord mathbf">1</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mord mathnormal mtight">ee</span><span class="mord mathnormal mtight">d</span><span class="mord mtight" style="margin-right:0.0278em;">_</span><span class="mord mathnormal mtight" style="margin-right:0.0278em;">r</span><span class="mord mathnormal mtight">e</span><span class="mord mathnormal mtight" style="margin-right:0.0359em;">g</span><span class="mord mathnormal mtight">i</span><span class="mord mathnormal mtight">d</span><span class="mord mathnormal mtight">s</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.367em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1.0114em;vertical-align:-0.367em;"></span><span class="mord">8</span><span class="mord"><span class="mord mathbf">1</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mord mathnormal mtight">ee</span><span class="mord mathnormal mtight">d</span><span class="mord mtight" style="margin-right:0.0278em;">_</span><span class="mord mathnormal mtight" style="margin-right:0.0359em;">v</span><span class="mord mathnormal mtight">a</span><span class="mord mathnormal mtight" style="margin-right:0.0197em;">l</span><span class="mord mathnormal mtight" style="margin-right:0.0715em;">C</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.367em;"><span></span></span></span></span></span></span><span class="mord">.</span></span></span></span></span>
+</div>
+<ul>
+<li>取指地址错误时输出 nop 型编码，是让下游组合逻辑获得确定输入；Stat 仍报告 ADR，不能因此认为出错指令成功变成可继续执行的 nop。</li>
+<li>这里 <code>instr_valid</code> 是课件给出的<strong>icode 类别检查</strong>，不等于完整验证每种 ifun、寄存器字段与编码组合；模拟器/扩展实现应按实际 ISA 再作检查。</li>
+</ul>
+<h2 id="section-6">Decode / Write back：四个寄存器选择器<a class="anchor" href="#section-6" aria-label="链接到本节">#</a></h2>
+<pre><code class="language-text">int srcA = [
+    icode in { IRRMOVQ, IRMMOVQ, IOPQ, IPUSHQ } : rA;
+    icode in { IPOPQ, IRET } : RRSP;
+    1 : RNONE;
+];
+int srcB = [
+    icode in { IOPQ, IRMMOVQ, IMRMOVQ } : rB;
+    icode in { IPUSHQ, IPOPQ, ICALL, IRET } : RRSP;
+    1 : RNONE;
+];
+int dstE = [
+    icode == IRRMOVQ &amp;&amp; Cnd : rB;
+    icode in { IIRMOVQ, IOPQ } : rB;
+    icode in { IPUSHQ, IPOPQ, ICALL, IRET } : RRSP;
+    1 : RNONE;
+];
+int dstM = [
+    icode in { IMRMOVQ, IPOPQ } : rA;
+    1 : RNONE;
+];
+</code></pre>
+<ul>
+<li>选择 srcA 是因为需要“被存数据/运算 A/旧栈顶”，选择 srcB 是因为需要“运算 B/基址/旧 rsp”。按数据用途推导，而非死记集合。</li>
+<li><code>call</code> 的写内存数据来自 valP，因此不需要为它读 srcA。</li>
+<li><code>mrmovq</code> 只写 dstM；<code>popq</code> 同时写 dstE 和 dstM；<code>rmmovq/jXX</code> 均不写寄存器。</li>
+<li><code>IRRMOVQ</code> 包括条件传送，其 dstE 由 Cnd 使能。RNONE 是抑制端口的编号，不是“向某个假寄存器写零”。</li>
+</ul>
+<h2 id="section-7">Execute：ALU 的两个输入、功能和 CC<a class="anchor" href="#section-7" aria-label="链接到本节">#</a></h2>
+<pre><code class="language-text">int aluA = [
+    icode in { IRRMOVQ, IOPQ } : valA;
+    icode in { IIRMOVQ, IRMMOVQ, IMRMOVQ } : valC;
+    icode in { ICALL, IPUSHQ } : -8;
+    icode in { IRET, IPOPQ } : 8;
+    1 : 0;
+];
+int aluB = [
+    icode in { IRMMOVQ, IMRMOVQ, IOPQ, ICALL, IPUSHQ, IRET, IPOPQ } : valB;
+    icode in { IRRMOVQ, IIRMOVQ } : 0;
+    1 : 0;
+];
+int alufun = [ icode == IOPQ : ifun; 1 : ALUADD; ];
+bool set_cc = icode == IOPQ;
+</code></pre>
+<ul>
+<li>数据传送也可能使用 ALU：<code>rrmovq</code> 是 0+valA，<code>irmovq</code> 是 0+valC，load/store 是基址+位移。</li>
+<li>栈操作用 ALU 加 ±8，但 <strong>set_cc 为假</strong>，因此不会破坏调用前的算术标志。</li>
+<li><code>alufun=ifun</code> 仅对 OPq 成立；其他需要 ALU 的指令统一使用加法，不能把 cmov 的条件功能码当成 ALU 运算码。</li>
+<li>上面是课件的正常执行控制。停止或地址错误下，是否提交各状态还需要执行状态/使能控制；不能把这个 set_cc 片段单独当作完整异常处理方案。</li>
+</ul>
+<h2 id="section-8">Memory：地址、数据与读写使能<a class="anchor" href="#section-8" aria-label="链接到本节">#</a></h2>
+<pre><code class="language-text">int mem_addr = [
+    icode in { IRMMOVQ, IMRMOVQ, IPUSHQ, ICALL } : valE;
+    icode in { IPOPQ, IRET } : valA;
+    1 : 0;
+];
+int mem_data = [
+    icode in { IRMMOVQ, IPUSHQ } : valA;
+    icode == ICALL : valP;
+    1 : 0;
+];
+bool mem_read  = icode in { IMRMOVQ, IPOPQ, IRET };
+bool mem_write = icode in { IRMMOVQ, IPUSHQ, ICALL };
+</code></pre>
+<ul>
+<li><code>mem_addr</code> 有值不等于发生访问；必须同时查看读/写使能。默认地址 0 在使能为假时不代表读写了地址 0。</li>
+<li>valM 由数据内存的读端提供；只有 load/pop/ret 使用其结果。</li>
+<li>call 的写数据必须是 valP；若错接 valC，就把被调函数地址而非返回地址压栈，ret 将跳错。</li>
+<li>每次正常指令最多进行一次本节所指的数据内存读或写；取指内存访问另算。</li>
+</ul>
+<h2 id="section-9">状态与 PC 更新的优先选择<a class="anchor" href="#section-9" aria-label="链接到本节">#</a></h2>
+<pre><code class="language-text">int Stat = [
+    imem_error || dmem_error : SADR;
+    !instr_valid : SINS;
+    icode == IHALT : SHLT;
+    1 : SAOK;
+];
+int new_pc = [
+    icode == ICALL : valC;
+    icode == IJXX &amp;&amp; Cnd : valC;
+    icode == IRET : valM;
+    1 : valP;
+];
+</code></pre>
+<ul>
+<li>状态 case 按第一条真条件取值：地址错优先于非法指令，非法指令优先于 halt，均无异常时为 AOK。</li>
+<li>call 总选择 valC；条件跳转只有条件真才选择 valC；ret 选择 valM；普通指令和未跳转的 JXX 选择 valP。</li>
+<li>条件不满足的 cmov 仍取 valP，并且不修改目的寄存器和 CC。</li>
+</ul>
+<h2 id="section-10">一周期内什么变化，时钟沿上什么变化<a class="anchor" href="#section-10" aria-label="链接到本节">#</a></h2>
+<ul>
+<li>周期开始时，PC、寄存器堆、CC、数据内存提供旧状态。</li>
+<li>取指、读寄存器、ALU、条件判断、内存读与各选择器在周期内传播，候选写回值和新 PC 逐渐稳定。</li>
+<li>正常指令在约定的上升沿更新状态；新状态出现后，组合网络开始为下一条指令传播。不能因为图上画了“Write back”，就额外给它安排一拍。</li>
+<li>对 <code>rmmovq</code>，更新的是数据内存而不是程序寄存器；对 OPq，寄存器与 CC 更新；对 jXX，主要更新 PC。</li>
+</ul>
+<h3 id="section-11">课件 pp.47–50 的执行轨迹<a class="anchor" href="#section-11" aria-label="链接到本节">#</a></h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>周期</th>
+<th>当前 PC</th>
+<th>指令</th>
+<th>周期结束后的主要结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>0x000</td>
+<td><code>irmovq $0x100,%rbx</code></td>
+<td>rbx=0x100，PC=0x00a</td>
+</tr>
+<tr>
+<td>2</td>
+<td>0x00a</td>
+<td><code>irmovq $0x200,%rdx</code></td>
+<td>rdx=0x200，PC=0x014</td>
+</tr>
+<tr>
+<td>3</td>
+<td>0x014</td>
+<td><code>addq %rdx,%rbx</code></td>
+<td>rbx=0x300；ZF=SF=OF=0；PC=0x016</td>
+</tr>
+<tr>
+<td>4</td>
+<td>0x016</td>
+<td><code>je dest</code></td>
+<td>ZF=0，不跳，PC=0x01f</td>
+</tr>
+<tr>
+<td>5</td>
+<td>0x01f</td>
+<td><code>rmmovq %rbx,0(%rdx)</code></td>
+<td>M8[0x200]=0x300，PC=0x029</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>第 3 周期的计算先使用旧 rbx=0x100；它变成 0x300 后，下一条指令才看到新结果。</li>
+<li>je 必须读取 addq 设置的 ZF。它自身不能把“用于形成地址的 ALU 结果”写成新的标志。</li>
+</ul>
+<h2 id="section-12">作业 4.51：扩展 iaddq 的完整改动清单<a class="anchor" href="#section-12" aria-label="链接到本节">#</a></h2>
+<p>设扩展采用 <code>icode=C, ifun=0</code>、<code>FrB</code> 与 8 字节立即数字段，<code>iaddq V,rB</code> 语义为 <code>R[rB] ← R[rB]+V</code>，并更新 CC。这是作业扩展，基础 Y86 指令表未包含它。</p>
+<ul>
+<li><strong>取指</strong>：将该扩展的指令常量名记为 <code>IIADDQ</code>；将它加入 instr_valid、need_regids、need_valC，长度为 10。</li>
+<li><strong>译码</strong>：srcA=RNONE、srcB=rB；不能为立即数去读一个寄存器。</li>
+<li><strong>执行</strong>：aluA=valC、aluB=valB、alufun=ALUADD；把 <code>IIADDQ</code> 加入 set_cc 的条件。</li>
+<li><strong>写回</strong>：dstE=rB、dstM=RNONE。</li>
+<li><strong>访存</strong>：不加入 mem_read 或 mem_write；不因它有常数字段就误当作数据内存访问。</li>
+<li><strong>PC</strong>：普通顺序路径选择 valP，不需增加分支项。</li>
+<li><strong>测试</strong>：正数、负立即数、零结果、有符号溢出以及 <code>rB=rsp</code> 都应核对；每种测试分别看结果、标志和 PC。</li>
+</ul>
+<h2 id="section-13">性能边界与课件勘误<a class="anchor" href="#section-13" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>时钟周期下界</strong>：必须覆盖本设计最慢的组合路径及建立/时钟开销。典型长路径涉及取指、寄存器读、ALU、数据内存读与写回选择，不能只按一次加法延迟定频率。</li>
+<li>SEQ 的优点是每条指令使用统一阶段，控制逻辑容易由操作表推导；缺点是所有指令都等待最坏路径，各单元在一个长周期内只有部分时间有用。</li>
+<li>后续流水线可改善吞吐率，但本章不把流水线、缓存或程序优化的旧资料自动并入当前课程范围。</li>
+<li>第 16 页的 popq 编码末半字节应按 ISA 为 F；第 33 页的立即数传送未用寄存器位也应为 F，A0 那一行应是 pushq。第 39 页残留 <code>OPl/rmmovl</code> 字样按本课 64 位模型读为 <code>OPq/rmmovq</code>。</li>
+</ul>
+<p>来源：本地第 10 讲课件 pp.1–51、第 10 讲小班研讨单；HCL 常量名与六阶段约定以教材第 4 章的 SEQ 模型为准。</p>
+<div class="pager"><a href="09-isa-logic.html">上一章<br>09 · Y86-64 指令集与逻辑设计</a><a href="11-quiz01.html">下一章<br>11 · 2026 第一次测验：答案回查与复盘</a></div><footer>理解表示，追踪执行。<span><a href="14-coverage.html">资料来源与覆盖范围</a></span></footer></main><aside aria-label="本页目录"><div class="nav-label">本页内容</div><a href="#section-1">从机器状态到六个阶段</a><a href="#section-2">信号不是同义词</a><a href="#section-3">每类指令的六阶段操作</a><a href="#section-4">数值追踪：pop、call、ret</a><a href="#section-5">Fetch：字段位置、长度和有效性</a><a href="#section-6">Decode / Write back：四个寄存器选择器</a><a href="#section-7">Execute：ALU 的两个输入、功能和 CC</a><a href="#section-8">Memory：地址、数据与读写使能</a><a href="#section-9">状态与 PC 更新的优先选择</a><a href="#section-10">一周期内什么变化，时钟沿上什么变化</a><a href="#section-11">课件 pp.47–50 的执行轨迹</a><a href="#section-12">作业 4.51：扩展 iaddq 的完整改动清单</a><a href="#section-13">性能边界与课件勘误</a><a href="#main">回到顶部 ↑</a></aside></div><script src="app.js"></script></body></html>
