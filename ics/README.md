@@ -18,6 +18,7 @@ npm ci
 python3 build.py
 python3 checks/verify.py
 python3 checks/verify_math.py
+python3 checks/verify_code.py
 python3 -m http.server 8765 --directory dist
 ```
 
@@ -42,3 +43,7 @@ $$
 支持分式、上下标、求和、矩阵、aligned 对齐和 cases 分段式。数学中的竖线请用 `\lvert`、`\rvert` 或 `\mid`，避免干扰 Markdown 表格。C 和汇编继续放在反引号或代码块里，立即数 `$8` 不会作为公式解析。
 
 构建需要 Python 依赖和 Node.js；KaTeX 版本由 package-lock.json 固定。公式在构建时生成 HTML + MathML，CSS 和字体随网站托管，不依赖第三方 CDN 或浏览器 JavaScript。非法公式会中止构建，避免错误公式上线。长公式与宽表格可横向滚动。
+
+## 代码高亮
+
+C、AT&T/x86/Y86 汇编与 HCL 代码在构建时由本地 Pygments 高亮，无需浏览器加载第三方脚本。代码围栏分别使用 c、asm、hcl；text 保持纯文本。verify_code.py 检查高亮后文字与源码逐字一致，并校验源码压缩包包含高亮模块与依赖。

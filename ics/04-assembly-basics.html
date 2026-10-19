@@ -165,21 +165,21 @@
 <p><code>inc</code> 与 <code>add $1</code> 的数据结果相同，但只有前者保留 CF。<code>cmp S,D</code> 对应比较 D 与 S，不要把减法方向反过来。</p>
 <p><code>neg</code> 算 <code>0-D</code>，<code>not</code> 算逐位取反。例如 8 位 5=<code>00000101</code>：neg 得 <code>11111011</code>（−5），not 得 <code>11111010</code>（−6）。neg 原操作数非零时 CF=1；最小负数取负位模式不变且 OF=1。not 不修改标志。</p>
 <h3 id="section-8">二／三操作数乘法与判零<a class="anchor" href="#section-8" aria-label="链接到本节">#</a></h3>
-<pre><code class="language-asm">imulq %rbx,%rax       # 旧 rax * rbx，保留低 64 位
-imulq $7,%rbx,%rax    # 7 * rbx，保留低 64 位；不用旧 rax
+<pre><code class="language-asm"><span class="tok-nf">imulq</span><span class="tok-w"> </span><span class="tok-nv">%rbx</span><span class="tok-p">,</span><span class="tok-nv">%rax</span><span class="tok-w">       </span><span class="tok-c1"># 旧 rax * rbx，保留低 64 位</span>
+<span class="tok-nf">imulq</span><span class="tok-w"> </span><span class="tok-no">$7</span><span class="tok-p">,</span><span class="tok-nv">%rbx</span><span class="tok-p">,</span><span class="tok-nv">%rax</span><span class="tok-w">    </span><span class="tok-c1"># 7 * rbx，保留低 64 位；不用旧 rax</span>
 </code></pre>
 <p>完整有符号乘积能由目标宽度表示时 CF=OF=0，否则为 1。不能简单按“高半部非零”判断：负积的高位可能只是正常符号扩展。ZF/SF/PF 等在 imul 后未定义，不能直接用 <code>je</code> 判断结果为零；应显式更新标志：</p>
-<pre><code class="language-asm">imulq %rbx,%rax
-testq %rax,%rax
-je zero              # 判断保留下来的低 64 位是否为零
+<pre><code class="language-asm"><span class="tok-nf">imulq</span><span class="tok-w"> </span><span class="tok-nv">%rbx</span><span class="tok-p">,</span><span class="tok-nv">%rax</span>
+<span class="tok-nf">testq</span><span class="tok-w"> </span><span class="tok-nv">%rax</span><span class="tok-p">,</span><span class="tok-nv">%rax</span>
+<span class="tok-nf">je</span><span class="tok-w"> </span><span class="tok-no">zero</span><span class="tok-w">              </span><span class="tok-c1"># 判断保留下来的低 64 位是否为零</span>
 </code></pre>
 <p>这不是判断无限精度乘积是否为零。单操作数 imul 的完整积规则见下一节。</p>
 <h3 id="section-9">位运算与不写回的 test<a class="anchor" href="#section-9" aria-label="链接到本节">#</a></h3>
-<pre><code class="language-asm">andq $15,%rax        # 保留低 4 位
-orq  $1,%rax         # 最低位置 1
-xorq $1,%rax         # 最低位翻转
-xorq %rax,%rax       # 清零；ZF=1、SF=0、PF=1、CF=OF=0
-testq %rax,%rax      # 按 rax &amp; rax 更新标志，rax 不变
+<pre><code class="language-asm"><span class="tok-nf">andq</span><span class="tok-w"> </span><span class="tok-no">$15</span><span class="tok-p">,</span><span class="tok-nv">%rax</span><span class="tok-w">        </span><span class="tok-c1"># 保留低 4 位</span>
+<span class="tok-nf">orq</span><span class="tok-w">  </span><span class="tok-no">$1</span><span class="tok-p">,</span><span class="tok-nv">%rax</span><span class="tok-w">         </span><span class="tok-c1"># 最低位置 1</span>
+<span class="tok-nf">xorq</span><span class="tok-w"> </span><span class="tok-no">$1</span><span class="tok-p">,</span><span class="tok-nv">%rax</span><span class="tok-w">         </span><span class="tok-c1"># 最低位翻转</span>
+<span class="tok-nf">xorq</span><span class="tok-w"> </span><span class="tok-nv">%rax</span><span class="tok-p">,</span><span class="tok-nv">%rax</span><span class="tok-w">       </span><span class="tok-c1"># 清零；ZF=1、SF=0、PF=1、CF=OF=0</span>
+<span class="tok-nf">testq</span><span class="tok-w"> </span><span class="tok-nv">%rax</span><span class="tok-p">,</span><span class="tok-nv">%rax</span><span class="tok-w">      </span><span class="tok-c1"># 按 rax &amp; rax 更新标志，rax 不变</span>
 </code></pre>
 <p>AND 两位都为 1 才为 1；OR 至少一位为 1 即为 1；XOR 两位不同才为 1。test 与 and 的关系类似 cmp 与 sub：计算标志但不写回。上述逻辑指令的 AF 未定义，不要把“更新标志”理解成每个标志都有可用值。</p>
 <h3 id="section-10">移位计数、右移舍入与标志<a class="anchor" href="#section-10" aria-label="链接到本节">#</a></h3>
@@ -238,17 +238,17 @@ testq %rax,%rax      # 按 rax &amp; rax 更新标志，rax 不变
 <h2 id="section-11">双倍宽乘除<a class="anchor" href="#section-11" aria-label="链接到本节">#</a></h2>
 <p>64 位单操作数 <code>mulq S</code>：无符号 <code>rdx:rax = rax*S</code>；<code>imulq S</code>：有符号的 128 位乘积。二操作数 <code>imulq S,D</code> 与单操作数形式不同，不能混淆隐含寄存器。</p>
 <p><code>divq S</code>/<code>idivq S</code> 用 rdx:rax 作为 128 位被除数，商写 rax、余数写 rdx。无符号 64 位被除数通常先清 rdx；有符号先 <code>cqto</code>。除数为零或商超出目标寄存器范围触发除法异常；<code>TMin / -1</code> 是常见边界。idiv 商向零截断，余数与被除数同号或为零。</p>
-<pre><code class="language-asm"># long x / long y，x 在 rdi，y 在 rsi
-movq %rdi, %rax
-cqto
-idivq %rsi          # 商 rax，余数 rdx
+<pre><code class="language-asm"><span class="tok-c1"># long x / long y，x 在 rdi，y 在 rsi</span>
+<span class="tok-nf">movq</span><span class="tok-w"> </span><span class="tok-nv">%rdi</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rax</span>
+<span class="tok-nf">cqto</span>
+<span class="tok-nf">idivq</span><span class="tok-w"> </span><span class="tok-nv">%rsi</span><span class="tok-w">          </span><span class="tok-c1"># 商 rax，余数 rdx</span>
 </code></pre>
 <h2 id="section-12">解读代码的方法<a class="anchor" href="#section-12" aria-label="链接到本节">#</a></h2>
 <p>为每个寄存器写一个符号表达式，逐条替换；只在内存读写时引入 <code>M[address]</code>。例如：</p>
-<pre><code class="language-asm">leaq (%rdi,%rdi,2), %rax    # 3*x
-leaq (%rax,%rsi,4), %rax    # 3*x + 4*y
-subq %rdx, %rax            # 3*x + 4*y - z
-ret
+<pre><code class="language-asm"><span class="tok-nf">leaq</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-nv">%rdi</span><span class="tok-p">,</span><span class="tok-nv">%rdi</span><span class="tok-p">,</span><span class="tok-mi">2</span><span class="tok-p">),</span><span class="tok-w"> </span><span class="tok-nv">%rax</span><span class="tok-w">    </span><span class="tok-c1"># 3*x</span>
+<span class="tok-nf">leaq</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-nv">%rax</span><span class="tok-p">,</span><span class="tok-nv">%rsi</span><span class="tok-p">,</span><span class="tok-mi">4</span><span class="tok-p">),</span><span class="tok-w"> </span><span class="tok-nv">%rax</span><span class="tok-w">    </span><span class="tok-c1"># 3*x + 4*y</span>
+<span class="tok-nf">subq</span><span class="tok-w"> </span><span class="tok-nv">%rdx</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rax</span><span class="tok-w">            </span><span class="tok-c1"># 3*x + 4*y - z</span>
+<span class="tok-nf">ret</span>
 </code></pre>
 <p>计数访问时先看题目是否排除取指。<code>movq (%rdi),%rax</code> 有地址寄存器读取、数据寄存器写入和一次数据内存读取；与“几个操作数”不是同一个计数口径。2025 阶段卷 swap 四条 mov 按其口径共 8 次通用寄存器访问、4 次数据内存访问。</p>
 <h2 id="section-13">自检<a class="anchor" href="#section-13" aria-label="链接到本节">#</a></h2>

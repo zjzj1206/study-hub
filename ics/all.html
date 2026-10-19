@@ -226,13 +226,13 @@
 <p>逐位 <code>&amp; | ^ ~</code> 分别为交、并、异或、补。集合可以用位图表示：第 i 位为 1 表示元素 i 属于集合。<code>x^x=0</code>，<code>x&amp;~x=0</code>，<code>x|~x</code> 是全 1；德摩根律为 <code>~(x&amp;y)=~x|~y</code>、<code>~(x|y)=~x&amp;~y</code>。</p>
 <p><code>&amp;&amp; || !</code> 判断零/非零，结果为 int 类型的 0 或 1，并且 <code>&amp;&amp;</code>、<code>||</code> 从左到右短路。<code>0xF0 &amp; 0x0F=0</code>，但 <code>0xF0 &amp;&amp; 0x0F=1</code>。<code>p &amp;&amp; *p</code> 在 p 为空时跳过解引用，但不能防止 p 是悬空或其他无效指针。</p>
 <p>常用无符号位操作：</p>
-<pre><code class="language-c">/* 前提：0 &lt;= k &lt; 32 */
-x &amp; (1u &lt;&lt; k)       /* 测试第 k 位 */
-x | (1u &lt;&lt; k)       /* 置位 */
-x &amp; ~(1u &lt;&lt; k)      /* 清位 */
-x ^ (1u &lt;&lt; k)       /* 翻转 */
-x &amp; (x - 1u)       /* 清掉最低的 1；x=0 时仍为 0 */
-x &amp; (0u - x)       /* 提取最低的 1 */
+<pre><code class="language-c"><span class="tok-cm">/* 前提：0 &lt;= k &lt; 32 */</span>
+<span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">&amp;</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-mi">1u</span><span class="tok-w"> </span><span class="tok-o">&lt;&lt;</span><span class="tok-w"> </span><span class="tok-n">k</span><span class="tok-p">)</span><span class="tok-w">       </span><span class="tok-cm">/* 测试第 k 位 */</span>
+<span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">|</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-mi">1u</span><span class="tok-w"> </span><span class="tok-o">&lt;&lt;</span><span class="tok-w"> </span><span class="tok-n">k</span><span class="tok-p">)</span><span class="tok-w">       </span><span class="tok-cm">/* 置位 */</span>
+<span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">&amp;</span><span class="tok-w"> </span><span class="tok-o">~</span><span class="tok-p">(</span><span class="tok-mi">1u</span><span class="tok-w"> </span><span class="tok-o">&lt;&lt;</span><span class="tok-w"> </span><span class="tok-n">k</span><span class="tok-p">)</span><span class="tok-w">      </span><span class="tok-cm">/* 清位 */</span>
+<span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">^</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-mi">1u</span><span class="tok-w"> </span><span class="tok-o">&lt;&lt;</span><span class="tok-w"> </span><span class="tok-n">k</span><span class="tok-p">)</span><span class="tok-w">       </span><span class="tok-cm">/* 翻转 */</span>
+<span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">&amp;</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">-</span><span class="tok-w"> </span><span class="tok-mi">1u</span><span class="tok-p">)</span><span class="tok-w">       </span><span class="tok-cm">/* 清掉最低的 1；x=0 时仍为 0 */</span>
+<span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">&amp;</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-mi">0u</span><span class="tok-w"> </span><span class="tok-o">-</span><span class="tok-w"> </span><span class="tok-n">x</span><span class="tok-p">)</span><span class="tok-w">       </span><span class="tok-cm">/* 提取最低的 1 */</span>
 </code></pre>
 <p>对 <code>unsigned char</code> 做运算时先发生整数提升；例如 <code>~(unsigned char)0</code> 的表达式通常是 int 的 -1，而不是 255。需要取低 8 位时再转换或加掩码。</p>
 <h2 id="section-16">移位<a class="anchor" href="#section-16" aria-label="链接到本节">#</a></h2>
@@ -406,8 +406,8 @@ x &amp; (0u - x)       /* 提取最低的 1 */
 </tbody>
 </table></div>
 <p>8 位模型中 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>255</mn><mo>+</mo><mn>1</mn><mo>≡</mo><mn>0</mn><mspace></mspace><mspace width="0.4444em"/><mo stretchy="false">(</mo><mrow><mi mathvariant="normal">m</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">d</mi></mrow><mspace width="0.3333em"/><mn>256</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">255+1\equiv0\pmod{256}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">255</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≡</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">0</span><span class="mspace allowbreak"></span><span class="mspace" style="margin-right:0.4444em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord"><span class="mord"><span class="mord mathrm">mod</span></span></span><span class="mspace" style="margin-right:0.3333em;"></span><span class="mord">256</span><span class="mclose">)</span></span></span></span></span>。模运算仍满足交换、结合、分配律，但下面的 C 代码不能用“加完再减回来”证明合法：</p>
-<pre><code class="language-c">int x = INT_MAX;
-int y = (x + 1) - 1;  /* x+1 已发生有符号溢出 */
+<pre><code class="language-c"><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-n">INT_MAX</span><span class="tok-p">;</span>
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">y</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">+</span><span class="tok-w"> </span><span class="tok-mi">1</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-o">-</span><span class="tok-w"> </span><span class="tok-mi">1</span><span class="tok-p">;</span><span class="tok-w">  </span><span class="tok-cm">/* x+1 已发生有符号溢出 */</span>
 </code></pre>
 <p>在 32 位位向量里可证明 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo stretchy="false">)</mo><mo>−</mo><mn>1</mn><mo>≡</mo><mi>x</mi><mspace></mspace><mspace width="0.4444em"/><mo stretchy="false">(</mo><mrow><mi mathvariant="normal">m</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">d</mi></mrow><mspace width="0.3333em"/><msup><mn>2</mn><mn>32</mn></msup><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(x+1)-1\equiv x\pmod{2^{32}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≡</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal">x</span><span class="mspace allowbreak"></span><span class="mspace" style="margin-right:0.4444em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord"><span class="mord"><span class="mord mathrm">mod</span></span></span><span class="mspace" style="margin-right:0.3333em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">32</span></span></span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span>；在 C 中却必须检查每一步中间结果，后面的减法不能撤销先前的未定义行为。</p>
 <h2 id="section-23">用移位替代常数乘除<a class="anchor" href="#section-23" aria-label="链接到本节">#</a></h2>
@@ -895,21 +895,21 @@ int y = (x + 1) - 1;  /* x+1 已发生有符号溢出 */
 <p><code>inc</code> 与 <code>add $1</code> 的数据结果相同，但只有前者保留 CF。<code>cmp S,D</code> 对应比较 D 与 S，不要把减法方向反过来。</p>
 <p><code>neg</code> 算 <code>0-D</code>，<code>not</code> 算逐位取反。例如 8 位 5=<code>00000101</code>：neg 得 <code>11111011</code>（−5），not 得 <code>11111010</code>（−6）。neg 原操作数非零时 CF=1；最小负数取负位模式不变且 OF=1。not 不修改标志。</p>
 <h3 id="section-46">二／三操作数乘法与判零<a class="anchor" href="#section-46" aria-label="链接到本节">#</a></h3>
-<pre><code class="language-asm">imulq %rbx,%rax       # 旧 rax * rbx，保留低 64 位
-imulq $7,%rbx,%rax    # 7 * rbx，保留低 64 位；不用旧 rax
+<pre><code class="language-asm"><span class="tok-nf">imulq</span><span class="tok-w"> </span><span class="tok-nv">%rbx</span><span class="tok-p">,</span><span class="tok-nv">%rax</span><span class="tok-w">       </span><span class="tok-c1"># 旧 rax * rbx，保留低 64 位</span>
+<span class="tok-nf">imulq</span><span class="tok-w"> </span><span class="tok-no">$7</span><span class="tok-p">,</span><span class="tok-nv">%rbx</span><span class="tok-p">,</span><span class="tok-nv">%rax</span><span class="tok-w">    </span><span class="tok-c1"># 7 * rbx，保留低 64 位；不用旧 rax</span>
 </code></pre>
 <p>完整有符号乘积能由目标宽度表示时 CF=OF=0，否则为 1。不能简单按“高半部非零”判断：负积的高位可能只是正常符号扩展。ZF/SF/PF 等在 imul 后未定义，不能直接用 <code>je</code> 判断结果为零；应显式更新标志：</p>
-<pre><code class="language-asm">imulq %rbx,%rax
-testq %rax,%rax
-je zero              # 判断保留下来的低 64 位是否为零
+<pre><code class="language-asm"><span class="tok-nf">imulq</span><span class="tok-w"> </span><span class="tok-nv">%rbx</span><span class="tok-p">,</span><span class="tok-nv">%rax</span>
+<span class="tok-nf">testq</span><span class="tok-w"> </span><span class="tok-nv">%rax</span><span class="tok-p">,</span><span class="tok-nv">%rax</span>
+<span class="tok-nf">je</span><span class="tok-w"> </span><span class="tok-no">zero</span><span class="tok-w">              </span><span class="tok-c1"># 判断保留下来的低 64 位是否为零</span>
 </code></pre>
 <p>这不是判断无限精度乘积是否为零。单操作数 imul 的完整积规则见下一节。</p>
 <h3 id="section-47">位运算与不写回的 test<a class="anchor" href="#section-47" aria-label="链接到本节">#</a></h3>
-<pre><code class="language-asm">andq $15,%rax        # 保留低 4 位
-orq  $1,%rax         # 最低位置 1
-xorq $1,%rax         # 最低位翻转
-xorq %rax,%rax       # 清零；ZF=1、SF=0、PF=1、CF=OF=0
-testq %rax,%rax      # 按 rax &amp; rax 更新标志，rax 不变
+<pre><code class="language-asm"><span class="tok-nf">andq</span><span class="tok-w"> </span><span class="tok-no">$15</span><span class="tok-p">,</span><span class="tok-nv">%rax</span><span class="tok-w">        </span><span class="tok-c1"># 保留低 4 位</span>
+<span class="tok-nf">orq</span><span class="tok-w">  </span><span class="tok-no">$1</span><span class="tok-p">,</span><span class="tok-nv">%rax</span><span class="tok-w">         </span><span class="tok-c1"># 最低位置 1</span>
+<span class="tok-nf">xorq</span><span class="tok-w"> </span><span class="tok-no">$1</span><span class="tok-p">,</span><span class="tok-nv">%rax</span><span class="tok-w">         </span><span class="tok-c1"># 最低位翻转</span>
+<span class="tok-nf">xorq</span><span class="tok-w"> </span><span class="tok-nv">%rax</span><span class="tok-p">,</span><span class="tok-nv">%rax</span><span class="tok-w">       </span><span class="tok-c1"># 清零；ZF=1、SF=0、PF=1、CF=OF=0</span>
+<span class="tok-nf">testq</span><span class="tok-w"> </span><span class="tok-nv">%rax</span><span class="tok-p">,</span><span class="tok-nv">%rax</span><span class="tok-w">      </span><span class="tok-c1"># 按 rax &amp; rax 更新标志，rax 不变</span>
 </code></pre>
 <p>AND 两位都为 1 才为 1；OR 至少一位为 1 即为 1；XOR 两位不同才为 1。test 与 and 的关系类似 cmp 与 sub：计算标志但不写回。上述逻辑指令的 AF 未定义，不要把“更新标志”理解成每个标志都有可用值。</p>
 <h3 id="section-48">移位计数、右移舍入与标志<a class="anchor" href="#section-48" aria-label="链接到本节">#</a></h3>
@@ -968,17 +968,17 @@ testq %rax,%rax      # 按 rax &amp; rax 更新标志，rax 不变
 <h2 id="section-49">双倍宽乘除<a class="anchor" href="#section-49" aria-label="链接到本节">#</a></h2>
 <p>64 位单操作数 <code>mulq S</code>：无符号 <code>rdx:rax = rax*S</code>；<code>imulq S</code>：有符号的 128 位乘积。二操作数 <code>imulq S,D</code> 与单操作数形式不同，不能混淆隐含寄存器。</p>
 <p><code>divq S</code>/<code>idivq S</code> 用 rdx:rax 作为 128 位被除数，商写 rax、余数写 rdx。无符号 64 位被除数通常先清 rdx；有符号先 <code>cqto</code>。除数为零或商超出目标寄存器范围触发除法异常；<code>TMin / -1</code> 是常见边界。idiv 商向零截断，余数与被除数同号或为零。</p>
-<pre><code class="language-asm"># long x / long y，x 在 rdi，y 在 rsi
-movq %rdi, %rax
-cqto
-idivq %rsi          # 商 rax，余数 rdx
+<pre><code class="language-asm"><span class="tok-c1"># long x / long y，x 在 rdi，y 在 rsi</span>
+<span class="tok-nf">movq</span><span class="tok-w"> </span><span class="tok-nv">%rdi</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rax</span>
+<span class="tok-nf">cqto</span>
+<span class="tok-nf">idivq</span><span class="tok-w"> </span><span class="tok-nv">%rsi</span><span class="tok-w">          </span><span class="tok-c1"># 商 rax，余数 rdx</span>
 </code></pre>
 <h2 id="section-50">解读代码的方法<a class="anchor" href="#section-50" aria-label="链接到本节">#</a></h2>
 <p>为每个寄存器写一个符号表达式，逐条替换；只在内存读写时引入 <code>M[address]</code>。例如：</p>
-<pre><code class="language-asm">leaq (%rdi,%rdi,2), %rax    # 3*x
-leaq (%rax,%rsi,4), %rax    # 3*x + 4*y
-subq %rdx, %rax            # 3*x + 4*y - z
-ret
+<pre><code class="language-asm"><span class="tok-nf">leaq</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-nv">%rdi</span><span class="tok-p">,</span><span class="tok-nv">%rdi</span><span class="tok-p">,</span><span class="tok-mi">2</span><span class="tok-p">),</span><span class="tok-w"> </span><span class="tok-nv">%rax</span><span class="tok-w">    </span><span class="tok-c1"># 3*x</span>
+<span class="tok-nf">leaq</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-nv">%rax</span><span class="tok-p">,</span><span class="tok-nv">%rsi</span><span class="tok-p">,</span><span class="tok-mi">4</span><span class="tok-p">),</span><span class="tok-w"> </span><span class="tok-nv">%rax</span><span class="tok-w">    </span><span class="tok-c1"># 3*x + 4*y</span>
+<span class="tok-nf">subq</span><span class="tok-w"> </span><span class="tok-nv">%rdx</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rax</span><span class="tok-w">            </span><span class="tok-c1"># 3*x + 4*y - z</span>
+<span class="tok-nf">ret</span>
 </code></pre>
 <p>计数访问时先看题目是否排除取指。<code>movq (%rdi),%rax</code> 有地址寄存器读取、数据寄存器写入和一次数据内存读取；与“几个操作数”不是同一个计数口径。2025 阶段卷 swap 四条 mov 按其口径共 8 次通用寄存器访问、4 次数据内存访问。</p>
 <h2 id="section-51">自检<a class="anchor" href="#section-51" aria-label="链接到本节">#</a></h2>
@@ -1102,11 +1102,11 @@ ret
 <p><code>setle %al</code> <strong>只写一个字节</strong>，要返回完整 int 布尔值常接 <code>movzbl %al,%eax</code>。不能把 <code>setle %rax</code> 当作合法的 64 位 set 指令。</p>
 <p>条件跳转根据标志修改控制流；无条件跳转 <code>jmp label</code> 是直接跳转，<code>jmp *%rax</code> 或 <code>jmp *table(,%rdi,8)</code> 是间接跳转。相对跳转目标是<strong>下一条指令地址 + 带符号位移</strong>。例如 <code>0x100: eb fe</code> 长 2 字节，目标 <code>0x102-2=0x100</code>。</p>
 <p>cmov 根据条件把源值复制到目标寄存器；目标不能是内存，没有普通 8 位 cmov 形式。它通常先计算候选值，再选择结果，减少错误分支预测带来的代价。代价是候选表达式都可能执行：昂贵函数、不安全解引用、可见副作用不能随便提前执行。<strong>内存源 cmov 不保证在条件不满足时避免访存异常</strong>。</p>
-<pre><code class="language-asm"># 返回 x&lt;=y 的布尔值，x、y 是 long
-cmpq %rsi, %rdi
-setle %al
-movzbl %al, %eax
-ret
+<pre><code class="language-asm"><span class="tok-c1"># 返回 x&lt;=y 的布尔值，x、y 是 long</span>
+<span class="tok-nf">cmpq</span><span class="tok-w"> </span><span class="tok-nv">%rsi</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rdi</span>
+<span class="tok-nf">setle</span><span class="tok-w"> </span><span class="tok-nv">%al</span>
+<span class="tok-nf">movzbl</span><span class="tok-w"> </span><span class="tok-nv">%al</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%eax</span>
+<span class="tok-nf">ret</span>
 </code></pre>
 <p>读分支时检查最后一次修改标志的指令，不能无视中间的 add/sub/test；mov 和 lea 则通常保留原标志。</p>
 <h2 id="section-56">if 与条件表达式<a class="anchor" href="#section-56" aria-label="链接到本节">#</a></h2>
@@ -1127,21 +1127,21 @@ done:
 <li>for：Init → Test → Body → Update → Test；<code>continue</code> 应进入 Update，不能把它错误地直连 Test。</li>
 </ul>
 <p>还原汇编时依次找初始化、循环体、测试、更新、出口、返回值。循环不一定有单独的“索引 i”，可能通过指针推进或移位掩码控制。</p>
-<pre><code class="language-c">/* unsigned 版本明确位级行为；限制 1&lt;=n&lt;=63 才保证推进 */
-unsigned long pick(unsigned long x, unsigned n) {
-    unsigned long result = 0;
-    for (unsigned long mask=1; mask!=0; mask&lt;&lt;=n)
-        result |= x &amp; mask;
-    return result;
-}
+<pre><code class="language-c"><span class="tok-cm">/* unsigned 版本明确位级行为；限制 1&lt;=n&lt;=63 才保证推进 */</span>
+<span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-nf">pick</span><span class="tok-p">(</span><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-n">x</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-n">result</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-k">for</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-n">mask</span><span class="tok-o">=</span><span class="tok-mi">1</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-n">mask</span><span class="tok-o">!=</span><span class="tok-mi">0</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-n">mask</span><span class="tok-o">&lt;&lt;=</span><span class="tok-n">n</span><span class="tok-p">)</span>
+<span class="tok-w">        </span><span class="tok-n">result</span><span class="tok-w"> </span><span class="tok-o">|=</span><span class="tok-w"> </span><span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">&amp;</span><span class="tok-w"> </span><span class="tok-n">mask</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-k">return</span><span class="tok-w"> </span><span class="tok-n">result</span><span class="tok-p">;</span>
+<span class="tok-p">}</span>
 </code></pre>
 <p>n=0 会使 mask 不变化；n≥位宽的 C 移位不合法，硬件低位掩码也不等于修复了源代码。Popcount 可逐位累加 <code>(x&amp;1)</code> 再右移，也可反复 <code>x&amp;=x-1</code>；x86 的 POPCNT 是专门指令，但编译器是否采用取决于目标 ISA、选项和识别能力。</p>
 <h2 id="section-58">switch 与跳转表<a class="anchor" href="#section-58" aria-label="链接到本节">#</a></h2>
 <p>稠密 case 常用跳转表，稀疏 case 可能采用比较树。流程通常为：索引归一化 → 范围检查 → 间接跳转 → 各 case 代码。</p>
-<pre><code class="language-asm">subq $3, %rdi             # 原 case 从 3 开始
-cmpq $4, %rdi
-ja .Ldefault              # 无符号检查同时排除原值&lt;3 或 &gt;7
-jmp *.Ltable(,%rdi,8)     # 每项是 8 字节代码地址
+<pre><code class="language-asm"><span class="tok-nf">subq</span><span class="tok-w"> </span><span class="tok-no">$3</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rdi</span><span class="tok-w">             </span><span class="tok-c1"># 原 case 从 3 开始</span>
+<span class="tok-nf">cmpq</span><span class="tok-w"> </span><span class="tok-no">$4</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rdi</span>
+<span class="tok-nf">ja</span><span class="tok-w"> </span><span class="tok-no">.Ldefault</span><span class="tok-w">              </span><span class="tok-c1"># 无符号检查同时排除原值&lt;3 或 &gt;7</span>
+<span class="tok-nf">jmp</span><span class="tok-w"> </span><span class="tok-p">*.</span><span class="tok-no">Ltable</span><span class="tok-p">(,</span><span class="tok-nv">%rdi</span><span class="tok-p">,</span><span class="tok-mi">8</span><span class="tok-p">)</span><span class="tok-w">     </span><span class="tok-c1"># 每项是 8 字节代码地址</span>
 </code></pre>
 <p>表中的第 0 项对应原值 3，不一定对应 case 0。多个 case 可共享同一地址；缺失值可指向 default；fall-through 表现为执行一个代码块后直接接另一个块，不意味着两个标签必须相同。</p>
 <p>位置无关代码可能用 4 字节相对偏移表：先读有符号表项，再加表基址得到目标，因此“所有跳转表表项必为 8 字节”错误。一定看 <code>.quad/.long</code> 和加载指令。</p>
@@ -1254,21 +1254,21 @@ jmp *.Ltable(,%rdi,8)     # 每项是 8 字节代码地址
 <p>例如第三个参数 dest 在 rdx，而调用另一个函数可能破坏 rdx：可以先 push rbx 保存调用者的旧 rbx，再把 dest 放 rbx，call 后经 rbx 写回结果，最后 pop 恢复。<strong>callee-saved 不表示值永不变化，而是跨调用边界的约定值能保持。</strong></p>
 <h2 id="section-65">栈帧与局部存储<a class="anchor" href="#section-65" aria-label="链接到本节">#</a></h2>
 <p>常见传统序言和尾声：</p>
-<pre><code class="language-asm">pushq %rbp
-movq %rsp, %rbp
-subq $32, %rsp          # 局部区/对齐
-# 局部对象在 rbp 的负偏移，返回地址通常在 8(%rbp)
-leave                  # mov rbp,rsp; pop rbp 的效果
-ret
+<pre><code class="language-asm"><span class="tok-nf">pushq</span><span class="tok-w"> </span><span class="tok-nv">%rbp</span>
+<span class="tok-nf">movq</span><span class="tok-w"> </span><span class="tok-nv">%rsp</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rbp</span>
+<span class="tok-nf">subq</span><span class="tok-w"> </span><span class="tok-no">$32</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rsp</span><span class="tok-w">          </span><span class="tok-c1"># 局部区/对齐</span>
+<span class="tok-c1"># 局部对象在 rbp 的负偏移，返回地址通常在 8(%rbp)</span>
+<span class="tok-nf">leave</span><span class="tok-w">                  </span><span class="tok-c1"># mov rbp,rsp; pop rbp 的效果</span>
+<span class="tok-nf">ret</span>
 </code></pre>
 <p>不是所有函数都有该形式。叶函数可能完全不分配栈；System V 用户态允许使用 rsp 以下的 128 字节 red zone，适合不跨调用保存的临时数据。内核、Windows 等环境不可直接套用。动态长度数组或 alloca 可能需要运行时计算栈空间并对齐。</p>
 <p>局部量放内存的常见原因：取地址、数组/结构体存储、寄存器不足、跨调用保留。优化可能消除对象或传播常量，因此源代码变量与栈槽不存在永远一一对应关系。</p>
 <h2 id="section-66">递归：每一层有什么不同<a class="anchor" href="#section-66" aria-label="链接到本节">#</a></h2>
 <p>每个递归调用都有自身返回地址与需要保留的局部状态。硬件不需要“递归专用指令”，普通 call/ret、栈与编译器约定已经足够。递归深度、总调用次数和同时存活的帧数不同。</p>
-<pre><code class="language-c">unsigned long count(unsigned long x) {
-    if (x == 0) return 0;
-    return (x &amp; 1) + count(x &gt;&gt; 1);
-}
+<pre><code class="language-c"><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-nf">count</span><span class="tok-p">(</span><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-n">x</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-k">if</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">==</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-k">return</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-k">return</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">&amp;</span><span class="tok-w"> </span><span class="tok-mi">1</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-o">+</span><span class="tok-w"> </span><span class="tok-n">count</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">&gt;&gt;</span><span class="tok-w"> </span><span class="tok-mi">1</span><span class="tok-p">);</span>
+<span class="tok-p">}</span>
 </code></pre>
 <p>当前层的 <code>x&amp;1</code> 必须在递归调用之后仍可获得：可放 callee-saved 寄存器或栈。返回时再加到子调用的返回值。若最高 1 位在第 k 位（0 起算），不优化时非零层有 k+1 层，再加 x=0 的基例层；按是否计基例说明答案。</p>
 <p>带两个递归子调用的组合数程序总调用次数可能很大，但栈同时只保存一条尚未返回的路径。尾调用若被优化为跳转，帧数又可能变化；考试按给定汇编追踪。</p>
@@ -1292,10 +1292,10 @@ ret
 </div>
 <p><code>A + i</code> 中每增加一行的跨度为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>⋅</mo><mi mathvariant="normal">sizeof</mi><mo>⁡</mo><mo stretchy="false">(</mo><mi>T</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">C\cdot\operatorname{sizeof}(T)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0715em;">C</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mop"><span class="mord mathrm" style="margin-right:0.0778em;">sizeof</span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.1389em;">T</span><span class="mclose">)</span></span></span></span></span>；<code>&amp;A + 1</code> 跨过整个数组，跨度为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>C</mi><mo>⋅</mo><mi mathvariant="normal">sizeof</mi><mo>⁡</mo><mo stretchy="false">(</mo><mi>T</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">RC\cdot\operatorname{sizeof}(T)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="mord mathnormal" style="margin-right:0.0715em;">C</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mop"><span class="mord mathrm" style="margin-right:0.0778em;">sizeof</span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.1389em;">T</span><span class="mclose">)</span></span></span></span></span>。</p>
 <p>int A[3][5] 中 <code>sizeof(A)=60</code>、<code>sizeof(*A)=20</code>、<code>sizeof(**A)=4</code>、<code>sizeof(&amp;A)=8</code>。这些数值默认本课 LP64。</p>
-<pre><code class="language-c">int fixed(int a[3][5], size_t i, size_t j) { return a[i][j]; }
-int variable(size_t n, int a[n][n], size_t i, size_t j) {
-    return a[i][j];
-}
+<pre><code class="language-c"><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">fixed</span><span class="tok-p">(</span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">a</span><span class="tok-p">[</span><span class="tok-mi">3</span><span class="tok-p">][</span><span class="tok-mi">5</span><span class="tok-p">],</span><span class="tok-w"> </span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-n">j</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span><span class="tok-w"> </span><span class="tok-k">return</span><span class="tok-w"> </span><span class="tok-n">a</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">][</span><span class="tok-n">j</span><span class="tok-p">];</span><span class="tok-w"> </span><span class="tok-p">}</span>
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">variable</span><span class="tok-p">(</span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">a</span><span class="tok-p">[</span><span class="tok-n">n</span><span class="tok-p">][</span><span class="tok-n">n</span><span class="tok-p">],</span><span class="tok-w"> </span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-n">j</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-k">return</span><span class="tok-w"> </span><span class="tok-n">a</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">][</span><span class="tok-n">j</span><span class="tok-p">];</span>
+<span class="tok-p">}</span>
 </code></pre>
 <p>变长数组的列数要在运算时参与乘法；形参调整后的类型是指向整行的指针，不是 <code>int **</code>。固定列数常能用移位或 LEA 算行偏移。</p>
 <p><code>int *rows[R]</code> 是指针数组：先从表里读 rows[i]，再通过所得指针读第 j 项，通常两次数据读取；各行可独立分配、不连续或不同长度。<code>int A[R][C]</code> 只需一次最终元素读取，行地址可直接算出。将连续二维数组强转 <code>int **</code> 不会自动变成行指针表。</p>
@@ -1363,8 +1363,8 @@ int variable(size_t n, int a[n][n], size_t i, size_t j) {
 <span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi mathvariant="normal">align_up</mi><mo>⁡</mo><mo stretchy="false">(</mo><mi>x</mi><mo separator="true">,</mo><mi>a</mi><mo stretchy="false">)</mo><mo>=</mo><mrow><mo fence="true">⌈</mo><mfrac><mi>x</mi><mi>a</mi></mfrac><mo fence="true">⌉</mo></mrow><mi>a</mi><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">\operatorname{align\_up}(x,a)=\left\lceil\frac{x}{a}\right\rceil a.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1.06em;vertical-align:-0.31em;"></span><span class="mop"><span class="mord mathrm">align_up</span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1.836em;vertical-align:-0.686em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size2">⌈</span></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.1076em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">a</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">x</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mclose delimcenter" style="top:0em;"><span class="delimsizing size2">⌉</span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">a</span><span class="mord">.</span></span></span></span></span>
 </div>
 <p>成员偏移用当前末尾和成员对齐要求代入；结构体大小用最后成员末尾和结构体对齐要求代入。</p>
-<pre><code class="language-c">struct S { char c; int i; short s; double d; };
-/* 本课 ABI：offset(c)=0, i=4, s=8, d=16, sizeof=24, align=8 */
+<pre><code class="language-c"><span class="tok-k">struct</span><span class="tok-w"> </span><span class="tok-nc">S</span><span class="tok-w"> </span><span class="tok-p">{</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-n">c</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-kt">short</span><span class="tok-w"> </span><span class="tok-n">s</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-kt">double</span><span class="tok-w"> </span><span class="tok-n">d</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-p">};</span>
+<span class="tok-cm">/* 本课 ABI：offset(c)=0, i=4, s=8, d=16, sizeof=24, align=8 */</span>
 </code></pre>
 <p>c 后补 3 字节；s 后结束于 10，再补 6 字节使 d 在 16。如果改成 <code>double d; int i; short s; char c;</code>，偏移 0/8/12/14，总大小 16。这说明<strong>程序员改变顺序</strong>可节省空间；编译器不能偷偷改变对外布局。</p>
 <p>数组和嵌套结构体作为完整成员参与布局。结构体整体起始地址必须满足所有成员的对齐，不能只满足第一个 char。x86 支持许多未对齐访问不意味着 C/ABI 可以忽略对齐；未对齐还可能跨缓存块并影响性能。<code>#pragma pack</code>、不同 ABI 和向量类型可能改变规则。</p>
@@ -1473,8 +1473,8 @@ t 在 8，u 在 32
 <p>来源：2026-10-08 第 8 讲 <code>ICS08-machine-advanced-20261008.pdf</code>，共 53 页；教材 §3.9～3.10；2025 第一次阶段测验第 23～24 题。课件主线为 <strong>union、内存布局、缓冲区溢出及防护</strong>。下文用课件页码定位，并单列此前保留的指针与调试补充。</p>
 <h2 id="section-78">union 的分配与位重解释（pp.3～4）<a class="anchor" href="#section-78" aria-label="链接到本节">#</a></h2>
 <p>union 各成员从相同偏移开始，共享存储；总大小至少容纳最大成员，并按最严格成员对齐要求取整。struct 则依声明顺序为每个成员分配独立空间，中间和末尾可能有填充。</p>
-<pre><code class="language-c">union U1 { char c; int i[2]; double v; };
-struct S1 { char c; int i[2]; double v; };
+<pre><code class="language-c"><span class="tok-k">union</span><span class="tok-w"> </span><span class="tok-nc">U1</span><span class="tok-w"> </span><span class="tok-p">{</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-n">c</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-p">[</span><span class="tok-mi">2</span><span class="tok-p">];</span><span class="tok-w"> </span><span class="tok-kt">double</span><span class="tok-w"> </span><span class="tok-n">v</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-p">};</span>
+<span class="tok-k">struct</span><span class="tok-w"> </span><span class="tok-nc">S1</span><span class="tok-w"> </span><span class="tok-p">{</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-n">c</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-p">[</span><span class="tok-mi">2</span><span class="tok-p">];</span><span class="tok-w"> </span><span class="tok-kt">double</span><span class="tok-w"> </span><span class="tok-n">v</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-p">};</span>
 </code></pre>
 <p>在课件的 int 为 4 字节、double 为 8 字节且按 8 对齐的平台：</p>
 <div class="table-scroll"><table>
@@ -1506,13 +1506,13 @@ struct S1 { char c; int i[2]; double v; };
 <p>这些例子须明确数据宽度与浮点格式。C 与 C++ 对读取非活动 union 成员的规则不同；需要检查对象位串时，可在大小相等的对象之间使用 <code>memcpy</code>，避免直接通过不兼容类型指针读取。不要将课堂的位重解释练习当成任意语言、任意类型均可用的保证。</p>
 <h2 id="section-79">端序与数据模型（pp.5～10）<a class="anchor" href="#section-79" aria-label="链接到本节">#</a></h2>
 <p>大端把最高有效字节放在最低地址，小端相反。端序决定多字节数值如何解释，<strong>不改变字符数组按地址递增排列的顺序</strong>。课件列举传统 Sun/SPARC 大端、x86 小端和可配置端序的 ARM；具体平台模式须看题目条件，网络字节序采用大端。</p>
-<pre><code class="language-c">union {
-    unsigned char c[8];
-    unsigned short s[4];
-    unsigned int i[2];
-    unsigned long l[1];
-} dw;
-/* 按地址递增写入：f0 f1 f2 f3 f4 f5 f6 f7 */
+<pre><code class="language-c"><span class="tok-k">union</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-n">c</span><span class="tok-p">[</span><span class="tok-mi">8</span><span class="tok-p">];</span>
+<span class="tok-w">    </span><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">short</span><span class="tok-w"> </span><span class="tok-n">s</span><span class="tok-p">[</span><span class="tok-mi">4</span><span class="tok-p">];</span>
+<span class="tok-w">    </span><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-p">[</span><span class="tok-mi">2</span><span class="tok-p">];</span>
+<span class="tok-w">    </span><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-n">l</span><span class="tok-p">[</span><span class="tok-mi">1</span><span class="tok-p">];</span>
+<span class="tok-p">}</span><span class="tok-w"> </span><span class="tok-n">dw</span><span class="tok-p">;</span>
+<span class="tok-cm">/* 按地址递增写入：f0 f1 f2 f3 f4 f5 f6 f7 */</span>
 </code></pre>
 <div class="table-scroll"><table>
 <thead>
@@ -1742,16 +1742,16 @@ struct S1 { char c; int i[2]; double v; };
 <p>第 42 页通过栈偏移随机化说明 ASLR 思想。第 43 页对比传统 x86 权限与支持不可执行数据页的环境。2025 试题据此区分：安全输入通常要改源码并重编译；栈随机化通常不需重编译普通用户程序；金丝雀通常需重编译但不必改源码；NX 依赖 CPU 支持。已有支持的机器不需为了启用 NX 再“换 CPU”。</p>
 <h3 id="section-89">金丝雀汇编逐步读（pp.44～47）<a class="anchor" href="#section-89" aria-label="链接到本节">#</a></h3>
 <p>课件介绍 <code>-fstack-protector</code>；是否默认启用、保护哪些函数取决于工具链和构建选项。第 45 页的关键流程为：</p>
-<pre><code class="language-asm">sub $0x18, %rsp
-mov %fs:0x28, %rax
-mov %rax, 0x8(%rsp)    # 保存参考金丝雀的副本
-xor %eax, %eax        # 清除寄存器副本，不是清除栈中金丝雀
-# 输入与输出操作
-mov 0x8(%rsp), %rax
-xor %fs:0x28, %rax    # 相同则结果为 0，ZF=1
-je normal_return
-call __stack_chk_fail
-# normal_return: 恢复 rsp 并 ret
+<pre><code class="language-asm"><span class="tok-nf">sub</span><span class="tok-w"> </span><span class="tok-no">$0x18</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rsp</span>
+<span class="tok-nf">mov</span><span class="tok-w"> </span><span class="tok-nv">%fs</span><span class="tok-p">:</span><span class="tok-mi">0x28</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rax</span>
+<span class="tok-nf">mov</span><span class="tok-w"> </span><span class="tok-nv">%rax</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-mi">0x8</span><span class="tok-p">(</span><span class="tok-nv">%rsp</span><span class="tok-p">)</span><span class="tok-w">    </span><span class="tok-c1"># 保存参考金丝雀的副本</span>
+<span class="tok-nf">xor</span><span class="tok-w"> </span><span class="tok-nv">%eax</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%eax</span><span class="tok-w">        </span><span class="tok-c1"># 清除寄存器副本，不是清除栈中金丝雀</span>
+<span class="tok-c1"># 输入与输出操作</span>
+<span class="tok-nf">mov</span><span class="tok-w"> </span><span class="tok-mi">0x8</span><span class="tok-p">(</span><span class="tok-nv">%rsp</span><span class="tok-p">),</span><span class="tok-w"> </span><span class="tok-nv">%rax</span>
+<span class="tok-nf">xor</span><span class="tok-w"> </span><span class="tok-nv">%fs</span><span class="tok-p">:</span><span class="tok-mi">0x28</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rax</span><span class="tok-w">    </span><span class="tok-c1"># 相同则结果为 0，ZF=1</span>
+<span class="tok-nf">je</span><span class="tok-w"> </span><span class="tok-no">normal_return</span>
+<span class="tok-nf">call</span><span class="tok-w"> </span><span class="tok-no">__stack_chk_fail</span>
+<span class="tok-c1"># normal_return: 恢复 rsp 并 ret</span>
 </code></pre>
 <p><code>0x28</code> 是十进制 40，所以 <code>%fs:0x28</code> 与 <code>%fs:40</code> 表示同一偏移；FS 段基址参与寻址，<strong>不是访问普通绝对地址 0x28</strong>。在该 Linux ABI 实现中，它用于取得线程相关区域的参考金丝雀。单凭 FS 寻址语法不能推出该区域一定只读，课件的旁注不应推广成 x86 指令规则。</p>
 <p>本例栈中 buf 位于 0～3，4～7 是填充，金丝雀位于 8～15，16～23 是剩余空间，返回地址位于 24～31。7 个普通字符加 NUL 写到偏移 7，虽已越界但尚未碰金丝雀；8 个字符的 NUL 到达偏移 8。课件展示后者报错，但<strong>接触不等于必然改变值</strong>：若覆盖字节恰与原字节相同，比较可能仍通过。例如 glibc 的初始化实现会清除金丝雀的一个字节，参见 <a href="https://sourceware.org/legacy-ml/libc-alpha/2012-03/msg00321.html">glibc 官方源码补丁记录</a>。判断检测是否触发，要看保存值是否真的发生变化，不能只看输入长度。金丝雀检查也不会让前面已经发生的未定义行为变合法。</p>
@@ -2178,45 +2178,45 @@ call __stack_chk_fail
 </ul>
 <h2 id="section-103">从 C 翻译为 Y86：一个可运行的完整例子<a class="anchor" href="#section-103" aria-label="链接到本节">#</a></h2>
 <p>目标是遍历以零结尾的 <code>long</code> 数组，返回零之前的元素数；本例采用 LP64，<code>long</code> 为 8 字节。</p>
-<pre><code class="language-c">long len(long *p) {
-    long n = 0;
-    while (*p != 0) { ++n; ++p; }
-    return n;
-}
+<pre><code class="language-c"><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-nf">len</span><span class="tok-p">(</span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">p</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-k">while</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-o">*</span><span class="tok-n">p</span><span class="tok-w"> </span><span class="tok-o">!=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span><span class="tok-w"> </span><span class="tok-o">++</span><span class="tok-n">n</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-o">++</span><span class="tok-n">p</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-p">}</span>
+<span class="tok-w">    </span><span class="tok-k">return</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-p">;</span>
+<span class="tok-p">}</span>
 </code></pre>
 <ul>
 <li>x86 可用 <code>addq $1,%rax</code>、<code>addq $8,%rdi</code> 和 <code>cmpq $0,(%rdi)</code>。</li>
 <li>Y86 先把常数装进寄存器，以寄存器加法替代立即数加法；用 load 加 <code>andq %rdx,%rdx</code> 替代内存比较。</li>
 <li>以下程序使用标签、<code>.pos</code>、<code>.align</code>、<code>.quad</code>；这些是汇编器指示，不是 CPU 执行的指令。</li>
 </ul>
-<pre><code class="language-asm">.pos 0
-    irmovq stack,%rsp
-    irmovq array,%rdi
-    call len
-    halt
-.align 8
-array:
-    .quad 0x123
-    .quad 0x456
-    .quad 0x789
-    .quad 0
-len:
-    irmovq $1,%r8
-    irmovq $8,%r9
-    xorq %rax,%rax
-    mrmovq 0(%rdi),%rdx
-    andq %rdx,%rdx
-    je done
-loop:
-    addq %r8,%rax
-    addq %r9,%rdi
-    mrmovq 0(%rdi),%rdx
-    andq %rdx,%rdx
-    jne loop
-done:
-    ret
-.pos 0x200
-stack:
+<pre><code class="language-asm"><span class="tok-na">.pos</span><span class="tok-w"> </span><span class="tok-mi">0</span>
+<span class="tok-w">    </span><span class="tok-nf">irmovq</span><span class="tok-w"> </span><span class="tok-no">stack</span><span class="tok-p">,</span><span class="tok-nv">%rsp</span>
+<span class="tok-w">    </span><span class="tok-nf">irmovq</span><span class="tok-w"> </span><span class="tok-no">array</span><span class="tok-p">,</span><span class="tok-nv">%rdi</span>
+<span class="tok-w">    </span><span class="tok-nf">call</span><span class="tok-w"> </span><span class="tok-no">len</span>
+<span class="tok-w">    </span><span class="tok-nf">halt</span>
+<span class="tok-na">.align</span><span class="tok-w"> </span><span class="tok-mi">8</span>
+<span class="tok-nl">array:</span>
+<span class="tok-w">    </span><span class="tok-na">.quad</span><span class="tok-w"> </span><span class="tok-mi">0x123</span>
+<span class="tok-w">    </span><span class="tok-na">.quad</span><span class="tok-w"> </span><span class="tok-mi">0x456</span>
+<span class="tok-w">    </span><span class="tok-na">.quad</span><span class="tok-w"> </span><span class="tok-mi">0x789</span>
+<span class="tok-w">    </span><span class="tok-na">.quad</span><span class="tok-w"> </span><span class="tok-mi">0</span>
+<span class="tok-nl">len:</span>
+<span class="tok-w">    </span><span class="tok-nf">irmovq</span><span class="tok-w"> </span><span class="tok-no">$1</span><span class="tok-p">,</span><span class="tok-nv">%r8</span>
+<span class="tok-w">    </span><span class="tok-nf">irmovq</span><span class="tok-w"> </span><span class="tok-no">$8</span><span class="tok-p">,</span><span class="tok-nv">%r9</span>
+<span class="tok-w">    </span><span class="tok-nf">xorq</span><span class="tok-w"> </span><span class="tok-nv">%rax</span><span class="tok-p">,</span><span class="tok-nv">%rax</span>
+<span class="tok-w">    </span><span class="tok-nf">mrmovq</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">(</span><span class="tok-nv">%rdi</span><span class="tok-p">),</span><span class="tok-nv">%rdx</span>
+<span class="tok-w">    </span><span class="tok-nf">andq</span><span class="tok-w"> </span><span class="tok-nv">%rdx</span><span class="tok-p">,</span><span class="tok-nv">%rdx</span>
+<span class="tok-w">    </span><span class="tok-nf">je</span><span class="tok-w"> </span><span class="tok-no">done</span>
+<span class="tok-nl">loop:</span>
+<span class="tok-w">    </span><span class="tok-nf">addq</span><span class="tok-w"> </span><span class="tok-nv">%r8</span><span class="tok-p">,</span><span class="tok-nv">%rax</span>
+<span class="tok-w">    </span><span class="tok-nf">addq</span><span class="tok-w"> </span><span class="tok-nv">%r9</span><span class="tok-p">,</span><span class="tok-nv">%rdi</span>
+<span class="tok-w">    </span><span class="tok-nf">mrmovq</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">(</span><span class="tok-nv">%rdi</span><span class="tok-p">),</span><span class="tok-nv">%rdx</span>
+<span class="tok-w">    </span><span class="tok-nf">andq</span><span class="tok-w"> </span><span class="tok-nv">%rdx</span><span class="tok-p">,</span><span class="tok-nv">%rdx</span>
+<span class="tok-w">    </span><span class="tok-nf">jne</span><span class="tok-w"> </span><span class="tok-no">loop</span>
+<span class="tok-nl">done:</span>
+<span class="tok-w">    </span><span class="tok-nf">ret</span>
+<span class="tok-na">.pos</span><span class="tok-w"> </span><span class="tok-mi">0x200</span>
+<span class="tok-nl">stack:</span>
 </code></pre>
 <ul>
 <li>程序从地址 0 开始，显式初始化栈指针；数据区、代码区和栈空间要避免重叠。</li>
@@ -2299,20 +2299,20 @@ stack:
 <li><code>A in {B,C,D}</code> 表示 A 等于其中至少一个值；<code>[ 条件:值; ... ]</code> 按从上到下的<strong>第一条真条件</strong>选值，末尾 <code>1:</code> 提供默认值。</li>
 <li>case 的优先级描述选择关系，不表示硬件必须像软件一样跨多个周期逐条试条件；网络仍可由组合逻辑实现。</li>
 </ul>
-<pre><code class="language-text">bool eq = (a &amp;&amp; b) || (!a &amp;&amp; !b);
-int Out = [ s : A; 1 : B; ];
-bool hit = code in { OP1, OP2, OP3 };
-int Out4 = [
-    !s1 &amp;&amp; !s0 : D0;
-    !s1        : D1;
-    !s0        : D2;
-    1          : D3;
-];
-int Min3 = [
-    A &lt;= B &amp;&amp; A &lt;= C : A;
-    B &lt;= A &amp;&amp; B &lt;= C : B;
-    1               : C;
-];
+<pre><code class="language-hcl"><span class="tok-kt">bool</span> <span class="tok-n">eq</span> <span class="tok-o">=</span> <span class="tok-p">(</span><span class="tok-n">a</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">b</span><span class="tok-p">)</span> <span class="tok-o">||</span> <span class="tok-p">(</span><span class="tok-o">!</span><span class="tok-n">a</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-o">!</span><span class="tok-n">b</span><span class="tok-p">);</span>
+<span class="tok-kt">int</span> <span class="tok-n">Out</span> <span class="tok-o">=</span> <span class="tok-p">[</span> <span class="tok-n">s</span> <span class="tok-p">:</span> <span class="tok-no">A</span><span class="tok-p">;</span> <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-no">B</span><span class="tok-p">;</span> <span class="tok-p">];</span>
+<span class="tok-kt">bool</span> <span class="tok-n">hit</span> <span class="tok-o">=</span> <span class="tok-n">code</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">OP1</span><span class="tok-p">,</span> <span class="tok-no">OP2</span><span class="tok-p">,</span> <span class="tok-no">OP3</span> <span class="tok-p">};</span>
+<span class="tok-kt">int</span> <span class="tok-n">Out4</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-o">!</span><span class="tok-n">s1</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-o">!</span><span class="tok-n">s0</span> <span class="tok-p">:</span> <span class="tok-no">D0</span><span class="tok-p">;</span>
+    <span class="tok-o">!</span><span class="tok-n">s1</span>        <span class="tok-p">:</span> <span class="tok-no">D1</span><span class="tok-p">;</span>
+    <span class="tok-o">!</span><span class="tok-n">s0</span>        <span class="tok-p">:</span> <span class="tok-no">D2</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span>          <span class="tok-p">:</span> <span class="tok-no">D3</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+<span class="tok-kt">int</span> <span class="tok-n">Min3</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-no">A</span> <span class="tok-o">&lt;=</span> <span class="tok-no">B</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-no">A</span> <span class="tok-o">&lt;=</span> <span class="tok-no">C</span> <span class="tok-p">:</span> <span class="tok-no">A</span><span class="tok-p">;</span>
+    <span class="tok-no">B</span> <span class="tok-o">&lt;=</span> <span class="tok-no">A</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-no">B</span> <span class="tok-o">&lt;=</span> <span class="tok-no">C</span> <span class="tok-p">:</span> <span class="tok-no">B</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span>               <span class="tok-p">:</span> <span class="tok-no">C</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
 </code></pre>
 <ul>
 <li>四选一对应 <code>(s1,s0)=00/01/10/11</code> 依次选 D0/D1/D2/D3。后面条件之所以省略一部分，是前面已排除了其他情况。</li>
@@ -2427,111 +2427,144 @@ int Min3 = [
 <thead>
 <tr>
 <th>类别</th>
+<th>取指所得顺序地址 valP</th>
 <th>读寄存器</th>
 <th>执行</th>
 <th>访存</th>
 <th>写回</th>
-<th>下一 PC</th>
+<th>实际下一 PC</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>halt/nop</code></td>
+<td><code>PC+1</code></td>
 <td>无</td>
 <td>无有效 ALU 结果</td>
 <td>无</td>
 <td>无</td>
-<td>实现仍可形成 valP；halt 后不再执行下一条</td>
+<td>nop：<code>PC ← valP</code>；halt：停止执行</td>
 </tr>
 <tr>
 <td><code>rrmovq/cmovXX</code></td>
-<td>valA=R[rA]</td>
-<td>valE=0+valA；计算 Cnd</td>
+<td><code>PC+2</code></td>
+<td><code>valA=R[rA]</code></td>
+<td><code>valE=0+valA</code>；计算 Cnd</td>
 <td>无</td>
-<td>条件真：R[rB]=valE；否则不写</td>
-<td>valP=PC+2</td>
+<td>条件真：<code>R[rB]=valE</code>；否则不写</td>
+<td><code>PC ← valP</code></td>
 </tr>
 <tr>
 <td><code>irmovq</code></td>
+<td><code>PC+10</code></td>
 <td>无</td>
-<td>valE=0+valC</td>
+<td><code>valE=0+valC</code></td>
 <td>无</td>
-<td>R[rB]=valE</td>
-<td>valP=PC+10</td>
+<td><code>R[rB]=valE</code></td>
+<td><code>PC ← valP</code></td>
 </tr>
 <tr>
 <td><code>rmmovq</code></td>
-<td>valA=R[rA]；valB=R[rB]</td>
-<td>valE=valB+valC</td>
-<td>M8[valE]=valA</td>
+<td><code>PC+10</code></td>
+<td><code>valA=R[rA]</code>；<code>valB=R[rB]</code></td>
+<td><code>valE=valB+valC</code></td>
+<td><code>M8[valE]=valA</code></td>
 <td>无</td>
-<td>valP=PC+10</td>
+<td><code>PC ← valP</code></td>
 </tr>
 <tr>
 <td><code>mrmovq</code></td>
-<td>valB=R[rB]</td>
-<td>valE=valB+valC</td>
-<td>valM=M8[valE]</td>
-<td>R[rA]=valM</td>
-<td>valP=PC+10</td>
+<td><code>PC+10</code></td>
+<td><code>valB=R[rB]</code></td>
+<td><code>valE=valB+valC</code></td>
+<td><code>valM=M8[valE]</code></td>
+<td><code>R[rA]=valM</code></td>
+<td><code>PC ← valP</code></td>
 </tr>
 <tr>
 <td><code>OPq</code></td>
-<td>valA=R[rA]；valB=R[rB]</td>
-<td>valE=valB OP valA；更新 CC</td>
+<td><code>PC+2</code></td>
+<td><code>valA=R[rA]</code>；<code>valB=R[rB]</code></td>
+<td><code>valE=valB OP valA</code>；更新 CC</td>
 <td>无</td>
-<td>R[rB]=valE</td>
-<td>valP=PC+2</td>
+<td><code>R[rB]=valE</code></td>
+<td><code>PC ← valP</code></td>
 </tr>
 <tr>
 <td><code>jXX</code></td>
+<td><code>PC+9</code></td>
 <td>无</td>
-<td>Cnd=Cond(CC,ifun)</td>
+<td><code>Cnd=Cond(CC,ifun)</code></td>
 <td>无</td>
 <td>无</td>
-<td>Cnd ? valC : valP；valP=PC+9</td>
+<td><code>PC ← Cnd ? valC : valP</code></td>
 </tr>
 <tr>
 <td><code>pushq</code></td>
-<td>valA=R[rA]；valB=s</td>
-<td>valE=valB−8</td>
-<td>M8[valE]=valA</td>
-<td>R[rsp]=valE</td>
-<td>valP=PC+2</td>
+<td><code>PC+2</code></td>
+<td><code>valA=R[rA]</code>；<code>valB=s</code></td>
+<td><code>valE=valB−8</code></td>
+<td><code>M8[valE]=valA</code></td>
+<td><code>R[rsp]=valE</code></td>
+<td><code>PC ← valP</code></td>
 </tr>
 <tr>
 <td><code>popq</code></td>
-<td>valA=s；valB=s</td>
-<td>valE=valB+8</td>
-<td>valM=M8[valA]</td>
-<td>R[rsp]=valE；R[rA]=valM</td>
-<td>valP=PC+2</td>
+<td><code>PC+2</code></td>
+<td><code>valA=s</code>；<code>valB=s</code></td>
+<td><code>valE=valB+8</code></td>
+<td><code>valM=M8[valA]</code></td>
+<td><code>R[rsp]=valE</code>；<code>R[rA]=valM</code></td>
+<td><code>PC ← valP</code></td>
 </tr>
 <tr>
 <td><code>call</code></td>
-<td>valB=s</td>
-<td>valE=valB−8</td>
-<td>M8[valE]=valP</td>
-<td>R[rsp]=valE</td>
-<td>valC；valP=PC+9</td>
+<td><code>PC+9</code>，作为返回地址压栈</td>
+<td><code>valB=s</code></td>
+<td><code>valE=valB−8</code></td>
+<td><code>M8[valE]=valP</code></td>
+<td><code>R[rsp]=valE</code></td>
+<td><code>PC ← valC</code>（被调函数入口）</td>
 </tr>
 <tr>
 <td><code>ret</code></td>
-<td>valA=s；valB=s</td>
-<td>valE=valB+8</td>
-<td>valM=M8[valA]</td>
-<td>R[rsp]=valE</td>
-<td>valM；valP=PC+1</td>
+<td><code>PC+1</code>，本指令不使用该顺序地址</td>
+<td><code>valA=s</code>；<code>valB=s</code></td>
+<td><code>valE=valB+8</code></td>
+<td><code>valM=M8[valA]</code></td>
+<td><code>R[rsp]=valE</code></td>
+<td><code>PC ← valM</code>（栈中的返回地址）</td>
 </tr>
 </tbody>
 </table></div>
 <ul>
-<li><code>rmmovq</code> 的 valA 是待写数据，valB 是基址；不能把两者都送去 ALU 相加而忘掉位移。</li>
-<li><code>mrmovq</code> 的目的写在 M 端口，ALU 的 valE 是地址，不是要写入目的寄存器的数据。</li>
-<li><code>pushq/call</code> 先形成新栈顶地址 valE，向它写；<code>popq/ret</code> 从旧栈顶 valA 读。新旧地址是两套信号，不能用统一“栈地址”代替。</li>
-<li><code>popq</code> 需要两个写回。若 <code>rA=rsp</code>，M 端口写入的弹出值优先于 E 端口的递增值，最终栈指针等于弹出的字。</li>
-<li><code>cmovXX</code> 即使条件假也可计算 valE，只把 dstE 置为 RNONE；<code>jXX</code> 不写寄存器，只选择新 PC。两者都使用此前 CC，而非本指令 ALU 的新结果。</li>
-<li><code>call</code> 与 push 共用 rsp−8，但写数据分别为 valP 和 valA；<code>ret</code> 与 pop 共用从旧栈顶读，但读出值分别流向 PC 和寄存器。</li>
+<li>
+<p><strong>valP 的定义</strong>：若当前指令位于地址 p、长度为 L，则 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mi>a</mi><mi>l</mi><mi>P</mi><mo>=</mo><mi>p</mi><mo>+</mo><mi>L</mi></mrow><annotation encoding="application/x-tex">valP=p+L</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.0359em;">v</span><span class="mord mathnormal">a</span><span class="mord mathnormal" style="margin-right:0.0197em;">l</span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal">L</span></span></span></span></span>，表示紧接着该指令之后的地址；是否真正执行那里，要由 PC 更新逻辑另行决定。</p>
+</li>
+<li>
+<p><strong>call 的两个地址</strong>：<code>valC</code> 来自指令的目标地址字段，立即成为下一 PC；<code>valP=p+9</code> 被写入栈中，供将来的 ret 返回。它们不是两次连续的 PC 赋值。</p>
+</li>
+<li>
+<p><strong>ret 的两个地址</strong>：<code>valM</code> 来自旧栈顶保存的返回地址，成为下一 PC；<code>valP=p+1</code> 只是统一取指电路形成的顺序地址，不用于该 ret 的 PC 更新。</p>
+</li>
+<li>
+<p><code>rmmovq</code> 的 valA 是待写数据，valB 是基址；不能把两者都送去 ALU 相加而忘掉位移。</p>
+</li>
+<li>
+<p><code>mrmovq</code> 的目的写在 M 端口，ALU 的 valE 是地址，不是要写入目的寄存器的数据。</p>
+</li>
+<li>
+<p><code>pushq/call</code> 先形成新栈顶地址 valE，向它写；<code>popq/ret</code> 从旧栈顶 valA 读。新旧地址是两套信号，不能用统一“栈地址”代替。</p>
+</li>
+<li>
+<p><code>popq</code> 需要两个写回。若 <code>rA=rsp</code>，M 端口写入的弹出值优先于 E 端口的递增值，最终栈指针等于弹出的字。</p>
+</li>
+<li>
+<p><code>cmovXX</code> 即使条件假也可计算 valE，只把 dstE 置为 RNONE；<code>jXX</code> 不写寄存器，只选择新 PC。两者都使用此前 CC，而非本指令 ALU 的新结果。</p>
+</li>
+<li>
+<p><code>call</code> 与 push 共用 rsp−8，但写数据分别为 valP 和 valA；<code>ret</code> 与 pop 共用从旧栈顶读，但读出值分别流向 PC 和寄存器。</p>
+</li>
 </ul>
 <h3 id="section-113">数值追踪：pop、call、ret<a class="anchor" href="#section-113" aria-label="链接到本节">#</a></h3>
 <ul>
@@ -2541,16 +2574,16 @@ int Min3 = [
 <li><strong>ret</strong>：被调过程保持该返回栈布局时，ret 读出 0x109，恢复 <code>%rsp=0x200</code>，转回 0x109。返回地址是完整 call 后继，不是 call 首地址加 1。</li>
 </ul>
 <h2 id="section-114">Fetch：字段位置、长度和有效性<a class="anchor" href="#section-114" aria-label="链接到本节">#</a></h2>
-<pre><code class="language-text">int icode = [ imem_error : INOP; 1 : imem_icode; ];
-int ifun  = [ imem_error : FNONE; 1 : imem_ifun; ];
-bool need_regids = icode in {
-    IRRMOVQ, IIRMOVQ, IRMMOVQ, IMRMOVQ, IOPQ, IPUSHQ, IPOPQ
-};
-bool need_valC = icode in { IIRMOVQ, IRMMOVQ, IMRMOVQ, IJXX, ICALL };
-bool instr_valid = icode in {
-    IHALT, INOP, IRRMOVQ, IIRMOVQ, IRMMOVQ, IMRMOVQ,
-    IOPQ, IJXX, ICALL, IRET, IPUSHQ, IPOPQ
-};
+<pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">icode</span> <span class="tok-o">=</span> <span class="tok-p">[</span> <span class="tok-n">imem_error</span> <span class="tok-p">:</span> <span class="tok-no">INOP</span><span class="tok-p">;</span> <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-n">imem_icode</span><span class="tok-p">;</span> <span class="tok-p">];</span>
+<span class="tok-kt">int</span> <span class="tok-n">ifun</span>  <span class="tok-o">=</span> <span class="tok-p">[</span> <span class="tok-n">imem_error</span> <span class="tok-p">:</span> <span class="tok-no">FNONE</span><span class="tok-p">;</span> <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-n">imem_ifun</span><span class="tok-p">;</span> <span class="tok-p">];</span>
+<span class="tok-kt">bool</span> <span class="tok-n">need_regids</span> <span class="tok-o">=</span> <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span>
+    <span class="tok-no">IRRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IIRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IMRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IOPQ</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span>
+<span class="tok-p">};</span>
+<span class="tok-kt">bool</span> <span class="tok-n">need_valC</span> <span class="tok-o">=</span> <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IIRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IMRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IJXX</span><span class="tok-p">,</span> <span class="tok-no">ICALL</span> <span class="tok-p">};</span>
+<span class="tok-kt">bool</span> <span class="tok-n">instr_valid</span> <span class="tok-o">=</span> <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span>
+    <span class="tok-no">IHALT</span><span class="tok-p">,</span> <span class="tok-no">INOP</span><span class="tok-p">,</span> <span class="tok-no">IRRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IIRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IMRMOVQ</span><span class="tok-p">,</span>
+    <span class="tok-no">IOPQ</span><span class="tok-p">,</span> <span class="tok-no">IJXX</span><span class="tok-p">,</span> <span class="tok-no">ICALL</span><span class="tok-p">,</span> <span class="tok-no">IRET</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span>
+<span class="tok-p">};</span>
 </code></pre>
 <ul>
 <li><code>need_regids</code> 控制是否解释 PC+1 为寄存器编号，不能总读它为 rA/rB；jmp 的 PC+1 已是目标地址第一个字节。</li>
@@ -2565,26 +2598,26 @@ bool instr_valid = icode in {
 <li>这里 <code>instr_valid</code> 是课件给出的<strong>icode 类别检查</strong>，不等于完整验证每种 ifun、寄存器字段与编码组合；模拟器/扩展实现应按实际 ISA 再作检查。</li>
 </ul>
 <h2 id="section-115">Decode / Write back：四个寄存器选择器<a class="anchor" href="#section-115" aria-label="链接到本节">#</a></h2>
-<pre><code class="language-text">int srcA = [
-    icode in { IRRMOVQ, IRMMOVQ, IOPQ, IPUSHQ } : rA;
-    icode in { IPOPQ, IRET } : RRSP;
-    1 : RNONE;
-];
-int srcB = [
-    icode in { IOPQ, IRMMOVQ, IMRMOVQ } : rB;
-    icode in { IPUSHQ, IPOPQ, ICALL, IRET } : RRSP;
-    1 : RNONE;
-];
-int dstE = [
-    icode == IRRMOVQ &amp;&amp; Cnd : rB;
-    icode in { IIRMOVQ, IOPQ } : rB;
-    icode in { IPUSHQ, IPOPQ, ICALL, IRET } : RRSP;
-    1 : RNONE;
-];
-int dstM = [
-    icode in { IMRMOVQ, IPOPQ } : rA;
-    1 : RNONE;
-];
+<pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">srcA</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IOPQ</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">rA</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IPOPQ</span><span class="tok-p">,</span> <span class="tok-no">IRET</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-no">RRSP</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-no">RNONE</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+<span class="tok-kt">int</span> <span class="tok-n">srcB</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IOPQ</span><span class="tok-p">,</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IMRMOVQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">rB</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IPUSHQ</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span><span class="tok-p">,</span> <span class="tok-no">ICALL</span><span class="tok-p">,</span> <span class="tok-no">IRET</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-no">RRSP</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-no">RNONE</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+<span class="tok-kt">int</span> <span class="tok-n">dstE</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">icode</span> <span class="tok-o">==</span> <span class="tok-no">IRRMOVQ</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">Cnd</span> <span class="tok-p">:</span> <span class="tok-n">rB</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IIRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IOPQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">rB</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IPUSHQ</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span><span class="tok-p">,</span> <span class="tok-no">ICALL</span><span class="tok-p">,</span> <span class="tok-no">IRET</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-no">RRSP</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-no">RNONE</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+<span class="tok-kt">int</span> <span class="tok-n">dstM</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IMRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">rA</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-no">RNONE</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
 </code></pre>
 <ul>
 <li>选择 srcA 是因为需要“被存数据/运算 A/旧栈顶”，选择 srcB 是因为需要“运算 B/基址/旧 rsp”。按数据用途推导，而非死记集合。</li>
@@ -2593,20 +2626,20 @@ int dstM = [
 <li><code>IRRMOVQ</code> 包括条件传送，其 dstE 由 Cnd 使能。RNONE 是抑制端口的编号，不是“向某个假寄存器写零”。</li>
 </ul>
 <h2 id="section-116">Execute：ALU 的两个输入、功能和 CC<a class="anchor" href="#section-116" aria-label="链接到本节">#</a></h2>
-<pre><code class="language-text">int aluA = [
-    icode in { IRRMOVQ, IOPQ } : valA;
-    icode in { IIRMOVQ, IRMMOVQ, IMRMOVQ } : valC;
-    icode in { ICALL, IPUSHQ } : -8;
-    icode in { IRET, IPOPQ } : 8;
-    1 : 0;
-];
-int aluB = [
-    icode in { IRMMOVQ, IMRMOVQ, IOPQ, ICALL, IPUSHQ, IRET, IPOPQ } : valB;
-    icode in { IRRMOVQ, IIRMOVQ } : 0;
-    1 : 0;
-];
-int alufun = [ icode == IOPQ : ifun; 1 : ALUADD; ];
-bool set_cc = icode == IOPQ;
+<pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">aluA</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IOPQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">valA</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IIRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IMRMOVQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">valC</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">ICALL</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-o">-</span><span class="tok-m">8</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRET</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-m">8</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-m">0</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+<span class="tok-kt">int</span> <span class="tok-n">aluB</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IMRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IOPQ</span><span class="tok-p">,</span> <span class="tok-no">ICALL</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span><span class="tok-p">,</span> <span class="tok-no">IRET</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">valB</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IIRMOVQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-m">0</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-m">0</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+<span class="tok-kt">int</span> <span class="tok-n">alufun</span> <span class="tok-o">=</span> <span class="tok-p">[</span> <span class="tok-n">icode</span> <span class="tok-o">==</span> <span class="tok-no">IOPQ</span> <span class="tok-p">:</span> <span class="tok-n">ifun</span><span class="tok-p">;</span> <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-no">ALUADD</span><span class="tok-p">;</span> <span class="tok-p">];</span>
+<span class="tok-kt">bool</span> <span class="tok-n">set_cc</span> <span class="tok-o">=</span> <span class="tok-n">icode</span> <span class="tok-o">==</span> <span class="tok-no">IOPQ</span><span class="tok-p">;</span>
 </code></pre>
 <ul>
 <li>数据传送也可能使用 ALU：<code>rrmovq</code> 是 0+valA，<code>irmovq</code> 是 0+valC，load/store 是基址+位移。</li>
@@ -2615,18 +2648,18 @@ bool set_cc = icode == IOPQ;
 <li>上面是课件的正常执行控制。停止或地址错误下，是否提交各状态还需要执行状态/使能控制；不能把这个 set_cc 片段单独当作完整异常处理方案。</li>
 </ul>
 <h2 id="section-117">Memory：地址、数据与读写使能<a class="anchor" href="#section-117" aria-label="链接到本节">#</a></h2>
-<pre><code class="language-text">int mem_addr = [
-    icode in { IRMMOVQ, IMRMOVQ, IPUSHQ, ICALL } : valE;
-    icode in { IPOPQ, IRET } : valA;
-    1 : 0;
-];
-int mem_data = [
-    icode in { IRMMOVQ, IPUSHQ } : valA;
-    icode == ICALL : valP;
-    1 : 0;
-];
-bool mem_read  = icode in { IMRMOVQ, IPOPQ, IRET };
-bool mem_write = icode in { IRMMOVQ, IPUSHQ, ICALL };
+<pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">mem_addr</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IMRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span><span class="tok-p">,</span> <span class="tok-no">ICALL</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">valE</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IPOPQ</span><span class="tok-p">,</span> <span class="tok-no">IRET</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">valA</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-m">0</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+<span class="tok-kt">int</span> <span class="tok-n">mem_data</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">valA</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-o">==</span> <span class="tok-no">ICALL</span> <span class="tok-p">:</span> <span class="tok-n">valP</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-m">0</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+<span class="tok-kt">bool</span> <span class="tok-n">mem_read</span>  <span class="tok-o">=</span> <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IMRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span><span class="tok-p">,</span> <span class="tok-no">IRET</span> <span class="tok-p">};</span>
+<span class="tok-kt">bool</span> <span class="tok-n">mem_write</span> <span class="tok-o">=</span> <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span><span class="tok-p">,</span> <span class="tok-no">ICALL</span> <span class="tok-p">};</span>
 </code></pre>
 <ul>
 <li><code>mem_addr</code> 有值不等于发生访问；必须同时查看读/写使能。默认地址 0 在使能为假时不代表读写了地址 0。</li>
@@ -2635,18 +2668,18 @@ bool mem_write = icode in { IRMMOVQ, IPUSHQ, ICALL };
 <li>每次正常指令最多进行一次本节所指的数据内存读或写；取指内存访问另算。</li>
 </ul>
 <h2 id="section-118">状态与 PC 更新的优先选择<a class="anchor" href="#section-118" aria-label="链接到本节">#</a></h2>
-<pre><code class="language-text">int Stat = [
-    imem_error || dmem_error : SADR;
-    !instr_valid : SINS;
-    icode == IHALT : SHLT;
-    1 : SAOK;
-];
-int new_pc = [
-    icode == ICALL : valC;
-    icode == IJXX &amp;&amp; Cnd : valC;
-    icode == IRET : valM;
-    1 : valP;
-];
+<pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">Stat</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">imem_error</span> <span class="tok-o">||</span> <span class="tok-n">dmem_error</span> <span class="tok-p">:</span> <span class="tok-no">SADR</span><span class="tok-p">;</span>
+    <span class="tok-o">!</span><span class="tok-n">instr_valid</span> <span class="tok-p">:</span> <span class="tok-no">SINS</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-o">==</span> <span class="tok-no">IHALT</span> <span class="tok-p">:</span> <span class="tok-no">SHLT</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-no">SAOK</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+<span class="tok-kt">int</span> <span class="tok-n">new_pc</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">icode</span> <span class="tok-o">==</span> <span class="tok-no">ICALL</span> <span class="tok-p">:</span> <span class="tok-n">valC</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-o">==</span> <span class="tok-no">IJXX</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">Cnd</span> <span class="tok-p">:</span> <span class="tok-n">valC</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-o">==</span> <span class="tok-no">IRET</span> <span class="tok-p">:</span> <span class="tok-n">valM</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-n">valP</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
 </code></pre>
 <ul>
 <li>状态 case 按第一条真条件取值：地址错优先于非法指令，非法指令优先于 halt，均无异常时为 AOK。</li>

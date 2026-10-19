@@ -82,111 +82,144 @@
 <thead>
 <tr>
 <th>类别</th>
+<th>取指所得顺序地址 valP</th>
 <th>读寄存器</th>
 <th>执行</th>
 <th>访存</th>
 <th>写回</th>
-<th>下一 PC</th>
+<th>实际下一 PC</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>halt/nop</code></td>
+<td><code>PC+1</code></td>
 <td>无</td>
 <td>无有效 ALU 结果</td>
 <td>无</td>
 <td>无</td>
-<td>实现仍可形成 valP；halt 后不再执行下一条</td>
+<td>nop：<code>PC ← valP</code>；halt：停止执行</td>
 </tr>
 <tr>
 <td><code>rrmovq/cmovXX</code></td>
-<td>valA=R[rA]</td>
-<td>valE=0+valA；计算 Cnd</td>
+<td><code>PC+2</code></td>
+<td><code>valA=R[rA]</code></td>
+<td><code>valE=0+valA</code>；计算 Cnd</td>
 <td>无</td>
-<td>条件真：R[rB]=valE；否则不写</td>
-<td>valP=PC+2</td>
+<td>条件真：<code>R[rB]=valE</code>；否则不写</td>
+<td><code>PC ← valP</code></td>
 </tr>
 <tr>
 <td><code>irmovq</code></td>
+<td><code>PC+10</code></td>
 <td>无</td>
-<td>valE=0+valC</td>
+<td><code>valE=0+valC</code></td>
 <td>无</td>
-<td>R[rB]=valE</td>
-<td>valP=PC+10</td>
+<td><code>R[rB]=valE</code></td>
+<td><code>PC ← valP</code></td>
 </tr>
 <tr>
 <td><code>rmmovq</code></td>
-<td>valA=R[rA]；valB=R[rB]</td>
-<td>valE=valB+valC</td>
-<td>M8[valE]=valA</td>
+<td><code>PC+10</code></td>
+<td><code>valA=R[rA]</code>；<code>valB=R[rB]</code></td>
+<td><code>valE=valB+valC</code></td>
+<td><code>M8[valE]=valA</code></td>
 <td>无</td>
-<td>valP=PC+10</td>
+<td><code>PC ← valP</code></td>
 </tr>
 <tr>
 <td><code>mrmovq</code></td>
-<td>valB=R[rB]</td>
-<td>valE=valB+valC</td>
-<td>valM=M8[valE]</td>
-<td>R[rA]=valM</td>
-<td>valP=PC+10</td>
+<td><code>PC+10</code></td>
+<td><code>valB=R[rB]</code></td>
+<td><code>valE=valB+valC</code></td>
+<td><code>valM=M8[valE]</code></td>
+<td><code>R[rA]=valM</code></td>
+<td><code>PC ← valP</code></td>
 </tr>
 <tr>
 <td><code>OPq</code></td>
-<td>valA=R[rA]；valB=R[rB]</td>
-<td>valE=valB OP valA；更新 CC</td>
+<td><code>PC+2</code></td>
+<td><code>valA=R[rA]</code>；<code>valB=R[rB]</code></td>
+<td><code>valE=valB OP valA</code>；更新 CC</td>
 <td>无</td>
-<td>R[rB]=valE</td>
-<td>valP=PC+2</td>
+<td><code>R[rB]=valE</code></td>
+<td><code>PC ← valP</code></td>
 </tr>
 <tr>
 <td><code>jXX</code></td>
+<td><code>PC+9</code></td>
 <td>无</td>
-<td>Cnd=Cond(CC,ifun)</td>
+<td><code>Cnd=Cond(CC,ifun)</code></td>
 <td>无</td>
 <td>无</td>
-<td>Cnd ? valC : valP；valP=PC+9</td>
+<td><code>PC ← Cnd ? valC : valP</code></td>
 </tr>
 <tr>
 <td><code>pushq</code></td>
-<td>valA=R[rA]；valB=s</td>
-<td>valE=valB−8</td>
-<td>M8[valE]=valA</td>
-<td>R[rsp]=valE</td>
-<td>valP=PC+2</td>
+<td><code>PC+2</code></td>
+<td><code>valA=R[rA]</code>；<code>valB=s</code></td>
+<td><code>valE=valB−8</code></td>
+<td><code>M8[valE]=valA</code></td>
+<td><code>R[rsp]=valE</code></td>
+<td><code>PC ← valP</code></td>
 </tr>
 <tr>
 <td><code>popq</code></td>
-<td>valA=s；valB=s</td>
-<td>valE=valB+8</td>
-<td>valM=M8[valA]</td>
-<td>R[rsp]=valE；R[rA]=valM</td>
-<td>valP=PC+2</td>
+<td><code>PC+2</code></td>
+<td><code>valA=s</code>；<code>valB=s</code></td>
+<td><code>valE=valB+8</code></td>
+<td><code>valM=M8[valA]</code></td>
+<td><code>R[rsp]=valE</code>；<code>R[rA]=valM</code></td>
+<td><code>PC ← valP</code></td>
 </tr>
 <tr>
 <td><code>call</code></td>
-<td>valB=s</td>
-<td>valE=valB−8</td>
-<td>M8[valE]=valP</td>
-<td>R[rsp]=valE</td>
-<td>valC；valP=PC+9</td>
+<td><code>PC+9</code>，作为返回地址压栈</td>
+<td><code>valB=s</code></td>
+<td><code>valE=valB−8</code></td>
+<td><code>M8[valE]=valP</code></td>
+<td><code>R[rsp]=valE</code></td>
+<td><code>PC ← valC</code>（被调函数入口）</td>
 </tr>
 <tr>
 <td><code>ret</code></td>
-<td>valA=s；valB=s</td>
-<td>valE=valB+8</td>
-<td>valM=M8[valA]</td>
-<td>R[rsp]=valE</td>
-<td>valM；valP=PC+1</td>
+<td><code>PC+1</code>，本指令不使用该顺序地址</td>
+<td><code>valA=s</code>；<code>valB=s</code></td>
+<td><code>valE=valB+8</code></td>
+<td><code>valM=M8[valA]</code></td>
+<td><code>R[rsp]=valE</code></td>
+<td><code>PC ← valM</code>（栈中的返回地址）</td>
 </tr>
 </tbody>
 </table></div>
 <ul>
-<li><code>rmmovq</code> 的 valA 是待写数据，valB 是基址；不能把两者都送去 ALU 相加而忘掉位移。</li>
-<li><code>mrmovq</code> 的目的写在 M 端口，ALU 的 valE 是地址，不是要写入目的寄存器的数据。</li>
-<li><code>pushq/call</code> 先形成新栈顶地址 valE，向它写；<code>popq/ret</code> 从旧栈顶 valA 读。新旧地址是两套信号，不能用统一“栈地址”代替。</li>
-<li><code>popq</code> 需要两个写回。若 <code>rA=rsp</code>，M 端口写入的弹出值优先于 E 端口的递增值，最终栈指针等于弹出的字。</li>
-<li><code>cmovXX</code> 即使条件假也可计算 valE，只把 dstE 置为 RNONE；<code>jXX</code> 不写寄存器，只选择新 PC。两者都使用此前 CC，而非本指令 ALU 的新结果。</li>
-<li><code>call</code> 与 push 共用 rsp−8，但写数据分别为 valP 和 valA；<code>ret</code> 与 pop 共用从旧栈顶读，但读出值分别流向 PC 和寄存器。</li>
+<li>
+<p><strong>valP 的定义</strong>：若当前指令位于地址 p、长度为 L，则 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mi>a</mi><mi>l</mi><mi>P</mi><mo>=</mo><mi>p</mi><mo>+</mo><mi>L</mi></mrow><annotation encoding="application/x-tex">valP=p+L</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.0359em;">v</span><span class="mord mathnormal">a</span><span class="mord mathnormal" style="margin-right:0.0197em;">l</span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal">L</span></span></span></span></span>，表示紧接着该指令之后的地址；是否真正执行那里，要由 PC 更新逻辑另行决定。</p>
+</li>
+<li>
+<p><strong>call 的两个地址</strong>：<code>valC</code> 来自指令的目标地址字段，立即成为下一 PC；<code>valP=p+9</code> 被写入栈中，供将来的 ret 返回。它们不是两次连续的 PC 赋值。</p>
+</li>
+<li>
+<p><strong>ret 的两个地址</strong>：<code>valM</code> 来自旧栈顶保存的返回地址，成为下一 PC；<code>valP=p+1</code> 只是统一取指电路形成的顺序地址，不用于该 ret 的 PC 更新。</p>
+</li>
+<li>
+<p><code>rmmovq</code> 的 valA 是待写数据，valB 是基址；不能把两者都送去 ALU 相加而忘掉位移。</p>
+</li>
+<li>
+<p><code>mrmovq</code> 的目的写在 M 端口，ALU 的 valE 是地址，不是要写入目的寄存器的数据。</p>
+</li>
+<li>
+<p><code>pushq/call</code> 先形成新栈顶地址 valE，向它写；<code>popq/ret</code> 从旧栈顶 valA 读。新旧地址是两套信号，不能用统一“栈地址”代替。</p>
+</li>
+<li>
+<p><code>popq</code> 需要两个写回。若 <code>rA=rsp</code>，M 端口写入的弹出值优先于 E 端口的递增值，最终栈指针等于弹出的字。</p>
+</li>
+<li>
+<p><code>cmovXX</code> 即使条件假也可计算 valE，只把 dstE 置为 RNONE；<code>jXX</code> 不写寄存器，只选择新 PC。两者都使用此前 CC，而非本指令 ALU 的新结果。</p>
+</li>
+<li>
+<p><code>call</code> 与 push 共用 rsp−8，但写数据分别为 valP 和 valA；<code>ret</code> 与 pop 共用从旧栈顶读，但读出值分别流向 PC 和寄存器。</p>
+</li>
 </ul>
 <h3 id="section-4">数值追踪：pop、call、ret<a class="anchor" href="#section-4" aria-label="链接到本节">#</a></h3>
 <ul>
@@ -196,16 +229,16 @@
 <li><strong>ret</strong>：被调过程保持该返回栈布局时，ret 读出 0x109，恢复 <code>%rsp=0x200</code>，转回 0x109。返回地址是完整 call 后继，不是 call 首地址加 1。</li>
 </ul>
 <h2 id="section-5">Fetch：字段位置、长度和有效性<a class="anchor" href="#section-5" aria-label="链接到本节">#</a></h2>
-<pre><code class="language-text">int icode = [ imem_error : INOP; 1 : imem_icode; ];
-int ifun  = [ imem_error : FNONE; 1 : imem_ifun; ];
-bool need_regids = icode in {
-    IRRMOVQ, IIRMOVQ, IRMMOVQ, IMRMOVQ, IOPQ, IPUSHQ, IPOPQ
-};
-bool need_valC = icode in { IIRMOVQ, IRMMOVQ, IMRMOVQ, IJXX, ICALL };
-bool instr_valid = icode in {
-    IHALT, INOP, IRRMOVQ, IIRMOVQ, IRMMOVQ, IMRMOVQ,
-    IOPQ, IJXX, ICALL, IRET, IPUSHQ, IPOPQ
-};
+<pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">icode</span> <span class="tok-o">=</span> <span class="tok-p">[</span> <span class="tok-n">imem_error</span> <span class="tok-p">:</span> <span class="tok-no">INOP</span><span class="tok-p">;</span> <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-n">imem_icode</span><span class="tok-p">;</span> <span class="tok-p">];</span>
+<span class="tok-kt">int</span> <span class="tok-n">ifun</span>  <span class="tok-o">=</span> <span class="tok-p">[</span> <span class="tok-n">imem_error</span> <span class="tok-p">:</span> <span class="tok-no">FNONE</span><span class="tok-p">;</span> <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-n">imem_ifun</span><span class="tok-p">;</span> <span class="tok-p">];</span>
+<span class="tok-kt">bool</span> <span class="tok-n">need_regids</span> <span class="tok-o">=</span> <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span>
+    <span class="tok-no">IRRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IIRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IMRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IOPQ</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span>
+<span class="tok-p">};</span>
+<span class="tok-kt">bool</span> <span class="tok-n">need_valC</span> <span class="tok-o">=</span> <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IIRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IMRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IJXX</span><span class="tok-p">,</span> <span class="tok-no">ICALL</span> <span class="tok-p">};</span>
+<span class="tok-kt">bool</span> <span class="tok-n">instr_valid</span> <span class="tok-o">=</span> <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span>
+    <span class="tok-no">IHALT</span><span class="tok-p">,</span> <span class="tok-no">INOP</span><span class="tok-p">,</span> <span class="tok-no">IRRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IIRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IMRMOVQ</span><span class="tok-p">,</span>
+    <span class="tok-no">IOPQ</span><span class="tok-p">,</span> <span class="tok-no">IJXX</span><span class="tok-p">,</span> <span class="tok-no">ICALL</span><span class="tok-p">,</span> <span class="tok-no">IRET</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span>
+<span class="tok-p">};</span>
 </code></pre>
 <ul>
 <li><code>need_regids</code> 控制是否解释 PC+1 为寄存器编号，不能总读它为 rA/rB；jmp 的 PC+1 已是目标地址第一个字节。</li>
@@ -220,26 +253,26 @@ bool instr_valid = icode in {
 <li>这里 <code>instr_valid</code> 是课件给出的<strong>icode 类别检查</strong>，不等于完整验证每种 ifun、寄存器字段与编码组合；模拟器/扩展实现应按实际 ISA 再作检查。</li>
 </ul>
 <h2 id="section-6">Decode / Write back：四个寄存器选择器<a class="anchor" href="#section-6" aria-label="链接到本节">#</a></h2>
-<pre><code class="language-text">int srcA = [
-    icode in { IRRMOVQ, IRMMOVQ, IOPQ, IPUSHQ } : rA;
-    icode in { IPOPQ, IRET } : RRSP;
-    1 : RNONE;
-];
-int srcB = [
-    icode in { IOPQ, IRMMOVQ, IMRMOVQ } : rB;
-    icode in { IPUSHQ, IPOPQ, ICALL, IRET } : RRSP;
-    1 : RNONE;
-];
-int dstE = [
-    icode == IRRMOVQ &amp;&amp; Cnd : rB;
-    icode in { IIRMOVQ, IOPQ } : rB;
-    icode in { IPUSHQ, IPOPQ, ICALL, IRET } : RRSP;
-    1 : RNONE;
-];
-int dstM = [
-    icode in { IMRMOVQ, IPOPQ } : rA;
-    1 : RNONE;
-];
+<pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">srcA</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IOPQ</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">rA</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IPOPQ</span><span class="tok-p">,</span> <span class="tok-no">IRET</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-no">RRSP</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-no">RNONE</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+<span class="tok-kt">int</span> <span class="tok-n">srcB</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IOPQ</span><span class="tok-p">,</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IMRMOVQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">rB</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IPUSHQ</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span><span class="tok-p">,</span> <span class="tok-no">ICALL</span><span class="tok-p">,</span> <span class="tok-no">IRET</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-no">RRSP</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-no">RNONE</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+<span class="tok-kt">int</span> <span class="tok-n">dstE</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">icode</span> <span class="tok-o">==</span> <span class="tok-no">IRRMOVQ</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">Cnd</span> <span class="tok-p">:</span> <span class="tok-n">rB</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IIRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IOPQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">rB</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IPUSHQ</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span><span class="tok-p">,</span> <span class="tok-no">ICALL</span><span class="tok-p">,</span> <span class="tok-no">IRET</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-no">RRSP</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-no">RNONE</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+<span class="tok-kt">int</span> <span class="tok-n">dstM</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IMRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">rA</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-no">RNONE</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
 </code></pre>
 <ul>
 <li>选择 srcA 是因为需要“被存数据/运算 A/旧栈顶”，选择 srcB 是因为需要“运算 B/基址/旧 rsp”。按数据用途推导，而非死记集合。</li>
@@ -248,20 +281,20 @@ int dstM = [
 <li><code>IRRMOVQ</code> 包括条件传送，其 dstE 由 Cnd 使能。RNONE 是抑制端口的编号，不是“向某个假寄存器写零”。</li>
 </ul>
 <h2 id="section-7">Execute：ALU 的两个输入、功能和 CC<a class="anchor" href="#section-7" aria-label="链接到本节">#</a></h2>
-<pre><code class="language-text">int aluA = [
-    icode in { IRRMOVQ, IOPQ } : valA;
-    icode in { IIRMOVQ, IRMMOVQ, IMRMOVQ } : valC;
-    icode in { ICALL, IPUSHQ } : -8;
-    icode in { IRET, IPOPQ } : 8;
-    1 : 0;
-];
-int aluB = [
-    icode in { IRMMOVQ, IMRMOVQ, IOPQ, ICALL, IPUSHQ, IRET, IPOPQ } : valB;
-    icode in { IRRMOVQ, IIRMOVQ } : 0;
-    1 : 0;
-];
-int alufun = [ icode == IOPQ : ifun; 1 : ALUADD; ];
-bool set_cc = icode == IOPQ;
+<pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">aluA</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IOPQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">valA</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IIRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IMRMOVQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">valC</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">ICALL</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-o">-</span><span class="tok-m">8</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRET</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-m">8</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-m">0</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+<span class="tok-kt">int</span> <span class="tok-n">aluB</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IMRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IOPQ</span><span class="tok-p">,</span> <span class="tok-no">ICALL</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span><span class="tok-p">,</span> <span class="tok-no">IRET</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">valB</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IIRMOVQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-m">0</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-m">0</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+<span class="tok-kt">int</span> <span class="tok-n">alufun</span> <span class="tok-o">=</span> <span class="tok-p">[</span> <span class="tok-n">icode</span> <span class="tok-o">==</span> <span class="tok-no">IOPQ</span> <span class="tok-p">:</span> <span class="tok-n">ifun</span><span class="tok-p">;</span> <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-no">ALUADD</span><span class="tok-p">;</span> <span class="tok-p">];</span>
+<span class="tok-kt">bool</span> <span class="tok-n">set_cc</span> <span class="tok-o">=</span> <span class="tok-n">icode</span> <span class="tok-o">==</span> <span class="tok-no">IOPQ</span><span class="tok-p">;</span>
 </code></pre>
 <ul>
 <li>数据传送也可能使用 ALU：<code>rrmovq</code> 是 0+valA，<code>irmovq</code> 是 0+valC，load/store 是基址+位移。</li>
@@ -270,18 +303,18 @@ bool set_cc = icode == IOPQ;
 <li>上面是课件的正常执行控制。停止或地址错误下，是否提交各状态还需要执行状态/使能控制；不能把这个 set_cc 片段单独当作完整异常处理方案。</li>
 </ul>
 <h2 id="section-8">Memory：地址、数据与读写使能<a class="anchor" href="#section-8" aria-label="链接到本节">#</a></h2>
-<pre><code class="language-text">int mem_addr = [
-    icode in { IRMMOVQ, IMRMOVQ, IPUSHQ, ICALL } : valE;
-    icode in { IPOPQ, IRET } : valA;
-    1 : 0;
-];
-int mem_data = [
-    icode in { IRMMOVQ, IPUSHQ } : valA;
-    icode == ICALL : valP;
-    1 : 0;
-];
-bool mem_read  = icode in { IMRMOVQ, IPOPQ, IRET };
-bool mem_write = icode in { IRMMOVQ, IPUSHQ, ICALL };
+<pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">mem_addr</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IMRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span><span class="tok-p">,</span> <span class="tok-no">ICALL</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">valE</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IPOPQ</span><span class="tok-p">,</span> <span class="tok-no">IRET</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">valA</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-m">0</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+<span class="tok-kt">int</span> <span class="tok-n">mem_data</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">valA</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-o">==</span> <span class="tok-no">ICALL</span> <span class="tok-p">:</span> <span class="tok-n">valP</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-m">0</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+<span class="tok-kt">bool</span> <span class="tok-n">mem_read</span>  <span class="tok-o">=</span> <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IMRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span><span class="tok-p">,</span> <span class="tok-no">IRET</span> <span class="tok-p">};</span>
+<span class="tok-kt">bool</span> <span class="tok-n">mem_write</span> <span class="tok-o">=</span> <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span><span class="tok-p">,</span> <span class="tok-no">ICALL</span> <span class="tok-p">};</span>
 </code></pre>
 <ul>
 <li><code>mem_addr</code> 有值不等于发生访问；必须同时查看读/写使能。默认地址 0 在使能为假时不代表读写了地址 0。</li>
@@ -290,18 +323,18 @@ bool mem_write = icode in { IRMMOVQ, IPUSHQ, ICALL };
 <li>每次正常指令最多进行一次本节所指的数据内存读或写；取指内存访问另算。</li>
 </ul>
 <h2 id="section-9">状态与 PC 更新的优先选择<a class="anchor" href="#section-9" aria-label="链接到本节">#</a></h2>
-<pre><code class="language-text">int Stat = [
-    imem_error || dmem_error : SADR;
-    !instr_valid : SINS;
-    icode == IHALT : SHLT;
-    1 : SAOK;
-];
-int new_pc = [
-    icode == ICALL : valC;
-    icode == IJXX &amp;&amp; Cnd : valC;
-    icode == IRET : valM;
-    1 : valP;
-];
+<pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">Stat</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">imem_error</span> <span class="tok-o">||</span> <span class="tok-n">dmem_error</span> <span class="tok-p">:</span> <span class="tok-no">SADR</span><span class="tok-p">;</span>
+    <span class="tok-o">!</span><span class="tok-n">instr_valid</span> <span class="tok-p">:</span> <span class="tok-no">SINS</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-o">==</span> <span class="tok-no">IHALT</span> <span class="tok-p">:</span> <span class="tok-no">SHLT</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-no">SAOK</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+<span class="tok-kt">int</span> <span class="tok-n">new_pc</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">icode</span> <span class="tok-o">==</span> <span class="tok-no">ICALL</span> <span class="tok-p">:</span> <span class="tok-n">valC</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-o">==</span> <span class="tok-no">IJXX</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">Cnd</span> <span class="tok-p">:</span> <span class="tok-n">valC</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-o">==</span> <span class="tok-no">IRET</span> <span class="tok-p">:</span> <span class="tok-n">valM</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-n">valP</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
 </code></pre>
 <ul>
 <li>状态 case 按第一条真条件取值：地址错优先于非法指令，非法指令优先于 halt，均无异常时为 AOK。</li>

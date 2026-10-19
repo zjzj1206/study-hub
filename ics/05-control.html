@@ -116,11 +116,11 @@
 <p><code>setle %al</code> <strong>只写一个字节</strong>，要返回完整 int 布尔值常接 <code>movzbl %al,%eax</code>。不能把 <code>setle %rax</code> 当作合法的 64 位 set 指令。</p>
 <p>条件跳转根据标志修改控制流；无条件跳转 <code>jmp label</code> 是直接跳转，<code>jmp *%rax</code> 或 <code>jmp *table(,%rdi,8)</code> 是间接跳转。相对跳转目标是<strong>下一条指令地址 + 带符号位移</strong>。例如 <code>0x100: eb fe</code> 长 2 字节，目标 <code>0x102-2=0x100</code>。</p>
 <p>cmov 根据条件把源值复制到目标寄存器；目标不能是内存，没有普通 8 位 cmov 形式。它通常先计算候选值，再选择结果，减少错误分支预测带来的代价。代价是候选表达式都可能执行：昂贵函数、不安全解引用、可见副作用不能随便提前执行。<strong>内存源 cmov 不保证在条件不满足时避免访存异常</strong>。</p>
-<pre><code class="language-asm"># 返回 x&lt;=y 的布尔值，x、y 是 long
-cmpq %rsi, %rdi
-setle %al
-movzbl %al, %eax
-ret
+<pre><code class="language-asm"><span class="tok-c1"># 返回 x&lt;=y 的布尔值，x、y 是 long</span>
+<span class="tok-nf">cmpq</span><span class="tok-w"> </span><span class="tok-nv">%rsi</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rdi</span>
+<span class="tok-nf">setle</span><span class="tok-w"> </span><span class="tok-nv">%al</span>
+<span class="tok-nf">movzbl</span><span class="tok-w"> </span><span class="tok-nv">%al</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%eax</span>
+<span class="tok-nf">ret</span>
 </code></pre>
 <p>读分支时检查最后一次修改标志的指令，不能无视中间的 add/sub/test；mov 和 lea 则通常保留原标志。</p>
 <h2 id="section-5">if 与条件表达式<a class="anchor" href="#section-5" aria-label="链接到本节">#</a></h2>
@@ -141,21 +141,21 @@ done:
 <li>for：Init → Test → Body → Update → Test；<code>continue</code> 应进入 Update，不能把它错误地直连 Test。</li>
 </ul>
 <p>还原汇编时依次找初始化、循环体、测试、更新、出口、返回值。循环不一定有单独的“索引 i”，可能通过指针推进或移位掩码控制。</p>
-<pre><code class="language-c">/* unsigned 版本明确位级行为；限制 1&lt;=n&lt;=63 才保证推进 */
-unsigned long pick(unsigned long x, unsigned n) {
-    unsigned long result = 0;
-    for (unsigned long mask=1; mask!=0; mask&lt;&lt;=n)
-        result |= x &amp; mask;
-    return result;
-}
+<pre><code class="language-c"><span class="tok-cm">/* unsigned 版本明确位级行为；限制 1&lt;=n&lt;=63 才保证推进 */</span>
+<span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-nf">pick</span><span class="tok-p">(</span><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-n">x</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-n">result</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-k">for</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-n">mask</span><span class="tok-o">=</span><span class="tok-mi">1</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-n">mask</span><span class="tok-o">!=</span><span class="tok-mi">0</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-n">mask</span><span class="tok-o">&lt;&lt;=</span><span class="tok-n">n</span><span class="tok-p">)</span>
+<span class="tok-w">        </span><span class="tok-n">result</span><span class="tok-w"> </span><span class="tok-o">|=</span><span class="tok-w"> </span><span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">&amp;</span><span class="tok-w"> </span><span class="tok-n">mask</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-k">return</span><span class="tok-w"> </span><span class="tok-n">result</span><span class="tok-p">;</span>
+<span class="tok-p">}</span>
 </code></pre>
 <p>n=0 会使 mask 不变化；n≥位宽的 C 移位不合法，硬件低位掩码也不等于修复了源代码。Popcount 可逐位累加 <code>(x&amp;1)</code> 再右移，也可反复 <code>x&amp;=x-1</code>；x86 的 POPCNT 是专门指令，但编译器是否采用取决于目标 ISA、选项和识别能力。</p>
 <h2 id="section-7">switch 与跳转表<a class="anchor" href="#section-7" aria-label="链接到本节">#</a></h2>
 <p>稠密 case 常用跳转表，稀疏 case 可能采用比较树。流程通常为：索引归一化 → 范围检查 → 间接跳转 → 各 case 代码。</p>
-<pre><code class="language-asm">subq $3, %rdi             # 原 case 从 3 开始
-cmpq $4, %rdi
-ja .Ldefault              # 无符号检查同时排除原值&lt;3 或 &gt;7
-jmp *.Ltable(,%rdi,8)     # 每项是 8 字节代码地址
+<pre><code class="language-asm"><span class="tok-nf">subq</span><span class="tok-w"> </span><span class="tok-no">$3</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rdi</span><span class="tok-w">             </span><span class="tok-c1"># 原 case 从 3 开始</span>
+<span class="tok-nf">cmpq</span><span class="tok-w"> </span><span class="tok-no">$4</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rdi</span>
+<span class="tok-nf">ja</span><span class="tok-w"> </span><span class="tok-no">.Ldefault</span><span class="tok-w">              </span><span class="tok-c1"># 无符号检查同时排除原值&lt;3 或 &gt;7</span>
+<span class="tok-nf">jmp</span><span class="tok-w"> </span><span class="tok-p">*.</span><span class="tok-no">Ltable</span><span class="tok-p">(,</span><span class="tok-nv">%rdi</span><span class="tok-p">,</span><span class="tok-mi">8</span><span class="tok-p">)</span><span class="tok-w">     </span><span class="tok-c1"># 每项是 8 字节代码地址</span>
 </code></pre>
 <p>表中的第 0 项对应原值 3，不一定对应 case 0。多个 case 可共享同一地址；缺失值可指向 default；fall-through 表现为执行一个代码块后直接接另一个块，不意味着两个标签必须相同。</p>
 <p>位置无关代码可能用 4 字节相对偏移表：先读有符号表项，再加表基址得到目标，因此“所有跳转表表项必为 8 字节”错误。一定看 <code>.quad/.long</code> 和加载指令。</p>

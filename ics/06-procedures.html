@@ -103,21 +103,21 @@
 <p>例如第三个参数 dest 在 rdx，而调用另一个函数可能破坏 rdx：可以先 push rbx 保存调用者的旧 rbx，再把 dest 放 rbx，call 后经 rbx 写回结果，最后 pop 恢复。<strong>callee-saved 不表示值永不变化，而是跨调用边界的约定值能保持。</strong></p>
 <h2 id="section-6">栈帧与局部存储<a class="anchor" href="#section-6" aria-label="链接到本节">#</a></h2>
 <p>常见传统序言和尾声：</p>
-<pre><code class="language-asm">pushq %rbp
-movq %rsp, %rbp
-subq $32, %rsp          # 局部区/对齐
-# 局部对象在 rbp 的负偏移，返回地址通常在 8(%rbp)
-leave                  # mov rbp,rsp; pop rbp 的效果
-ret
+<pre><code class="language-asm"><span class="tok-nf">pushq</span><span class="tok-w"> </span><span class="tok-nv">%rbp</span>
+<span class="tok-nf">movq</span><span class="tok-w"> </span><span class="tok-nv">%rsp</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rbp</span>
+<span class="tok-nf">subq</span><span class="tok-w"> </span><span class="tok-no">$32</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rsp</span><span class="tok-w">          </span><span class="tok-c1"># 局部区/对齐</span>
+<span class="tok-c1"># 局部对象在 rbp 的负偏移，返回地址通常在 8(%rbp)</span>
+<span class="tok-nf">leave</span><span class="tok-w">                  </span><span class="tok-c1"># mov rbp,rsp; pop rbp 的效果</span>
+<span class="tok-nf">ret</span>
 </code></pre>
 <p>不是所有函数都有该形式。叶函数可能完全不分配栈；System V 用户态允许使用 rsp 以下的 128 字节 red zone，适合不跨调用保存的临时数据。内核、Windows 等环境不可直接套用。动态长度数组或 alloca 可能需要运行时计算栈空间并对齐。</p>
 <p>局部量放内存的常见原因：取地址、数组/结构体存储、寄存器不足、跨调用保留。优化可能消除对象或传播常量，因此源代码变量与栈槽不存在永远一一对应关系。</p>
 <h2 id="section-7">递归：每一层有什么不同<a class="anchor" href="#section-7" aria-label="链接到本节">#</a></h2>
 <p>每个递归调用都有自身返回地址与需要保留的局部状态。硬件不需要“递归专用指令”，普通 call/ret、栈与编译器约定已经足够。递归深度、总调用次数和同时存活的帧数不同。</p>
-<pre><code class="language-c">unsigned long count(unsigned long x) {
-    if (x == 0) return 0;
-    return (x &amp; 1) + count(x &gt;&gt; 1);
-}
+<pre><code class="language-c"><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-nf">count</span><span class="tok-p">(</span><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-n">x</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-k">if</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">==</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-k">return</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-k">return</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">&amp;</span><span class="tok-w"> </span><span class="tok-mi">1</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-o">+</span><span class="tok-w"> </span><span class="tok-n">count</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">&gt;&gt;</span><span class="tok-w"> </span><span class="tok-mi">1</span><span class="tok-p">);</span>
+<span class="tok-p">}</span>
 </code></pre>
 <p>当前层的 <code>x&amp;1</code> 必须在递归调用之后仍可获得：可放 callee-saved 寄存器或栈。返回时再加到子调用的返回值。若最高 1 位在第 k 位（0 起算），不优化时非零层有 k+1 层，再加 x=0 的基例层；按是否计基例说明答案。</p>
 <p>带两个递归子调用的组合数程序总调用次数可能很大，但栈同时只保存一条尚未返回的路径。尾调用若被优化为跳转，帧数又可能变化；考试按给定汇编追踪。</p>

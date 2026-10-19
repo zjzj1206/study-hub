@@ -335,45 +335,45 @@
 </ul>
 <h2 id="section-8">从 C 翻译为 Y86：一个可运行的完整例子<a class="anchor" href="#section-8" aria-label="链接到本节">#</a></h2>
 <p>目标是遍历以零结尾的 <code>long</code> 数组，返回零之前的元素数；本例采用 LP64，<code>long</code> 为 8 字节。</p>
-<pre><code class="language-c">long len(long *p) {
-    long n = 0;
-    while (*p != 0) { ++n; ++p; }
-    return n;
-}
+<pre><code class="language-c"><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-nf">len</span><span class="tok-p">(</span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">p</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-k">while</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-o">*</span><span class="tok-n">p</span><span class="tok-w"> </span><span class="tok-o">!=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span><span class="tok-w"> </span><span class="tok-o">++</span><span class="tok-n">n</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-o">++</span><span class="tok-n">p</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-p">}</span>
+<span class="tok-w">    </span><span class="tok-k">return</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-p">;</span>
+<span class="tok-p">}</span>
 </code></pre>
 <ul>
 <li>x86 可用 <code>addq $1,%rax</code>、<code>addq $8,%rdi</code> 和 <code>cmpq $0,(%rdi)</code>。</li>
 <li>Y86 先把常数装进寄存器，以寄存器加法替代立即数加法；用 load 加 <code>andq %rdx,%rdx</code> 替代内存比较。</li>
 <li>以下程序使用标签、<code>.pos</code>、<code>.align</code>、<code>.quad</code>；这些是汇编器指示，不是 CPU 执行的指令。</li>
 </ul>
-<pre><code class="language-asm">.pos 0
-    irmovq stack,%rsp
-    irmovq array,%rdi
-    call len
-    halt
-.align 8
-array:
-    .quad 0x123
-    .quad 0x456
-    .quad 0x789
-    .quad 0
-len:
-    irmovq $1,%r8
-    irmovq $8,%r9
-    xorq %rax,%rax
-    mrmovq 0(%rdi),%rdx
-    andq %rdx,%rdx
-    je done
-loop:
-    addq %r8,%rax
-    addq %r9,%rdi
-    mrmovq 0(%rdi),%rdx
-    andq %rdx,%rdx
-    jne loop
-done:
-    ret
-.pos 0x200
-stack:
+<pre><code class="language-asm"><span class="tok-na">.pos</span><span class="tok-w"> </span><span class="tok-mi">0</span>
+<span class="tok-w">    </span><span class="tok-nf">irmovq</span><span class="tok-w"> </span><span class="tok-no">stack</span><span class="tok-p">,</span><span class="tok-nv">%rsp</span>
+<span class="tok-w">    </span><span class="tok-nf">irmovq</span><span class="tok-w"> </span><span class="tok-no">array</span><span class="tok-p">,</span><span class="tok-nv">%rdi</span>
+<span class="tok-w">    </span><span class="tok-nf">call</span><span class="tok-w"> </span><span class="tok-no">len</span>
+<span class="tok-w">    </span><span class="tok-nf">halt</span>
+<span class="tok-na">.align</span><span class="tok-w"> </span><span class="tok-mi">8</span>
+<span class="tok-nl">array:</span>
+<span class="tok-w">    </span><span class="tok-na">.quad</span><span class="tok-w"> </span><span class="tok-mi">0x123</span>
+<span class="tok-w">    </span><span class="tok-na">.quad</span><span class="tok-w"> </span><span class="tok-mi">0x456</span>
+<span class="tok-w">    </span><span class="tok-na">.quad</span><span class="tok-w"> </span><span class="tok-mi">0x789</span>
+<span class="tok-w">    </span><span class="tok-na">.quad</span><span class="tok-w"> </span><span class="tok-mi">0</span>
+<span class="tok-nl">len:</span>
+<span class="tok-w">    </span><span class="tok-nf">irmovq</span><span class="tok-w"> </span><span class="tok-no">$1</span><span class="tok-p">,</span><span class="tok-nv">%r8</span>
+<span class="tok-w">    </span><span class="tok-nf">irmovq</span><span class="tok-w"> </span><span class="tok-no">$8</span><span class="tok-p">,</span><span class="tok-nv">%r9</span>
+<span class="tok-w">    </span><span class="tok-nf">xorq</span><span class="tok-w"> </span><span class="tok-nv">%rax</span><span class="tok-p">,</span><span class="tok-nv">%rax</span>
+<span class="tok-w">    </span><span class="tok-nf">mrmovq</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">(</span><span class="tok-nv">%rdi</span><span class="tok-p">),</span><span class="tok-nv">%rdx</span>
+<span class="tok-w">    </span><span class="tok-nf">andq</span><span class="tok-w"> </span><span class="tok-nv">%rdx</span><span class="tok-p">,</span><span class="tok-nv">%rdx</span>
+<span class="tok-w">    </span><span class="tok-nf">je</span><span class="tok-w"> </span><span class="tok-no">done</span>
+<span class="tok-nl">loop:</span>
+<span class="tok-w">    </span><span class="tok-nf">addq</span><span class="tok-w"> </span><span class="tok-nv">%r8</span><span class="tok-p">,</span><span class="tok-nv">%rax</span>
+<span class="tok-w">    </span><span class="tok-nf">addq</span><span class="tok-w"> </span><span class="tok-nv">%r9</span><span class="tok-p">,</span><span class="tok-nv">%rdi</span>
+<span class="tok-w">    </span><span class="tok-nf">mrmovq</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">(</span><span class="tok-nv">%rdi</span><span class="tok-p">),</span><span class="tok-nv">%rdx</span>
+<span class="tok-w">    </span><span class="tok-nf">andq</span><span class="tok-w"> </span><span class="tok-nv">%rdx</span><span class="tok-p">,</span><span class="tok-nv">%rdx</span>
+<span class="tok-w">    </span><span class="tok-nf">jne</span><span class="tok-w"> </span><span class="tok-no">loop</span>
+<span class="tok-nl">done:</span>
+<span class="tok-w">    </span><span class="tok-nf">ret</span>
+<span class="tok-na">.pos</span><span class="tok-w"> </span><span class="tok-mi">0x200</span>
+<span class="tok-nl">stack:</span>
 </code></pre>
 <ul>
 <li>程序从地址 0 开始，显式初始化栈指针；数据区、代码区和栈空间要避免重叠。</li>
@@ -456,20 +456,20 @@ stack:
 <li><code>A in {B,C,D}</code> 表示 A 等于其中至少一个值；<code>[ 条件:值; ... ]</code> 按从上到下的<strong>第一条真条件</strong>选值，末尾 <code>1:</code> 提供默认值。</li>
 <li>case 的优先级描述选择关系，不表示硬件必须像软件一样跨多个周期逐条试条件；网络仍可由组合逻辑实现。</li>
 </ul>
-<pre><code class="language-text">bool eq = (a &amp;&amp; b) || (!a &amp;&amp; !b);
-int Out = [ s : A; 1 : B; ];
-bool hit = code in { OP1, OP2, OP3 };
-int Out4 = [
-    !s1 &amp;&amp; !s0 : D0;
-    !s1        : D1;
-    !s0        : D2;
-    1          : D3;
-];
-int Min3 = [
-    A &lt;= B &amp;&amp; A &lt;= C : A;
-    B &lt;= A &amp;&amp; B &lt;= C : B;
-    1               : C;
-];
+<pre><code class="language-hcl"><span class="tok-kt">bool</span> <span class="tok-n">eq</span> <span class="tok-o">=</span> <span class="tok-p">(</span><span class="tok-n">a</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">b</span><span class="tok-p">)</span> <span class="tok-o">||</span> <span class="tok-p">(</span><span class="tok-o">!</span><span class="tok-n">a</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-o">!</span><span class="tok-n">b</span><span class="tok-p">);</span>
+<span class="tok-kt">int</span> <span class="tok-n">Out</span> <span class="tok-o">=</span> <span class="tok-p">[</span> <span class="tok-n">s</span> <span class="tok-p">:</span> <span class="tok-no">A</span><span class="tok-p">;</span> <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-no">B</span><span class="tok-p">;</span> <span class="tok-p">];</span>
+<span class="tok-kt">bool</span> <span class="tok-n">hit</span> <span class="tok-o">=</span> <span class="tok-n">code</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">OP1</span><span class="tok-p">,</span> <span class="tok-no">OP2</span><span class="tok-p">,</span> <span class="tok-no">OP3</span> <span class="tok-p">};</span>
+<span class="tok-kt">int</span> <span class="tok-n">Out4</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-o">!</span><span class="tok-n">s1</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-o">!</span><span class="tok-n">s0</span> <span class="tok-p">:</span> <span class="tok-no">D0</span><span class="tok-p">;</span>
+    <span class="tok-o">!</span><span class="tok-n">s1</span>        <span class="tok-p">:</span> <span class="tok-no">D1</span><span class="tok-p">;</span>
+    <span class="tok-o">!</span><span class="tok-n">s0</span>        <span class="tok-p">:</span> <span class="tok-no">D2</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span>          <span class="tok-p">:</span> <span class="tok-no">D3</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+<span class="tok-kt">int</span> <span class="tok-n">Min3</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-no">A</span> <span class="tok-o">&lt;=</span> <span class="tok-no">B</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-no">A</span> <span class="tok-o">&lt;=</span> <span class="tok-no">C</span> <span class="tok-p">:</span> <span class="tok-no">A</span><span class="tok-p">;</span>
+    <span class="tok-no">B</span> <span class="tok-o">&lt;=</span> <span class="tok-no">A</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-no">B</span> <span class="tok-o">&lt;=</span> <span class="tok-no">C</span> <span class="tok-p">:</span> <span class="tok-no">B</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span>               <span class="tok-p">:</span> <span class="tok-no">C</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
 </code></pre>
 <ul>
 <li>四选一对应 <code>(s1,s0)=00/01/10/11</code> 依次选 D0/D1/D2/D3。后面条件之所以省略一部分，是前面已排除了其他情况。</li>

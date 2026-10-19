@@ -2,8 +2,8 @@
 <p>来源：2026-10-08 第 8 讲 <code>ICS08-machine-advanced-20261008.pdf</code>，共 53 页；教材 §3.9～3.10；2025 第一次阶段测验第 23～24 题。课件主线为 <strong>union、内存布局、缓冲区溢出及防护</strong>。下文用课件页码定位，并单列此前保留的指针与调试补充。</p>
 <h2 id="section-1">union 的分配与位重解释（pp.3～4）<a class="anchor" href="#section-1" aria-label="链接到本节">#</a></h2>
 <p>union 各成员从相同偏移开始，共享存储；总大小至少容纳最大成员，并按最严格成员对齐要求取整。struct 则依声明顺序为每个成员分配独立空间，中间和末尾可能有填充。</p>
-<pre><code class="language-c">union U1 { char c; int i[2]; double v; };
-struct S1 { char c; int i[2]; double v; };
+<pre><code class="language-c"><span class="tok-k">union</span><span class="tok-w"> </span><span class="tok-nc">U1</span><span class="tok-w"> </span><span class="tok-p">{</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-n">c</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-p">[</span><span class="tok-mi">2</span><span class="tok-p">];</span><span class="tok-w"> </span><span class="tok-kt">double</span><span class="tok-w"> </span><span class="tok-n">v</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-p">};</span>
+<span class="tok-k">struct</span><span class="tok-w"> </span><span class="tok-nc">S1</span><span class="tok-w"> </span><span class="tok-p">{</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-n">c</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-p">[</span><span class="tok-mi">2</span><span class="tok-p">];</span><span class="tok-w"> </span><span class="tok-kt">double</span><span class="tok-w"> </span><span class="tok-n">v</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-p">};</span>
 </code></pre>
 <p>在课件的 int 为 4 字节、double 为 8 字节且按 8 对齐的平台：</p>
 <div class="table-scroll"><table>
@@ -35,13 +35,13 @@ struct S1 { char c; int i[2]; double v; };
 <p>这些例子须明确数据宽度与浮点格式。C 与 C++ 对读取非活动 union 成员的规则不同；需要检查对象位串时，可在大小相等的对象之间使用 <code>memcpy</code>，避免直接通过不兼容类型指针读取。不要将课堂的位重解释练习当成任意语言、任意类型均可用的保证。</p>
 <h2 id="section-2">端序与数据模型（pp.5～10）<a class="anchor" href="#section-2" aria-label="链接到本节">#</a></h2>
 <p>大端把最高有效字节放在最低地址，小端相反。端序决定多字节数值如何解释，<strong>不改变字符数组按地址递增排列的顺序</strong>。课件列举传统 Sun/SPARC 大端、x86 小端和可配置端序的 ARM；具体平台模式须看题目条件，网络字节序采用大端。</p>
-<pre><code class="language-c">union {
-    unsigned char c[8];
-    unsigned short s[4];
-    unsigned int i[2];
-    unsigned long l[1];
-} dw;
-/* 按地址递增写入：f0 f1 f2 f3 f4 f5 f6 f7 */
+<pre><code class="language-c"><span class="tok-k">union</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-n">c</span><span class="tok-p">[</span><span class="tok-mi">8</span><span class="tok-p">];</span>
+<span class="tok-w">    </span><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">short</span><span class="tok-w"> </span><span class="tok-n">s</span><span class="tok-p">[</span><span class="tok-mi">4</span><span class="tok-p">];</span>
+<span class="tok-w">    </span><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-p">[</span><span class="tok-mi">2</span><span class="tok-p">];</span>
+<span class="tok-w">    </span><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-n">l</span><span class="tok-p">[</span><span class="tok-mi">1</span><span class="tok-p">];</span>
+<span class="tok-p">}</span><span class="tok-w"> </span><span class="tok-n">dw</span><span class="tok-p">;</span>
+<span class="tok-cm">/* 按地址递增写入：f0 f1 f2 f3 f4 f5 f6 f7 */</span>
 </code></pre>
 <div class="table-scroll"><table>
 <thead>
@@ -271,16 +271,16 @@ struct S1 { char c; int i[2]; double v; };
 <p>第 42 页通过栈偏移随机化说明 ASLR 思想。第 43 页对比传统 x86 权限与支持不可执行数据页的环境。2025 试题据此区分：安全输入通常要改源码并重编译；栈随机化通常不需重编译普通用户程序；金丝雀通常需重编译但不必改源码；NX 依赖 CPU 支持。已有支持的机器不需为了启用 NX 再“换 CPU”。</p>
 <h3 id="section-12">金丝雀汇编逐步读（pp.44～47）<a class="anchor" href="#section-12" aria-label="链接到本节">#</a></h3>
 <p>课件介绍 <code>-fstack-protector</code>；是否默认启用、保护哪些函数取决于工具链和构建选项。第 45 页的关键流程为：</p>
-<pre><code class="language-asm">sub $0x18, %rsp
-mov %fs:0x28, %rax
-mov %rax, 0x8(%rsp)    # 保存参考金丝雀的副本
-xor %eax, %eax        # 清除寄存器副本，不是清除栈中金丝雀
-# 输入与输出操作
-mov 0x8(%rsp), %rax
-xor %fs:0x28, %rax    # 相同则结果为 0，ZF=1
-je normal_return
-call __stack_chk_fail
-# normal_return: 恢复 rsp 并 ret
+<pre><code class="language-asm"><span class="tok-nf">sub</span><span class="tok-w"> </span><span class="tok-no">$0x18</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rsp</span>
+<span class="tok-nf">mov</span><span class="tok-w"> </span><span class="tok-nv">%fs</span><span class="tok-p">:</span><span class="tok-mi">0x28</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rax</span>
+<span class="tok-nf">mov</span><span class="tok-w"> </span><span class="tok-nv">%rax</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-mi">0x8</span><span class="tok-p">(</span><span class="tok-nv">%rsp</span><span class="tok-p">)</span><span class="tok-w">    </span><span class="tok-c1"># 保存参考金丝雀的副本</span>
+<span class="tok-nf">xor</span><span class="tok-w"> </span><span class="tok-nv">%eax</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%eax</span><span class="tok-w">        </span><span class="tok-c1"># 清除寄存器副本，不是清除栈中金丝雀</span>
+<span class="tok-c1"># 输入与输出操作</span>
+<span class="tok-nf">mov</span><span class="tok-w"> </span><span class="tok-mi">0x8</span><span class="tok-p">(</span><span class="tok-nv">%rsp</span><span class="tok-p">),</span><span class="tok-w"> </span><span class="tok-nv">%rax</span>
+<span class="tok-nf">xor</span><span class="tok-w"> </span><span class="tok-nv">%fs</span><span class="tok-p">:</span><span class="tok-mi">0x28</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rax</span><span class="tok-w">    </span><span class="tok-c1"># 相同则结果为 0，ZF=1</span>
+<span class="tok-nf">je</span><span class="tok-w"> </span><span class="tok-no">normal_return</span>
+<span class="tok-nf">call</span><span class="tok-w"> </span><span class="tok-no">__stack_chk_fail</span>
+<span class="tok-c1"># normal_return: 恢复 rsp 并 ret</span>
 </code></pre>
 <p><code>0x28</code> 是十进制 40，所以 <code>%fs:0x28</code> 与 <code>%fs:40</code> 表示同一偏移；FS 段基址参与寻址，<strong>不是访问普通绝对地址 0x28</strong>。在该 Linux ABI 实现中，它用于取得线程相关区域的参考金丝雀。单凭 FS 寻址语法不能推出该区域一定只读，课件的旁注不应推广成 x86 指令规则。</p>
 <p>本例栈中 buf 位于 0～3，4～7 是填充，金丝雀位于 8～15，16～23 是剩余空间，返回地址位于 24～31。7 个普通字符加 NUL 写到偏移 7，虽已越界但尚未碰金丝雀；8 个字符的 NUL 到达偏移 8。课件展示后者报错，但<strong>接触不等于必然改变值</strong>：若覆盖字节恰与原字节相同，比较可能仍通过。例如 glibc 的初始化实现会清除金丝雀的一个字节，参见 <a href="https://sourceware.org/legacy-ml/libc-alpha/2012-03/msg00321.html">glibc 官方源码补丁记录</a>。判断检测是否触发，要看保存值是否真的发生变化，不能只看输入长度。金丝雀检查也不会让前面已经发生的未定义行为变合法。</p>

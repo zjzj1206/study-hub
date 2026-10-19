@@ -6,3 +6,19 @@
 .katex{font-size:1.08em}.katex .mord.text{font-family:inherit}.table-scroll .math.inline{white-space:nowrap}
 @media(max-width:760px){.math.block{padding:16px 12px;font-size:.88em}.math.inline{font-size:.93em}}
 @media print{.math.block{overflow:visible;background:white;break-inside:avoid;font-size:.85em}}
+
+/* Build-time token colors: no browser script or external highlighting service. */
+pre{background:#102638;color:#e5edf5;border:1px solid #23445b;border-radius:9px;box-shadow:0 3px 12px #12283d0d;tab-size:4}
+pre code{font-size:1em;line-height:1.8}
+pre .tok-c,pre .tok-c1,pre .tok-cm,pre .tok-cs{color:#9bb1c0;font-style:italic}
+pre .tok-cp,pre .tok-k,pre .tok-kd,pre .tok-kn,pre .tok-kr{color:#c6a5fa}
+pre .tok-kt,pre .tok-kc{color:#7dd3fc}
+pre .tok-nf,pre .tok-nb,pre .tok-nl{color:#7de0cf}
+pre .tok-nv,pre .tok-vg,pre .tok-vi{color:#8dd9ec}
+pre .tok-nc,pre .tok-no{color:#ffd28a}
+pre .tok-m,pre .tok-mi,pre .tok-mh,pre .tok-mf,pre .tok-mo,pre .tok-mb,pre .tok-il{color:#ffbb8c}
+pre .tok-s,pre .tok-s1,pre .tok-s2,pre .tok-sc,pre .tok-sa,pre .tok-se{color:#b7e5a3}
+pre .tok-o,pre .tok-ow{color:#e2ca8d}
+pre .tok-p{color:#c3d2e1}
+pre .tok-err{color:inherit;background:transparent}
+@media print{pre{background:#f3f6f8;box-shadow:none;border-color:#cad5dd}pre span[class^="tok-"]{color:inherit!important}}
