@@ -16,8 +16,8 @@ int variable(size_t n, int a[n][n], size_t i, size_t j) {
     return a[i][j];
 }
 </code></pre>
-<p>变长数组的列数要在运算时参与乘法；形参调整后的类型是指向整行的指针，不是 int**。固定列数常能用移位或 LEA 算行偏移。</p>
-<p><code>int *rows[R]</code> 是指针数组：先从表里读 rows[i]，再通过所得指针读第 j 项，通常两次数据读取；各行可独立分配、不连续或不同长度。<code>int A[R][C]</code> 只需一次最终元素读取，行地址可直接算出。将连续二维数组强转 int** 不会自动变成行指针表。</p>
+<p>变长数组的列数要在运算时参与乘法；形参调整后的类型是指向整行的指针，不是 <code>int **</code>。固定列数常能用移位或 LEA 算行偏移。</p>
+<p><code>int *rows[R]</code> 是指针数组：先从表里读 rows[i]，再通过所得指针读第 j 项，通常两次数据读取；各行可独立分配、不连续或不同长度。<code>int A[R][C]</code> 只需一次最终元素读取，行地址可直接算出。将连续二维数组强转 <code>int **</code> 不会自动变成行指针表。</p>
 <h2 id="section-3">类型声明与 sizeof 表<a class="anchor" href="#section-3" aria-label="链接到本节">#</a></h2>
 <p>从变量名出发，先结合括号内的结构，再按 <code>[]</code>、<code>()</code> 优先于 <code>*</code> 读声明。</p>
 <div class="table-scroll"><table>
