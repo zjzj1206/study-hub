@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1467" viewBox="0 0 1320 1467" role="img" aria-labelledby="title desc">
+<title id="title">03 / EXECUTE · ALU 与条件码</title>
+<desc id="desc">蓝色实线为数据或字段输入，橙色虚线为控制。每行从左到右表示来源、功能单元和输出去向；重复信号名表示同一条线。</desc>
+<defs><marker id="data" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#2563a6"/></marker><marker id="ctl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10Z" fill="#b45309"/></marker></defs>
+<rect width="1320" height="1467" fill="#f8fafc"/>
+<style>text{font-family:"Noto Sans CJK SC","Microsoft YaHei",sans-serif;fill:#172c45;font-size:18px}.ctl{fill:#92400e;font-size:18px}.label{font-size:20px;font-weight:700}</style>
+<text x="32" y="43" class="label">03 / EXECUTE · ALU 与条件码</text>
+<text x="32" y="77" class="">蓝实线 → 数据 / 字段     橙虚线 ⇢ 控制来源与条件     同名信号相连；六阶段在同一周期内传播</text>
+<text x="32" y="111" class="">输入来源（选择器每行是一种候选）</text>
+<text x="615" y="111" class="">功能单元</text>
+<text x="875" y="111" class="">输出与下游去向</text>
+<rect x="20" y="130" width="1280" height="245" rx="12" fill="white" stroke="#d9e2ec"/>
+<text x="38" y="159" class="ctl">icode ← Fetch → ALU A 输入选择逻辑</text>
+<path d="M38 173 L710 173" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
+<path d="M710 173 L710 190" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
+<path d="M625 193 L795 207 L795 334 L625 348 Z" fill="#eaf2ff" stroke="#2563a6" stroke-width="2"/>
+<text x="638" y="276.5" class="label">aluA MUX</text>
+<text x="38" y="216" class="">valA ← Decode：rrmovq/cmovXX、OPq</text>
+<path d="M594 210 L623 210" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<text x="38" y="247" class="">valC ← Fetch：irmovq、rmmovq、mrmovq</text>
+<path d="M594 241 L623 241" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<text x="38" y="278" class="">−8 ← 常量：call、pushq</text>
+<path d="M594 272 L623 272" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<text x="38" y="309" class="">+8 ← 常量：ret、popq</text>
+<path d="M594 303 L623 303" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<text x="38" y="340" class="">0 ← 常量：其余</text>
+<path d="M594 334 L623 334" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<path d="M797 270.5 L855 270.5" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<rect x="860" y="193" width="420" height="155" rx="8" fill="#f0f7fb" stroke="#c4d9e9"/>
+<text x="875" y="216" class="">aluA（64 位）→ ALU 的 A 端</text>
+<rect x="20" y="387" width="1280" height="183" rx="12" fill="white" stroke="#d9e2ec"/>
+<text x="38" y="416" class="ctl">icode ← Fetch；访存=rmmovq/mrmovq，栈=pushq/popq/call/ret</text>
+<path d="M38 430 L710 430" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
+<path d="M710 430 L710 447" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
+<path d="M625 450 L795 464 L795 529 L625 543 Z" fill="#eaf2ff" stroke="#2563a6" stroke-width="2"/>
+<text x="638" y="502.5" class="label">aluB MUX</text>
+<text x="38" y="473" class="">valB ← Decode：访存、OPq、四类栈操作</text>
+<path d="M594 467 L623 467" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<text x="38" y="504" class="">0 ← 常量：其余（包括两类寄存器传送）</text>
+<path d="M594 498 L623 498" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<path d="M797 496.5 L855 496.5" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<rect x="860" y="450" width="420" height="93" rx="8" fill="#f0f7fb" stroke="#c4d9e9"/>
+<text x="875" y="473" class="">aluB（64 位）→ ALU 的 B 端</text>
+<rect x="20" y="582" width="1280" height="183" rx="12" fill="white" stroke="#d9e2ec"/>
+<text x="38" y="611" class="ctl">icode ← Fetch → alufun 选择逻辑</text>
+<path d="M38 625 L710 625" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
+<path d="M710 625 L710 642" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
+<path d="M625 645 L795 659 L795 724 L625 738 Z" fill="#eaf2ff" stroke="#2563a6" stroke-width="2"/>
+<text x="638" y="697.5" class="label">功能 MUX</text>
+<text x="38" y="668" class="">ifun ← Fetch：OPq</text>
+<path d="M594 662 L623 662" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<text x="38" y="699" class="">ALUADD ← 常量：其余</text>
+<path d="M594 693 L623 693" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<path d="M797 691.5 L855 691.5" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<rect x="860" y="645" width="420" height="93" rx="8" fill="#f0f7fb" stroke="#c4d9e9"/>
+<text x="875" y="668" class="">alufun → ALU 功能控制端</text>
+<text x="875" y="699" class="">OPq：add / sub / and / xor</text>
+<rect x="20" y="777" width="1280" height="183" rx="12" fill="white" stroke="#d9e2ec"/>
+<text x="38" y="806" class="ctl">alufun ← 功能 MUX；计算 aluB OP aluA</text>
+<path d="M38 820 L710 820" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
+<path d="M710 820 L710 837" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
+<rect x="625" y="840" width="170" height="93" rx="8" fill="#eaf2ff" stroke="#2563a6" stroke-width="2"/>
+<text x="638" y="892.5" class="label">ALU</text>
+<text x="38" y="863" class="">aluA ← A 选择器</text>
+<path d="M594 857 L623 857" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<text x="38" y="894" class="">aluB ← B 选择器</text>
+<path d="M594 888 L623 888" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<path d="M797 886.5 L855 886.5" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<rect x="860" y="840" width="420" height="93" rx="8" fill="#f0f7fb" stroke="#c4d9e9"/>
+<text x="875" y="863" class="">valE（64 位）→ Memory / Write back</text>
+<text x="875" y="894" class="">候选 ZF / SF / OF → CC 寄存器</text>
+<rect x="20" y="972" width="1280" height="183" rx="12" fill="white" stroke="#d9e2ec"/>
+<text x="38" y="1001" class="ctl">icode → set_cc=(icode==IOPQ)；CLK 上升沿且使能才写</text>
+<path d="M38 1015 L710 1015" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
+<path d="M710 1015 L710 1032" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
+<rect x="625" y="1035" width="170" height="93" rx="8" fill="#eaf2ff" stroke="#2563a6" stroke-width="2"/>
+<text x="638" y="1087.5" class="label">CC 寄存器</text>
+<text x="38" y="1058" class="">候选 ZF / SF / OF ← ALU</text>
+<path d="M594 1052 L623 1052" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<path d="M797 1081.5 L855 1081.5" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<rect x="860" y="1035" width="420" height="93" rx="8" fill="#f0f7fb" stroke="#c4d9e9"/>
+<text x="875" y="1058" class="">保存的 CC → 条件判断单元</text>
+<text x="875" y="1089" class="">pushq / popq / call / ret 不更新 CC</text>
+<rect x="20" y="1167" width="1280" height="183" rx="12" fill="white" stroke="#d9e2ec"/>
+<text x="38" y="1196" class="ctl">ifun ← Fetch → 条件类型（无条件 / le / l / e / ne / ge / g）</text>
+<path d="M38 1210 L710 1210" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
+<path d="M710 1210 L710 1227" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
+<rect x="625" y="1230" width="170" height="93" rx="8" fill="#eaf2ff" stroke="#2563a6" stroke-width="2"/>
+<text x="638" y="1282.5" class="label">条件判断</text>
+<text x="38" y="1253" class="">CC ← 已保存的条件码（旧状态）</text>
+<path d="M594 1247 L623 1247" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<path d="M797 1276.5 L855 1276.5" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<rect x="860" y="1230" width="420" height="93" rx="8" fill="#f0f7fb" stroke="#c4d9e9"/>
+<text x="875" y="1253" class="">Cnd（1 位）→ Write back 的 dstE</text>
+<text x="875" y="1284" class="">Cnd（1 位）→ PC update 的 new_pc</text>
+<text x="32" y="1387" class="">条件传送和跳转读取已保存的 CC；不读取本指令的候选 CC。正常执行的提交时机见正文。</text>
+<text x="32" y="1423" class="">基础 Y86-64 / SEQ；正常执行的数据通路。停止、异常下的状态提交另由执行状态控制；iaddq 扩展见正文。</text>
+</svg>

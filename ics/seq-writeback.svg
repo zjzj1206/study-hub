@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1015" viewBox="0 0 1320 1015" role="img" aria-labelledby="title desc">
+<title id="title">05 / WRITE BACK · 双写端口</title>
+<desc id="desc">蓝色实线为数据或字段输入，橙色虚线为控制。每行从左到右表示来源、功能单元和输出去向；重复信号名表示同一条线。</desc>
+<defs><marker id="data" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#2563a6"/></marker><marker id="ctl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10Z" fill="#b45309"/></marker></defs>
+<rect width="1320" height="1015" fill="#f8fafc"/>
+<style>text{font-family:"Noto Sans CJK SC","Microsoft YaHei",sans-serif;fill:#172c45;font-size:18px}.ctl{fill:#92400e;font-size:18px}.label{font-size:20px;font-weight:700}</style>
+<text x="32" y="43" class="label">05 / WRITE BACK · 双写端口</text>
+<text x="32" y="77" class="">蓝实线 → 数据 / 字段     橙虚线 ⇢ 控制来源与条件     同名信号相连；六阶段在同一周期内传播</text>
+<text x="32" y="111" class="">输入来源（选择器每行是一种候选）</text>
+<text x="615" y="111" class="">功能单元</text>
+<text x="875" y="111" class="">输出与下游去向</text>
+<rect x="20" y="130" width="1280" height="183" rx="12" fill="white" stroke="#d9e2ec"/>
+<text x="38" y="159" class="ctl">icode ← Fetch；Cnd ← Execute 的 Cond(CC,ifun)</text>
+<path d="M38 173 L710 173" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
+<path d="M710 173 L710 190" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
+<path d="M625 193 L795 207 L795 272 L625 286 Z" fill="#eaf2ff" stroke="#2563a6" stroke-width="2"/>
+<text x="638" y="245.5" class="label">dstE MUX</text>
+<text x="38" y="216" class="">rB ← Fetch：irmovq、OPq、条件满足的 rrmovq/cmovXX</text>
+<path d="M594 210 L623 210" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<text x="38" y="247" class="">RRSP ← 常量：pushq、popq、call、ret</text>
+<path d="M594 241 L623 241" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<text x="38" y="278" class="">RNONE ← 常量：其余（含条件假 cmovXX）</text>
+<path d="M594 272 L623 272" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<path d="M797 239.5 L855 239.5" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<rect x="860" y="193" width="420" height="93" rx="8" fill="#f0f7fb" stroke="#c4d9e9"/>
+<text x="875" y="216" class="">dstE（4 位）→ E 端口写地址</text>
+<rect x="20" y="325" width="1280" height="183" rx="12" fill="white" stroke="#d9e2ec"/>
+<text x="38" y="354" class="ctl">icode ← Fetch → dstM 选择逻辑</text>
+<path d="M38 368 L710 368" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
+<path d="M710 368 L710 385" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
+<path d="M625 388 L795 402 L795 467 L625 481 Z" fill="#eaf2ff" stroke="#2563a6" stroke-width="2"/>
+<text x="638" y="440.5" class="label">dstM MUX</text>
+<text x="38" y="411" class="">rA ← Fetch：mrmovq、popq</text>
+<path d="M594 405 L623 405" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<text x="38" y="442" class="">RNONE ← 常量：其余</text>
+<path d="M594 436 L623 436" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<path d="M797 434.5 L855 434.5" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<rect x="860" y="388" width="420" height="93" rx="8" fill="#f0f7fb" stroke="#c4d9e9"/>
+<text x="875" y="411" class="">dstM（4 位）→ M 端口写地址</text>
+<rect x="20" y="520" width="1280" height="183" rx="12" fill="white" stroke="#d9e2ec"/>
+<text x="38" y="549" class="ctl">dstE ← dstE MUX；dstE≠RNONE 且 CLK 上升沿</text>
+<path d="M38 563 L710 563" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
+<path d="M710 563 L710 580" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
+<rect x="625" y="583" width="170" height="93" rx="8" fill="#eaf2ff" stroke="#2563a6" stroke-width="2"/>
+<text x="638" y="635.5" class="label">E 写端口</text>
+<text x="38" y="606" class="">valE ← Execute 的 ALU（64 位）</text>
+<path d="M594 600 L623 600" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<path d="M797 629.5 L855 629.5" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<rect x="860" y="583" width="420" height="93" rx="8" fill="#f0f7fb" stroke="#c4d9e9"/>
+<text x="875" y="606" class="">R[dstE] ← valE</text>
+<text x="875" y="637" class="">写回 ALU 结果 / 新 R[%rsp]</text>
+<rect x="20" y="715" width="1280" height="183" rx="12" fill="white" stroke="#d9e2ec"/>
+<text x="38" y="744" class="ctl">dstM ← dstM MUX；dstM≠RNONE 且 CLK 上升沿</text>
+<path d="M38 758 L710 758" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
+<path d="M710 758 L710 775" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
+<rect x="625" y="778" width="170" height="93" rx="8" fill="#eaf2ff" stroke="#2563a6" stroke-width="2"/>
+<text x="638" y="830.5" class="label">M 写端口</text>
+<text x="38" y="801" class="">valM ← Memory 的读结果（64 位）</text>
+<path d="M594 795 L623 795" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<path d="M797 824.5 L855 824.5" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
+<rect x="860" y="778" width="420" height="93" rx="8" fill="#f0f7fb" stroke="#c4d9e9"/>
+<text x="875" y="801" class="">R[dstM] ← valM</text>
+<text x="875" y="832" class="">两个端口写入同一个寄存器堆</text>
+<text x="32" y="935" class="">写地址相同且均有效时，M 端口优先：popq %rsp 最终 R[%rsp]=valM，而不是 valE。</text>
+<text x="32" y="971" class="">基础 Y86-64 / SEQ；正常执行的数据通路。停止、异常下的状态提交另由执行状态控制；iaddq 扩展见正文。</text>
+</svg>

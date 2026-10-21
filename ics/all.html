@@ -2573,7 +2573,17 @@ t 在 8，u 在 32
 <li><strong>call</strong>：地址 <code>0x100</code> 的 <code>call 0x300</code>，原 <code>%rsp=0x200</code>，有 valP=0x109、valE=0x1f8，故 <code>M8[0x1f8]=0x109</code>、新 <code>%rsp=0x1f8</code>、新 PC=0x300。</li>
 <li><strong>ret</strong>：被调过程保持该返回栈布局时，ret 读出 0x109，恢复 <code>%rsp=0x200</code>，转回 0x109。返回地址是完整 call 后继，不是 call 首地址加 1。</li>
 </ul>
-<h2 id="section-114">Fetch：字段位置、长度和有效性<a class="anchor" href="#section-114" aria-label="链接到本节">#</a></h2>
+<h2 id="section-114">六张模块图怎么读<a class="anchor" href="#section-114" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>蓝色实线</strong> 表示数据、指令字段或寄存器编号的传递；<strong>橙色虚线</strong> 表示控制条件。箭头指向接收信号的单元。</li>
+<li>每张图从左到右读：<strong>信号来自哪里 → 由什么单元选择或计算 → 输出送到哪里</strong>。同名信号在不同图中是同一条连接，不代表额外寄存器或额外周期。</li>
+<li>标为 MUX 的单元是多路选择器，左侧列出全部候选来源，顶部给出选择逻辑的输入。普通计算、存储单元也沿用左输入、上控制、右输出的排布；它们并非 MUX。</li>
+<li><code>icode</code>、<code>ifun</code>、<code>rA/rB</code> 均来自 Fetch；<code>Cnd</code> 来自 Execute 的条件判断。数据字和地址为 64 位，寄存器编号与 <code>icode/ifun</code> 为 4 位，条件与使能为 1 位。</li>
+<li><code>CLK</code> 是处理器的公共时钟。图中写使能描述正常执行；停止和错误下的状态提交还要服从处理器执行状态控制。六张图均画基础指令集，<code>iaddq</code> 的新增路径见后文扩展清单。</li>
+</ul>
+<h2 id="section-115">Fetch：字段位置、长度和有效性<a class="anchor" href="#section-115" aria-label="链接到本节">#</a></h2>
+<p><a href="seq-fetch.svg"><img src="seq-fetch.svg" alt="Fetch：取指内存、编码选择、字段对齐、长度计算及有效性检查" /></a></p>
+<p>点击图可打开矢量大图，放大后文字与连线仍清晰。</p>
 <pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">icode</span> <span class="tok-o">=</span> <span class="tok-p">[</span> <span class="tok-n">imem_error</span> <span class="tok-p">:</span> <span class="tok-no">INOP</span><span class="tok-p">;</span> <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-n">imem_icode</span><span class="tok-p">;</span> <span class="tok-p">];</span>
 <span class="tok-kt">int</span> <span class="tok-n">ifun</span>  <span class="tok-o">=</span> <span class="tok-p">[</span> <span class="tok-n">imem_error</span> <span class="tok-p">:</span> <span class="tok-no">FNONE</span><span class="tok-p">;</span> <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-n">imem_ifun</span><span class="tok-p">;</span> <span class="tok-p">];</span>
 <span class="tok-kt">bool</span> <span class="tok-n">need_regids</span> <span class="tok-o">=</span> <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span>
@@ -2597,7 +2607,9 @@ t 在 8，u 在 32
 <li>取指地址错误时输出 nop 型编码，是让下游组合逻辑获得确定输入；Stat 仍报告 ADR，不能因此认为出错指令成功变成可继续执行的 nop。</li>
 <li>这里 <code>instr_valid</code> 是课件给出的<strong>icode 类别检查</strong>，不等于完整验证每种 ifun、寄存器字段与编码组合；模拟器/扩展实现应按实际 ISA 再作检查。</li>
 </ul>
-<h2 id="section-115">Decode / Write back：四个寄存器选择器<a class="anchor" href="#section-115" aria-label="链接到本节">#</a></h2>
+<h2 id="section-116">Decode：两个读端口与源寄存器选择<a class="anchor" href="#section-116" aria-label="链接到本节">#</a></h2>
+<p><a href="seq-decode.svg"><img src="seq-decode.svg" alt="Decode：srcA/srcB 的全部来源及寄存器堆的两个读端口" /></a></p>
+<p>点击图可打开矢量大图，放大后文字与连线仍清晰。</p>
 <pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">srcA</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
     <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IOPQ</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">rA</span><span class="tok-p">;</span>
     <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IPOPQ</span><span class="tok-p">,</span> <span class="tok-no">IRET</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-no">RRSP</span><span class="tok-p">;</span>
@@ -2608,16 +2620,7 @@ t 在 8，u 在 32
     <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IPUSHQ</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span><span class="tok-p">,</span> <span class="tok-no">ICALL</span><span class="tok-p">,</span> <span class="tok-no">IRET</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-no">RRSP</span><span class="tok-p">;</span>
     <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-no">RNONE</span><span class="tok-p">;</span>
 <span class="tok-p">];</span>
-<span class="tok-kt">int</span> <span class="tok-n">dstE</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
-    <span class="tok-n">icode</span> <span class="tok-o">==</span> <span class="tok-no">IRRMOVQ</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">Cnd</span> <span class="tok-p">:</span> <span class="tok-n">rB</span><span class="tok-p">;</span>
-    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IIRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IOPQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">rB</span><span class="tok-p">;</span>
-    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IPUSHQ</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span><span class="tok-p">,</span> <span class="tok-no">ICALL</span><span class="tok-p">,</span> <span class="tok-no">IRET</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-no">RRSP</span><span class="tok-p">;</span>
-    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-no">RNONE</span><span class="tok-p">;</span>
-<span class="tok-p">];</span>
-<span class="tok-kt">int</span> <span class="tok-n">dstM</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
-    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IMRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">rA</span><span class="tok-p">;</span>
-    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-no">RNONE</span><span class="tok-p">;</span>
-<span class="tok-p">];</span>
+
 </code></pre>
 <ul>
 <li>选择 srcA 是因为需要“被存数据/运算 A/旧栈顶”，选择 srcB 是因为需要“运算 B/基址/旧的 <code>%rsp</code> 值”。按数据用途推导，而非死记集合。</li>
@@ -2625,7 +2628,14 @@ t 在 8，u 在 32
 <li><code>mrmovq</code> 只写 dstM；<code>popq</code> 同时写 dstE 和 dstM；<code>rmmovq/jXX</code> 均不写寄存器。</li>
 <li><code>IRRMOVQ</code> 包括条件传送，其 dstE 由 Cnd 使能。RNONE 是抑制端口的编号，不是“向某个假寄存器写零”。</li>
 </ul>
-<h2 id="section-116">Execute：ALU 的两个输入、功能和 CC<a class="anchor" href="#section-116" aria-label="链接到本节">#</a></h2>
+<h2 id="section-117">Execute：ALU 的两个输入、功能和 CC<a class="anchor" href="#section-117" aria-label="链接到本节">#</a></h2>
+<p><a href="seq-execute.svg"><img src="seq-execute.svg" alt="Execute：ALU 输入与功能选择、条件码写使能以及 Cnd 来源" /></a></p>
+<p>点击图可打开矢量大图，放大后文字与连线仍清晰。</p>
+<ul>
+<li><strong>ALU 的数据路径</strong>：<code>valA/valB</code> 来自 Decode，<code>valC</code> 来自 Fetch，<code>−8/+8/0</code> 是硬件常量。<code>aluA/aluB</code> 是选择后的输入，运算方向始终为 <code>aluB OP aluA</code>。</li>
+<li><strong>ALU 的控制路径</strong>：<code>icode</code> 选择两侧数据来源，并决定 <code>alufun</code> 取 <code>ifun</code> 还是固定 <code>ALUADD</code>。只有 <code>OPq</code> 将 <code>ifun</code> 解释为算术逻辑功能。</li>
+<li><strong>条件码分成两条路径</strong>：ALU 产生候选 CC，在 <code>set_cc</code> 有效的提交时钟沿写入 CC 寄存器；条件判断单元读取已保存的 CC，并结合 <code>ifun</code> 形成 <code>Cnd</code>，分别送给条件传送写回和条件跳转。</li>
+</ul>
 <pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">aluA</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
     <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IOPQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">valA</span><span class="tok-p">;</span>
     <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IIRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IMRMOVQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">valC</span><span class="tok-p">;</span>
@@ -2647,7 +2657,9 @@ t 在 8，u 在 32
 <li><code>alufun=ifun</code> 仅对 OPq 成立；其他需要 ALU 的指令统一使用加法，不能把 cmov 的条件功能码当成 ALU 运算码。</li>
 <li>上面是课件的正常执行控制。停止或地址错误下，是否提交各状态还需要执行状态/使能控制；不能把这个 set_cc 片段单独当作完整异常处理方案。</li>
 </ul>
-<h2 id="section-117">Memory：地址、数据与读写使能<a class="anchor" href="#section-117" aria-label="链接到本节">#</a></h2>
+<h2 id="section-118">Memory：地址、数据与读写使能<a class="anchor" href="#section-118" aria-label="链接到本节">#</a></h2>
+<p><a href="seq-memory.svg"><img src="seq-memory.svg" alt="Memory：地址与写数据所有来源、读写使能及错误输出" /></a></p>
+<p>点击图可打开矢量大图，放大后文字与连线仍清晰。</p>
 <pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">mem_addr</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
     <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IMRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span><span class="tok-p">,</span> <span class="tok-no">ICALL</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">valE</span><span class="tok-p">;</span>
     <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IPOPQ</span><span class="tok-p">,</span> <span class="tok-no">IRET</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">valA</span><span class="tok-p">;</span>
@@ -2667,7 +2679,28 @@ t 在 8，u 在 32
 <li>call 的写数据必须是 valP；若错接 valC，就把被调函数地址而非返回地址压栈，ret 将跳错。</li>
 <li>每次正常指令最多进行一次本节所指的数据内存读或写；取指内存访问另算。</li>
 </ul>
-<h2 id="section-118">状态与 PC 更新的优先选择<a class="anchor" href="#section-118" aria-label="链接到本节">#</a></h2>
+<h2 id="section-119">Write back：两个目的选择器与双写端口<a class="anchor" href="#section-119" aria-label="链接到本节">#</a></h2>
+<p><a href="seq-writeback.svg"><img src="seq-writeback.svg" alt="Write back：dstE/dstM 的来源、写数据、时钟使能与冲突优先级" /></a></p>
+<p>点击图可打开矢量大图，放大后文字与连线仍清晰。</p>
+<pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">dstE</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">icode</span> <span class="tok-o">==</span> <span class="tok-no">IRRMOVQ</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">Cnd</span> <span class="tok-p">:</span> <span class="tok-n">rB</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IIRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IOPQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">rB</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IPUSHQ</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span><span class="tok-p">,</span> <span class="tok-no">ICALL</span><span class="tok-p">,</span> <span class="tok-no">IRET</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-no">RRSP</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-no">RNONE</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+<span class="tok-kt">int</span> <span class="tok-n">dstM</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IMRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">rA</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-no">RNONE</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+</code></pre>
+<ul>
+<li><strong>数据与地址分开看</strong>：E 端口的数据固定来自 <code>valE</code>，地址由 <code>dstE</code> 选择；M 端口的数据固定来自 <code>valM</code>，地址由 <code>dstM</code> 选择。<code>dstE/dstM</code> 不是数据值。</li>
+<li><strong>条件传送的控制路径</strong>：Fetch 的 <code>ifun</code> 与旧 CC 先产生 <code>Cnd</code>；<code>icode</code> 与 <code>Cnd</code> 再决定 <code>dstE</code> 是 <code>rB</code> 还是 <code>RNONE</code>。条件假时 ALU 可以照常算出 <code>valE</code>，但 E 端口不写。</li>
+<li><strong>两个端口属于同一个寄存器堆</strong>：它们在同一提交时钟沿生效。若目的编号相同，以 M 端口为准；因此 <code>popq %rsp</code> 最终得到内存中的弹出值。</li>
+</ul>
+<h2 id="section-120">PC update：状态与下一 PC 的优先选择<a class="anchor" href="#section-120" aria-label="链接到本节">#</a></h2>
+<p><a href="seq-pc-update.svg"><img src="seq-pc-update.svg" alt="PC update：valC/valM/valP 的选择控制、PC 反馈及状态路径" /></a></p>
+<p>点击图可打开矢量大图，放大后文字与连线仍清晰。</p>
 <pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">Stat</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
     <span class="tok-n">imem_error</span> <span class="tok-o">||</span> <span class="tok-n">dmem_error</span> <span class="tok-p">:</span> <span class="tok-no">SADR</span><span class="tok-p">;</span>
     <span class="tok-o">!</span><span class="tok-n">instr_valid</span> <span class="tok-p">:</span> <span class="tok-no">SINS</span><span class="tok-p">;</span>
@@ -2686,14 +2719,14 @@ t 在 8，u 在 32
 <li>call 总选择 valC；条件跳转只有条件真才选择 valC；ret 选择 valM；普通指令和未跳转的 JXX 选择 valP。</li>
 <li>条件不满足的 cmov 仍取 valP，并且不修改目的寄存器和 CC。</li>
 </ul>
-<h2 id="section-119">一周期内什么变化，时钟沿上什么变化<a class="anchor" href="#section-119" aria-label="链接到本节">#</a></h2>
+<h2 id="section-121">一周期内什么变化，时钟沿上什么变化<a class="anchor" href="#section-121" aria-label="链接到本节">#</a></h2>
 <ul>
 <li>周期开始时，PC、寄存器堆、CC、数据内存提供旧状态。</li>
 <li>取指、读寄存器、ALU、条件判断、内存读与各选择器在周期内传播，候选写回值和新 PC 逐渐稳定。</li>
 <li>正常指令在约定的上升沿更新状态；新状态出现后，组合网络开始为下一条指令传播。不能因为图上画了“Write back”，就额外给它安排一拍。</li>
 <li>对 <code>rmmovq</code>，更新的是数据内存而不是程序寄存器；对 OPq，寄存器与 CC 更新；对 jXX，主要更新 PC。</li>
 </ul>
-<h3 id="section-120">课件 pp.47–50 的执行轨迹<a class="anchor" href="#section-120" aria-label="链接到本节">#</a></h3>
+<h3 id="section-122">课件 pp.47–50 的执行轨迹<a class="anchor" href="#section-122" aria-label="链接到本节">#</a></h3>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -2740,7 +2773,7 @@ t 在 8，u 在 32
 <li>第 3 周期的计算先使用旧 rbx=0x100；它变成 0x300 后，下一条指令才看到新结果。</li>
 <li>je 必须读取 addq 设置的 ZF。它自身不能把“用于形成地址的 ALU 结果”写成新的标志。</li>
 </ul>
-<h2 id="section-121">作业 4.51：扩展 iaddq 的完整改动清单<a class="anchor" href="#section-121" aria-label="链接到本节">#</a></h2>
+<h2 id="section-123">作业 4.51：扩展 iaddq 的完整改动清单<a class="anchor" href="#section-123" aria-label="链接到本节">#</a></h2>
 <p>设扩展采用 <code>icode=C, ifun=0</code>、<code>FrB</code> 与 8 字节立即数字段，<code>iaddq V,rB</code> 语义为 <code>R[rB] ← R[rB]+V</code>，并更新 CC。这是作业扩展，基础 Y86 指令表未包含它。</p>
 <ul>
 <li><strong>取指</strong>：将该扩展的指令常量名记为 <code>IIADDQ</code>；将它加入 instr_valid、need_regids、need_valC，长度为 10。</li>
@@ -2751,7 +2784,7 @@ t 在 8，u 在 32
 <li><strong>PC</strong>：普通顺序路径选择 valP，不需增加分支项。</li>
 <li><strong>测试</strong>：正数、负立即数、零结果、有符号溢出以及 <code>rB=%rsp</code> 都应核对；每种测试分别看结果、标志和 PC。</li>
 </ul>
-<h2 id="section-122">性能边界与课件勘误<a class="anchor" href="#section-122" aria-label="链接到本节">#</a></h2>
+<h2 id="section-124">性能边界与课件勘误<a class="anchor" href="#section-124" aria-label="链接到本节">#</a></h2>
 <ul>
 <li><strong>时钟周期下界</strong>：必须覆盖本设计最慢的组合路径及建立/时钟开销。典型长路径涉及取指、寄存器读、ALU、数据内存读与写回选择，不能只按一次加法延迟定频率。</li>
 <li>SEQ 的优点是每条指令使用统一阶段，控制逻辑容易由操作表推导；缺点是所有指令都等待最坏路径，各单元在一个长周期内只有部分时间有用。</li>
@@ -2762,14 +2795,14 @@ t 在 8，u 在 32
 <hr />
 <h1>11 · 2026 第一次测验：答案回查与复盘</h1>
 <p>本章依据本地 <code>ICS2026-测验1-v2.0-纯答案.pdf</code>，共 5 页，卷名为“ICS2026 第一次阶段测试”。它提供答案和部分解析，<strong>不含完整题干、指令序列与选项</strong>。下面按原题号整理考点、答案与能够核验的推导；字母答案不能脱离原题理解，不凭答案补造缺失题目。</p>
-<h2 id="section-123">卷面范围与编号说明<a class="anchor" href="#section-123" aria-label="链接到本节">#</a></h2>
+<h2 id="section-125">卷面范围与编号说明<a class="anchor" href="#section-125" aria-label="链接到本节">#</a></h2>
 <ul>
 <li>覆盖第 2～8 讲；卷面各讲分值为 8、16、16、16、16、14、14，合计 100 分。第 9、10 讲为后续课程内容。</li>
 <li>第 4 讲出现两个“4.2”，分别为寻址方式与汇编程序，本站用题目名称区分。</li>
 <li>第 7 讲注明缺一道 2 分题并默认给 2 分；缺题不算已恢复或已解析。</li>
 <li>答案版说明：要求十六进制时省略 <code>0x</code>、寄存器省略 <code>%</code>、含义明确时省略指令 <code>q</code> 后缀不扣分。这是本卷评分约定，规范书写仍应保留。</li>
 </ul>
-<h2 id="section-124">第 2 讲：位运算、移位与无符号转换（PDF p.1）<a class="anchor" href="#section-124" aria-label="链接到本节">#</a></h2>
+<h2 id="section-126">第 2 讲：位运算、移位与无符号转换（PDF p.1）<a class="anchor" href="#section-126" aria-label="链接到本节">#</a></h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -2801,7 +2834,7 @@ t 在 8，u 在 32
 <li><code>count+change</code> 的 unsigned 结果为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mn>3</mn><mo>−</mo><mn>5</mn><mo stretchy="false">)</mo><mtext> </mtext><mo lspace="0.22em" rspace="0.22em"><mrow><mi mathvariant="normal">m</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">d</mi></mrow></mo><mtext> </mtext><msup><mn>2</mn><mn>32</mn></msup><mo>=</mo><msup><mn>2</mn><mn>32</mn></msup><mo>−</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">(3-5)\bmod2^{32}=2^{32}-2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">3</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">5</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.0556em;"></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin"><span class="mord"><span class="mord mathrm">mod</span></span></span><span class="mspace" style="margin-right:0.0556em;"></span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">32</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">32</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">2</span></span></span></span></span>，它大于原 count，故第二空为 1。不能在 unsigned 表达式中继续按数学负数比较。</li>
 <li>对应：<a href="02-integers.html">整数与位运算</a>。</li>
 </ul>
-<h2 id="section-125">第 3 讲：浮点编码、舍入与运算（PDF pp.1–2）<a class="anchor" href="#section-125" aria-label="链接到本节">#</a></h2>
+<h2 id="section-127">第 3 讲：浮点编码、舍入与运算（PDF pp.1–2）<a class="anchor" href="#section-127" aria-label="链接到本节">#</a></h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -2846,7 +2879,7 @@ t 在 8，u 在 32
 <li>3.5 只能依据原式逐步确定各次舍入；“浮点加法不结合”解释错误来源，不直接替代计算。</li>
 <li>对应：<a href="03-floating-point.html">浮点表示与舍入</a>。</li>
 </ul>
-<h2 id="section-126">第 4 讲：指令、地址与数据流（PDF pp.2–3）<a class="anchor" href="#section-126" aria-label="链接到本节">#</a></h2>
+<h2 id="section-128">第 4 讲：指令、地址与数据流（PDF pp.2–3）<a class="anchor" href="#section-128" aria-label="链接到本节">#</a></h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -2888,7 +2921,7 @@ t 在 8，u 在 32
 <li>4.4 的最终写地址为 <code>0x1008</code>。必须分别记录有效地址和该地址内的数据；不能拿 12 当地址。</li>
 <li>对应：<a href="04-assembly-basics.html">汇编基础</a>。</li>
 </ul>
-<h2 id="section-127">第 5 讲：条件码、循环与跳转表（PDF p.3）<a class="anchor" href="#section-127" aria-label="链接到本节">#</a></h2>
+<h2 id="section-129">第 5 讲：条件码、循环与跳转表（PDF p.3）<a class="anchor" href="#section-129" aria-label="链接到本节">#</a></h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -2927,7 +2960,7 @@ t 在 8，u 在 32
 <li>x=−1 在范围检查的 unsigned <code>ja</code> 中按 64 位无符号值解释，超过 5，进入默认分支返回 0。</li>
 <li>对应：<a href="05-control.html">控制流</a>。</li>
 </ul>
-<h2 id="section-128">第 6 讲：调用、寄存器保存与局部变量（PDF pp.3–4）<a class="anchor" href="#section-128" aria-label="链接到本节">#</a></h2>
+<h2 id="section-130">第 6 讲：调用、寄存器保存与局部变量（PDF pp.3–4）<a class="anchor" href="#section-130" aria-label="链接到本节">#</a></h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -2960,7 +2993,7 @@ t 在 8，u 在 32
 <li><code>leaq</code> 传入 local 的地址；若改成 <code>movq 8(%rsp),%rdi</code>，传入的是数值而非指针。</li>
 <li>对应：<a href="06-procedures.html">过程与栈帧</a>。</li>
 </ul>
-<h2 id="section-129">第 7 讲：数组与结构布局（PDF pp.4–5）<a class="anchor" href="#section-129" aria-label="链接到本节">#</a></h2>
+<h2 id="section-131">第 7 讲：数组与结构布局（PDF pp.4–5）<a class="anchor" href="#section-131" aria-label="链接到本节">#</a></h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -2990,7 +3023,7 @@ t 在 8，u 在 32
 <li>p 指向 a[1] 时，<code>p[1].sum</code> 访问 a[2].sum=30；q 指向 a[1].v 时，q[2]=6，故结果为 36。</li>
 <li>对应：<a href="07-data.html">数组、结构体与指针</a>。</li>
 </ul>
-<h2 id="section-130">第 8 讲：union 与安全防护（PDF p.5）<a class="anchor" href="#section-130" aria-label="链接到本节">#</a></h2>
+<h2 id="section-132">第 8 讲：union 与安全防护（PDF p.5）<a class="anchor" href="#section-132" aria-label="链接到本节">#</a></h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -3024,7 +3057,7 @@ t 在 8，u 在 32
 <li>8.3 的地址、31 和“否”保持为答案记录；拿到完整题干后，依次核对缓冲区首址、返回地址槽、输入终止符和限制字节，再验证攻击是否成功。</li>
 <li>对应：<a href="08-advanced.html">机器级进阶与安全</a>。</li>
 </ul>
-<h2 id="section-131">复盘清单<a class="anchor" href="#section-131" aria-label="链接到本节">#</a></h2>
+<h2 id="section-133">复盘清单<a class="anchor" href="#section-133" aria-label="链接到本节">#</a></h2>
 <ul>
 <li>把“公式不会”和“地址/值弄混”分开记录；本卷既测位级表示，也测跨调用数据流与布局。</li>
 <li>做完第 2～8 讲复盘后，再学习新授第 9、10 讲；新授内容不追溯算作本次测验考点。</li>
@@ -3033,9 +3066,9 @@ t 在 8，u 在 32
 <hr />
 <h1>12 · 往年题导航与勘误</h1>
 <p>来源为用户指定的 <a href="https://github.com/zhuozhiyongde/Introduction-to-Computer-System-2023Fall-PKU">公开仓库</a>。本章原创概括题型与解题路径，不转载整卷。<strong>2025 第一次阶段测验与当前第 1～8 讲范围最接近，应当优先于旧式期中卷。</strong></p>
-<h2 id="section-132">本章范围<a class="anchor" href="#section-132" aria-label="链接到本节">#</a></h2>
+<h2 id="section-134">本章范围<a class="anchor" href="#section-134" aria-label="链接到本节">#</a></h2>
 <p>2026 第一次测验的本地答案回查见<a href="11-quiz01.html">第 11 章</a>。本章以 2025 第一次阶段测验为主；历史题仅选数据表示和机器级程序相关内容。本章历史题导航仅围绕第一次测验的表示与机器级程序；新授 Y86/SEQ 分别见第 09、10 章，后续流水线、程序优化、缓存及链接题未在本次扩展中整理。</p>
-<h2 id="section-133">2025 第一次阶段测验：逐题回查<a class="anchor" href="#section-133" aria-label="链接到本节">#</a></h2>
+<h2 id="section-135">2025 第一次阶段测验：逐题回查<a class="anchor" href="#section-135" aria-label="链接到本节">#</a></h2>
 <p><a href="https://github.com/zhuozhiyongde/Introduction-to-Computer-System-2023Fall-PKU/blob/main/%E5%BE%80%E5%B9%B4%E9%A2%98/%E9%98%B6%E6%AE%B5%E6%B5%8B%E9%AA%8C/2025%E7%AC%AC1%E6%AC%A1%E9%98%B6%E6%AE%B5%E6%B5%8B%E9%AA%8C-%E5%B8%A6%E7%AD%94%E6%A1%88.pdf">试卷与答案</a></p>
 <div class="table-scroll"><table>
 <thead>
@@ -3194,7 +3227,7 @@ t 在 8，u 在 32
 </tbody>
 </table></div>
 <p>从这份卷的覆盖看，不应只复习汇编填空：低字节寄存器、访问计数、零扩展的隐含效果、混合浮点 ABI 等边角知识都直接成为独立小问。各章已据此补齐。</p>
-<h2 id="section-134">范围内的补充例题<a class="anchor" href="#section-134" aria-label="链接到本节">#</a></h2>
+<h2 id="section-136">范围内的补充例题<a class="anchor" href="#section-136" aria-label="链接到本节">#</a></h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -3236,15 +3269,15 @@ t 在 8，u 在 32
 </tr>
 </tbody>
 </table></div>
-<h2 id="section-135">应当明确区分的答案问题<a class="anchor" href="#section-135" aria-label="链接到本节">#</a></h2>
-<h3 id="section-136">2025 第 3 题：“首字节”的歧义<a class="anchor" href="#section-136" aria-label="链接到本节">#</a></h3>
+<h2 id="section-137">应当明确区分的答案问题<a class="anchor" href="#section-137" aria-label="链接到本节">#</a></h2>
+<h3 id="section-138">2025 第 3 题：“首字节”的歧义<a class="anchor" href="#section-138" aria-label="链接到本节">#</a></h3>
 <p>short -12 扩为 32 位 int 的位模式为 FFFFFFF4；小端内存从低到高为 F4 FF FF FF。原答案写 FF，只能与“最高有效字节”的解释一致。若按 show_bytes 从最低地址开始打印，第一个字节应为 F4。本手册保留这一判断依据，不把参考答案当作没有歧义的权威结论。</p>
-<h3 id="section-137">2024：结构体返回值的时机<a class="anchor" href="#section-137" aria-label="链接到本节">#</a></h3>
+<h3 id="section-139">2024：结构体返回值的时机<a class="anchor" href="#section-139" aria-label="链接到本节">#</a></h3>
 <p><a href="https://github.com/zhuozhiyongde/Introduction-to-Computer-System-2023Fall-PKU/blob/main/%E5%BE%80%E5%B9%B4%E9%A2%98/%E6%9C%9F%E4%B8%AD/2024%E6%9C%9F%E4%B8%AD-%E8%AF%95%E9%A2%98%E5%8F%8A%E7%AD%94%E6%A1%88%E5%8B%98%E8%AF%AF.pdf">2024 勘误文件</a> 中选择第 7 题最终允许 A/C 两种答案。核心是结构体返回地址：调用时隐藏缓冲区指针可在 rdi，返回时在 rax；未交代时机就有歧义。答题时要区分“传入结果缓冲区”和“函数返回”。</p>
-<h3 id="section-138">2022 自定义浮点：“不溢出域内无舍入”与边界舍入<a class="anchor" href="#section-138" aria-label="链接到本节">#</a></h3>
+<h3 id="section-140">2022 自定义浮点：“不溢出域内无舍入”与边界舍入<a class="anchor" href="#section-140" aria-label="链接到本节">#</a></h3>
 <p>1/3/4 格式最大有限值为 15.5，可精确表示整数 0～15；原题把 unsigned char 转换概括为“会溢出，不会舍入”。这里可理解为考察可表示范围内的整数均可精确编码；<strong>从完整 IEEE 转换过程看边界值仍需进行舍入并可能引发溢出</strong>，不宜把它泛化为所有转换都无需舍入逻辑。</p>
 <p>同年 switch 题部分路径没有初始化 val 就写结构体，适合按给定汇编还原，不适合作为没有未定义行为的 C 编程范例。本手册的原理解释不依赖这些路径具有可移植结果。</p>
-<h2 id="section-139">参考笔记中需要纠正的说法<a class="anchor" href="#section-139" aria-label="链接到本节">#</a></h2>
+<h2 id="section-141">参考笔记中需要纠正的说法<a class="anchor" href="#section-141" aria-label="链接到本节">#</a></h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -3284,16 +3317,16 @@ t 在 8，u 在 32
 </tbody>
 </table></div>
 <p>这些结论来自位宽、类型和地址布局推导，并与教材/官方勘误交叉核对。引用仓库是为了补充题型和经验，不代表无条件认可所有笔记内容。</p>
-<h2 id="section-140">真题驱动的复习闭环<a class="anchor" href="#section-140" aria-label="链接到本节">#</a></h2>
+<h2 id="section-142">真题驱动的复习闭环<a class="anchor" href="#section-142" aria-label="链接到本节">#</a></h2>
 <p>做题时给每一空标一个错误类别：概念、类型、位宽、端序、地址/值、控制流、边界、计算。错后先写“错误前提是什么”，再找一个最小反例，最后做一题改变位宽或类型的变式。只有重做后能独立推出，才算真正掌握。</p>
 <hr />
 <h1>13 · 小班拓展、边角知识与作业路线</h1>
 <p>逐项归并本地第 2～7、9～10 讲研讨主题；本章保留课堂提出的开放讨论与术语，不把它们伪装成只有唯一标准答案的计算题。</p>
-<h2 id="section-141">第 2 讲：表示与整数<a class="anchor" href="#section-141" aria-label="链接到本节">#</a></h2>
+<h2 id="section-143">第 2 讲：表示与整数<a class="anchor" href="#section-143" aria-label="链接到本节">#</a></h2>
 <p>研讨 1 的进制转换、位运算/逻辑运算、短路与移位见第 02 章。补充的设计问题：二进制容易用两种稳定物理状态表示，数字电路有噪声容限；十六进制是在不损失位边界的前提下缩短书写。8 位字节有历史、字符表示、寻址与硬件生态原因，不是数学上唯一最优方案。字更长能表示更大范围/地址，也提高存储、传输和硬件成本；嵌入式设备可采用不同取舍。</p>
 <p>研讨 2 的原码/反码比较、补码取负证明、混合类型比较、扩展截断、三类加法溢出、常数乘法和大小端均见第 02 章。补码取负证明：w 位下 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∼</mi><mi>x</mi><mo>=</mo><msup><mn>2</mn><mi>w</mi></msup><mo>−</mo><mn>1</mn><mo>−</mo><mi>x</mi></mrow><annotation encoding="application/x-tex">\mathord{\sim}x=2^w-1-x</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord"><span class="mrel">∼</span></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7477em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0269em;">w</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal">x</span></span></span></span></span>，所以 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∼</mi><mi>x</mi><mo>+</mo><mn>1</mn><mo>≡</mo><mo>−</mo><mi>x</mi><mspace></mspace><mspace width="0.4444em"/><mo stretchy="false">(</mo><mrow><mi mathvariant="normal">m</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">d</mi></mrow><mspace width="0.3333em"/><msup><mn>2</mn><mi>w</mi></msup><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\mathord{\sim}x+1\equiv-x\pmod{2^w}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mrel">∼</span></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≡</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord">−</span><span class="mord mathnormal">x</span><span class="mspace allowbreak"></span><span class="mspace" style="margin-right:0.4444em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord"><span class="mord"><span class="mord mathrm">mod</span></span></span><span class="mspace" style="margin-right:0.3333em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0269em;">w</span></span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span>；其位向量意义对所有 x 成立。</p>
 <p>设计自测：8 位用 DA 与 6F 做所有位运算；16 位用 0、1、-1、32767、-32768 做 B2U/B2T；用同一个 32 位常量画两种端序。要说清中间表达式是否先提升为 int。</p>
-<h2 id="section-142">第 3 讲：浮点的术语与设计<a class="anchor" href="#section-142" aria-label="链接到本节">#</a></h2>
+<h2 id="section-144">第 3 讲：浮点的术语与设计<a class="anchor" href="#section-144" aria-label="链接到本节">#</a></h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -3343,24 +3376,24 @@ t 在 8，u 在 32
 <p>偏置编码让正的浮点数主要按指数再按小数有序排列；全 0、全 1 阶码留给特殊类别，配合隐藏位提高规格化精度。指数正负数量不完全对称是偏置、保留编码及边界选择共同的结果，不应仅解释成“正数比较重要”。</p>
 <p>非规格化把零附近的断层补成均匀步长；正负零保留趋近方向等信息，同时让某些普通等式与位比较不能直接互换。无穷允许溢出或除零的结果继续传播，但不修复数值算法本身。NaN 让无效结果显式传播，其载荷含义不能跨平台随意假设。</p>
 <p>阿贝尔群要求封闭性、结合律、单位元、逆元与交换律；浮点加法集合不能简单视为实数加法的阿贝尔群，因为舍入破坏结合律等条件。关于单调性，区分弱单调/严格单调，乘数的正负以及 NaN；详见第 03 章。</p>
-<h3 id="section-143">两个事故案例及应当学到什么<a class="anchor" href="#section-143" aria-label="链接到本节">#</a></h3>
+<h3 id="section-145">两个事故案例及应当学到什么<a class="anchor" href="#section-145" aria-label="链接到本节">#</a></h3>
 <p>Ariane 5 首飞失败的调查指出惯性参考软件中一次数值转换溢出及未妥善保护、复用假设不适用等问题；不要简单概括为“浮点精度不足导致爆炸”。Patriot 的历史事故与时间表示截断误差长期积累有关。复习价值在于单位、可表示范围、转换、误差随时间累积与异常处理，而不是背损失金额。参考 <a href="https://www.esa.int/Newsroom/Press_Releases/Ariane_501_-_Presentation_of_Inquiry_Board_report">ESA 调查报告</a> 与 <a href="https://www.gao.gov/products/imtec-92-26">美国 GAO 报告</a>。</p>
 <p>AI 格式的原理比较见第 03 章。常用格式与硬件生态不断变化，课上的开放调研应注明时间与具体设备，不能用一份不带日期的“主流排名”当永久知识点。</p>
-<h2 id="section-144">第 4 讲：硬件与指令拓展<a class="anchor" href="#section-144" aria-label="链接到本节">#</a></h2>
+<h2 id="section-146">第 4 讲：硬件与指令拓展<a class="anchor" href="#section-146" aria-label="链接到本节">#</a></h2>
 <p>课件里的市场产品/主频/制程/核数是历史案例。看硬件参数时区分 ISA、实现、制造工艺命名、基准/睿频、核心/线程、功耗设计口径；制程标签不是每个晶体管某一长度的直接测量值，GHz 也不能跨微体系结构单独比较性能。</p>
 <p>CPU 数据通路、C→目标文件、反汇编字段、寄存器局部写入、传送类型、寻址、LEA 和算逻指令见第 01/04 章。没有普通 memory-to-memory mov 是编码和指令设计约束，<strong>不意味着 x86 完全没有涉及两处内存的字符串操作</strong>。不能把“普通 mov 的操作数组合”扩大为整个 ISA 的定律。</p>
 <p>实操可写一个小的 swap/算术函数，用 <code>gcc -Og -S</code> 比较汇编，再用 objdump 看指令字节。编译器、PIE、栈保护和优化级别不同都会影响结果；核心语义比和旧课件逐行完全一致更重要。</p>
-<h2 id="section-145">第 5 讲：控制流拓展<a class="anchor" href="#section-145" aria-label="链接到本节">#</a></h2>
+<h2 id="section-147">第 5 讲：控制流拓展<a class="anchor" href="#section-147" aria-label="链接到本节">#</a></h2>
 <p>CF/ZF/SF/OF、cmp/test 对照、set 返回、分支反转、cmov 不适用情形、三种循环转换与跳转表见第 05 章。cmov 的性能收益来自避免不可预测分支，而不是“少算了一边”；预测很准或一边特别昂贵时不一定有益。</p>
 <p>POPCNT 支持要看目标机器与编译选项。分析 if-else 链最多跳转次数时必须给出具体编译形态，不能只数 C 的 if 个数；一次路径可能包含条件跳转和合流的无条件跳转。跳转表也是先做范围检查，不是免费一步覆盖所有输入。</p>
-<h2 id="section-146">第 6 讲：ABI 与递归拓展<a class="anchor" href="#section-146" aria-label="链接到本节">#</a></h2>
+<h2 id="section-148">第 6 讲：ABI 与递归拓展<a class="anchor" href="#section-148" aria-label="链接到本节">#</a></h2>
 <p>传递控制、数据、存储三条线以及调用者/被调用者保存规则见第 06 章。硬件规定 call 写返回地址，软件规定参数寄存器；Windows 与 Linux 的差异是 ABI，不是 CPU 在两种 OS 上换了一套基本 call 语义。</p>
 <p>历史上某些语言实现不支持或限制递归，常与静态分配局部存储、运行时约束或语言设计有关；支持递归需要每次调用能保存独立活动记录，也可不用传统机器栈实现。递归不等于必须创建 OS 线程。</p>
-<h2 id="section-147">第 7 讲：数组、对齐与浮点拓展<a class="anchor" href="#section-147" aria-label="链接到本节">#</a></h2>
+<h2 id="section-149">第 7 讲：数组、对齐与浮点拓展<a class="anchor" href="#section-149" aria-label="链接到本节">#</a></h2>
 <p>各种元素宽度的数组图、数组表达式、二维行优先、多级间接、VLA、结构体与混合参数见第 07 章。Fortran 常用列优先，C 用行优先；二维存储次序是语言/库约定，和 CPU 的大小端是两个不同维度。第三方数组库还可能使用视图和可变 stride。</p>
 <p>Windows x64 采用 LLP64，long 与 Linux LP64 不同；结构体布局同时受类型大小、ABI、编译器扩展和 packing 控制。通过 <code>sizeof/offsetof/_Alignof</code> 核验，比从操作系统名字猜全部偏移可靠。</p>
 <p>SIMD 是一条指令对多个数据元素做同类运算；标量 XMM 指令不因寄存器宽 128 位就自动处理四个 float。浮点地址仍由通用寄存器形成，数值计算在浮点寄存器进行。</p>
-<h2 id="section-148">第 9 讲研讨 1：体系结构设计（逐项路线）<a class="anchor" href="#section-148" aria-label="链接到本节">#</a></h2>
+<h2 id="section-150">第 9 讲研讨 1：体系结构设计（逐项路线）<a class="anchor" href="#section-150" aria-label="链接到本节">#</a></h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -3412,7 +3445,7 @@ t 在 8，u 在 32
 <li>程序对比先检查返回结果与访存语义等价，再比较指令数量。单纯逐行照抄 x86 的比例寻址、cmp 或立即数加法并不是合法 Y86 程序。</li>
 <li>原题要求选前面课件中的例子；正文选用与本讲 len 示例一致的零结尾 long 数组遍历，并提供完整入口、数据与栈初始化，方便先复现实验方法。</li>
 </ul>
-<h2 id="section-149">第 9 讲研讨 2：逻辑设计（逐项路线）<a class="anchor" href="#section-149" aria-label="链接到本节">#</a></h2>
+<h2 id="section-151">第 9 讲研讨 2：逻辑设计（逐项路线）<a class="anchor" href="#section-151" aria-label="链接到本节">#</a></h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -3464,7 +3497,7 @@ t 在 8，u 在 32
 <li>累加器先标每个采样沿上的 In、Load 和旧状态，再计算新状态；不要把沿之间的输入变化当成立即写寄存器。</li>
 <li>HCL 三数最小值在并列输入下也要核验；课件严格比较版本不能覆盖 A=B&lt;C，正文已给出修正。</li>
 </ul>
-<h2 id="section-150">第 10 讲研讨 1：指令操作分解（逐项路线）<a class="anchor" href="#section-150" aria-label="链接到本节">#</a></h2>
+<h2 id="section-152">第 10 讲研讨 1：指令操作分解（逐项路线）<a class="anchor" href="#section-152" aria-label="链接到本节">#</a></h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -3515,7 +3548,7 @@ t 在 8，u 在 32
 <li>每道题都按“取指→读寄存器→执行→访存→写回→PC”列操作；没有操作的阶段明确写“无”，不凭阶段名字强行安排一次读写。</li>
 <li>以 call 为例，写入的是 valP 而不是 valC；以 ret 为例，新 PC 来自 valM 而不是 valP。这是最容易接错的两条线。</li>
 </ul>
-<h2 id="section-151">第 10 讲研讨 2：SEQ 部件设计（逐项路线）<a class="anchor" href="#section-151" aria-label="链接到本节">#</a></h2>
+<h2 id="section-153">第 10 讲研讨 2：SEQ 部件设计（逐项路线）<a class="anchor" href="#section-153" aria-label="链接到本节">#</a></h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -3576,7 +3609,7 @@ t 在 8，u 在 32
 <li>完成 iaddq 扩展时检查所有受影响的控制器；只增加 opcode 和 ALU 加法而漏掉取常数、寄存器读写或 CC 都不能正确执行。</li>
 <li>本次课程到 SEQ 顺序实现为止，后续流水线实验另按新课件补充。</li>
 </ul>
-<h2 id="section-152">指定教材作业：题号与应掌握的方法<a class="anchor" href="#section-152" aria-label="链接到本节">#</a></h2>
+<h2 id="section-154">指定教材作业：题号与应掌握的方法<a class="anchor" href="#section-154" aria-label="链接到本节">#</a></h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -3629,7 +3662,7 @@ t 在 8，u 在 32
 </tbody>
 </table></div>
 <p>只列题号与方法，不复刻教材完整题文。不同版次/国际版的题号可能不一致，作者官网也专门提醒国际版习题存在差异。以本地中文版作业单指定页面和题文为准。</p>
-<h2 id="section-153">最后一次边界检查清单<a class="anchor" href="#section-153" aria-label="链接到本节">#</a></h2>
+<h2 id="section-155">最后一次边界检查清单<a class="anchor" href="#section-155" aria-label="链接到本节">#</a></h2>
 <ul>
 <li>int/long/指针的宽度是否写清？普通 char 是否有符号？</li>
 <li>小整数是否先提升？signed 与 unsigned 是否发生类型变化？</li>
@@ -3646,7 +3679,7 @@ t 在 8，u 在 32
 <hr />
 <h1>14 · 课件覆盖索引与来源</h1>
 <p>这里保留全部现有课件的页码主题，包括附加材料。页题名由 PDF 文本抽取清理，少数无题页用内容起始行标识；它是回查索引，正文按知识主题合并重复例子。</p>
-<h2 id="section-154">覆盖情况<a class="anchor" href="#section-154" aria-label="链接到本节">#</a></h2>
+<h2 id="section-156">覆盖情况<a class="anchor" href="#section-156" aria-label="链接到本节">#</a></h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -3727,8 +3760,8 @@ t 在 8，u 在 32
 </table></div>
 <p>小班研讨题第 2～7、9～10 讲共 8 份、每份 2 页，已全文读取并归并到正文与第 13 章；新增两份按研讨小问逐项给出回查路线。教材扫描版仅提取前部信息作为版次参考，正文公式基于课件、CS:APP 通用原理及官方资料核对；没有宣称逐页阅读整本扫描教材。</p>
 <p>第 8 讲已按 2026-10-08 课件全部 53 页更新；教材补充与课件主题分开标注。本手册现整理第 1～10 讲；第一次测验复盘见第 11 章，往年题导航见第 12 章。第 9、10 讲不计入第一次测验原范围。</p>
-<h2 id="section-155">逐页主题清单<a class="anchor" href="#section-155" aria-label="链接到本节">#</a></h2>
-<h3 id="section-156">ICS01-overview-20260907<a class="anchor" href="#section-156" aria-label="链接到本节">#</a></h3>
+<h2 id="section-157">逐页主题清单<a class="anchor" href="#section-157" aria-label="链接到本节">#</a></h2>
+<h3 id="section-158">ICS01-overview-20260907<a class="anchor" href="#section-158" aria-label="链接到本节">#</a></h3>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -3990,7 +4023,7 @@ t 在 8，u 在 32
 </tr>
 </tbody>
 </table></div>
-<h3 id="section-157">ICS02-bits-bytes-ints-20260910<a class="anchor" href="#section-157" aria-label="链接到本节">#</a></h3>
+<h3 id="section-159">ICS02-bits-bytes-ints-20260910<a class="anchor" href="#section-159" aria-label="链接到本节">#</a></h3>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -4342,7 +4375,7 @@ t 在 8，u 在 32
 </tr>
 </tbody>
 </table></div>
-<h3 id="section-158">ICS03-float-20260914<a class="anchor" href="#section-158" aria-label="链接到本节">#</a></h3>
+<h3 id="section-160">ICS03-float-20260914<a class="anchor" href="#section-160" aria-label="链接到本节">#</a></h3>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -4594,7 +4627,7 @@ t 在 8，u 在 32
 </tr>
 </tbody>
 </table></div>
-<h3 id="section-159">ICS04-machine-basics-20260917<a class="anchor" href="#section-159" aria-label="链接到本节">#</a></h3>
+<h3 id="section-161">ICS04-machine-basics-20260917<a class="anchor" href="#section-161" aria-label="链接到本节">#</a></h3>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -4841,7 +4874,7 @@ t 在 8，u 在 32
 </tr>
 </tbody>
 </table></div>
-<h3 id="section-160">ICS05-machine-control-20260921<a class="anchor" href="#section-160" aria-label="链接到本节">#</a></h3>
+<h3 id="section-162">ICS05-machine-control-20260921<a class="anchor" href="#section-162" aria-label="链接到本节">#</a></h3>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -5173,7 +5206,7 @@ t 在 8，u 在 32
 </tr>
 </tbody>
 </table></div>
-<h3 id="section-161">ICS06-machine-procedures-20260924<a class="anchor" href="#section-161" aria-label="链接到本节">#</a></h3>
+<h3 id="section-163">ICS06-machine-procedures-20260924<a class="anchor" href="#section-163" aria-label="链接到本节">#</a></h3>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -5560,7 +5593,7 @@ t 在 8，u 在 32
 </tr>
 </tbody>
 </table></div>
-<h3 id="section-162">ICS07-machine-data-20260928<a class="anchor" href="#section-162" aria-label="链接到本节">#</a></h3>
+<h3 id="section-164">ICS07-machine-data-20260928<a class="anchor" href="#section-164" aria-label="链接到本节">#</a></h3>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -5827,7 +5860,7 @@ t 在 8，u 在 32
 </tr>
 </tbody>
 </table></div>
-<h3 id="section-163">ICS08-machine-advanced-20261008<a class="anchor" href="#section-163" aria-label="链接到本节">#</a></h3>
+<h3 id="section-165">ICS08-machine-advanced-20261008<a class="anchor" href="#section-165" aria-label="链接到本节">#</a></h3>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -6104,7 +6137,7 @@ t 在 8，u 在 32
 </tr>
 </tbody>
 </table></div>
-<h2 id="section-164">可核对的外部来源<a class="anchor" href="#section-164" aria-label="链接到本节">#</a></h2>
+<h2 id="section-166">可核对的外部来源<a class="anchor" href="#section-166" aria-label="链接到本节">#</a></h2>
 <ul>
 <li><a href="https://github.com/zhuozhiyongde/Introduction-to-Computer-System-2023Fall-PKU">指定 GitHub 仓库</a>：公开试卷、2024 勘误、复习细节。作者也提醒笔记可能有错误，本手册已单列纠正。</li>
 <li><a href="https://csapp.cs.cmu.edu/3e/errata.html">CS:APP 第 3 版官方勘误</a>：用于核对移位、扩展等细节；可继续到其中文版勘误链接。</li>
@@ -6112,9 +6145,9 @@ t 在 8，u 在 32
 <li><a href="https://gitlab.com/x86-psABIs/x86-64-ABI">System V AMD64 ABI 项目</a>：Linux x86-64 调用与类型布局参考。</li>
 <li><a href="https://learn.microsoft.com/en-us/cpp/build/x64-calling-convention?view=msvc-170">Microsoft x64 ABI</a>：Windows 对比。</li>
 </ul>
-<h2 id="section-165">使用与维护<a class="anchor" href="#section-165" aria-label="链接到本节">#</a></h2>
+<h2 id="section-167">使用与维护<a class="anchor" href="#section-167" aria-label="链接到本节">#</a></h2>
 <p>知识点使用原创表述与重新推导的例子；历史题给出处、题号、页码与解法导向；本地 2026 测验另整理已提供的答案与可核验推导。网站没有发布扫描教材和课堂 PDF。更新时优先补新的课件，再更新正文和此清单；考试政策以教师最新通知为准。</p>
-<h2 id="section-166">已知限制<a class="anchor" href="#section-166" aria-label="链接到本节">#</a></h2>
+<h2 id="section-168">已知限制<a class="anchor" href="#section-168" aria-label="链接到本节">#</a></h2>
 <ol>
 <li>当前考试最终通知仍以教师发布为准；第 1～10 讲课件已齐，第一次测验原范围仍为第 1～8 讲。</li>
 <li>2014 旧卷存在 OCR 乱码，精确作答应看原始 PDF。</li>
@@ -6122,7 +6155,7 @@ t 在 8，u 在 32
 <li>部分开放调研（如最新 CPU 产品排行）不属于稳定知识，这里解释比较方法而不编造当前市场表。</li>
 <li>课堂口头补充不在本地文件中，未纳入“已覆盖”的承诺。</li>
 </ol>
-<h3 id="section-167">ICS09-Processor Arch-ISA&amp;Logic-20261015<a class="anchor" href="#section-167" aria-label="链接到本节">#</a></h3>
+<h3 id="section-169">ICS09-Processor Arch-ISA&amp;Logic-20261015<a class="anchor" href="#section-169" aria-label="链接到本节">#</a></h3>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -6454,7 +6487,7 @@ t 在 8，u 在 32
 </tr>
 </tbody>
 </table></div>
-<h3 id="section-168">ICS10-Processor Arch-Sequential-20261019<a class="anchor" href="#section-168" aria-label="链接到本节">#</a></h3>
+<h3 id="section-170">ICS10-Processor Arch-Sequential-20261019<a class="anchor" href="#section-170" aria-label="链接到本节">#</a></h3>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -6721,7 +6754,7 @@ t 在 8，u 在 32
 </tr>
 </tbody>
 </table></div>
-<h2 id="section-169">2026 第一次测验与新增研讨资料<a class="anchor" href="#section-169" aria-label="链接到本节">#</a></h2>
+<h2 id="section-171">2026 第一次测验与新增研讨资料<a class="anchor" href="#section-171" aria-label="链接到本节">#</a></h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -6779,4 +6812,4 @@ t 在 8，u 在 32
 </tbody>
 </table></div>
 <p>新课页码表覆盖标题、主体、总结及附加页；重复图表在正文按主题合并。课件个别排印和边界问题在对应正文说明，未把课件中的误写直接当作规则。测验答案中的字母、缺题和重复编号保持来源状态。</p>
-<footer>理解表示，追踪执行。<span><a href="14-coverage.html">资料来源与覆盖范围</a></span></footer></main><aside aria-label="本页目录"><div class="nav-label">本页内容</div><a href="#section-1">资料已经更新到哪里</a><a href="#section-2">第一次测验范围与后续新课</a><a href="#section-3">读题与复习约定</a><a href="#section-4">建议学习路线</a><a href="#section-5">来源与发布边界</a><a href="#section-6">信息就是位加上解释</a><a href="#section-7">从 C 到执行</a><a href="#section-8">处理器与内存</a><a href="#section-9">五个贯穿全课的问题</a><a href="#section-10">层次、抽象与性能</a><a href="#section-11">不属于计算题但课件出现的内容</a><a href="#section-12">自检</a><a href="#section-13">进制、字长与存储单位</a><a href="#section-14">大小端与字符</a><a href="#section-15">布尔代数与位向量</a><a href="#section-16">移位</a><a href="#section-17">1 &lt;&lt; 31 和 1u &lt;&lt; 31 为什么不同</a><a href="#section-18">无符号、原码、反码与补码</a><a href="#section-19">类型转换、扩展、截断</a><a href="#section-20">通常算术转换：先决定共同类型</a><a href="#section-21">加、减、乘与溢出</a><a href="#section-22">模运算恒等式为什么不能替 C 的溢出兜底</a><a href="#section-23">用移位替代常数乘除</a><a href="#section-24">完整算例与常见陷阱</a><a href="#section-25">自检与练习方向</a><a href="#section-26">二进制小数与定点</a><a href="#section-27">通用 IEEE 风格公式</a><a href="#section-28">范围、间距与计数</a><a href="#section-29">1 两侧的间距与舍入区间</a><a href="#section-30">“最小负非规格化”不是负无穷</a><a href="#section-31">编码与解码：完整步骤</a><a href="#section-32">最近偶数舍入</a><a href="#section-33">加法、乘法与异常</a><a href="#section-34">五类异常：触发原因与默认结果</a><a href="#section-35">零、无穷与 NaN</a><a href="#section-36">代数性质与 C 转换</a><a href="#section-37">FP8 与低精度格式：按题设定义</a><a href="#section-38">自检</a><a href="#section-39">历史与抽象层次</a><a href="#section-40">AT&amp;T 语法</a><a href="#section-41">全部通用寄存器与局部访问</a><a href="#section-42">寻址与 LEA</a><a href="#section-43">数据传送和扩展</a><a href="#section-44">算术与逻辑指令</a><a href="#section-45">逐条看数据结果与条件码</a><a href="#section-46">二／三操作数乘法与判零</a><a href="#section-47">位运算与不写回的 test</a><a href="#section-48">移位计数、右移舍入与标志</a><a href="#section-49">双倍宽乘除</a><a href="#section-50">解读代码的方法</a><a href="#section-51">自检</a><a href="#section-52">四个主要条件码</a><a href="#section-53">PF：看低字节的 1，而非数值的奇偶</a><a href="#section-54">条件选择表</a><a href="#section-55">set、jump 与 cmov</a><a href="#section-56">if 与条件表达式</a><a href="#section-57">三种循环与边界</a><a href="#section-58">switch 与跳转表</a><a href="#section-59">自检</a><a href="#section-60">调用要完成三件事</a><a href="#section-61">栈的方向与四条指令</a><a href="#section-62">一次调用的地址跟踪</a><a href="#section-63">System V AMD64 参数与返回值</a><a href="#section-64">caller-saved / callee-saved</a><a href="#section-65">栈帧与局部存储</a><a href="#section-66">递归：每一层有什么不同</a><a href="#section-67">聚合类型传参与返回</a><a href="#section-68">ABI 对比（小班拓展）</a><a href="#section-69">自检</a><a href="#section-70">一维数组与指针算术</a><a href="#section-71">二维、变长与多级数组</a><a href="#section-72">类型声明与 sizeof 表</a><a href="#section-73">结构体布局与对齐</a><a href="#section-74">从汇编反推布局</a><a href="#section-75">SSE / XMM 与 SIMD</a><a href="#section-76">浮点参数与比较</a><a href="#section-77">自检</a><a href="#section-78">union 的分配与位重解释（pp.3～4）</a><a href="#section-79">端序与数据模型（pp.5～10）</a><a href="#section-80">数组、结构体和联合的对照（p.11）</a><a href="#section-81">Linux x86-64 进程内存布局（pp.13～15）</a><a href="#section-82">递归耗尽栈空间（p.16）</a><a href="#section-83">越界不一定立即崩溃（pp.18～20）</a><a href="#section-84">字符串输入为什么容易越界（pp.21～22、41）</a><a href="#section-85">从汇编推导越界位置（pp.23～27）</a><a href="#section-86">控制流破坏与代码注入（pp.28～34）</a><a href="#section-87">历史案例与术语（pp.34～39）</a><a href="#section-88">三层防护与各自限制（pp.40～47）</a><a href="#section-89">金丝雀汇编逐步读（pp.44～47）</a><a href="#section-90">ROP：复用已有指令（pp.48～53）</a><a href="#section-91">相关补充：指针、调试与对象寿命</a><a href="#section-92">C 指针的完整概念</a><a href="#section-93">调试与反汇编</a><a href="#section-94">内存错误与动态栈</a><a href="#section-95">自检与易错点</a><a href="#section-96">ISA：软件与硬件共同遵守的约定</a><a href="#section-97">寄存器编号与 RNONE</a><a href="#section-98">指令格式、语义与长度</a><a href="#section-99">OPq 与条件功能码</a><a href="#section-100">编码练习：从字段到字节</a><a href="#section-101">栈、调用与程序状态</a><a href="#section-102">Y86 的绝对跳转与 x86 的相对跳转</a><a href="#section-103">从 C 翻译为 Y86：一个可运行的完整例子</a><a href="#section-104">CISC、RISC 与课件中的 MIPS 例子</a><a href="#section-105">数字信号、逻辑门与组合电路</a><a href="#section-106">HCL：声明逻辑关系，不是按行执行的 C</a><a href="#section-107">时序电路：寄存器、寄存器堆与状态机</a><a href="#section-108">附加材料：一位存储、锁存器与边沿触发</a><a href="#section-109">自测与来源边界</a><a href="#section-110">从机器状态到六个阶段</a><a href="#section-111">信号不是同义词</a><a href="#section-112">每类指令的六阶段操作</a><a href="#section-113">数值追踪：pop、call、ret</a><a href="#section-114">Fetch：字段位置、长度和有效性</a><a href="#section-115">Decode / Write back：四个寄存器选择器</a><a href="#section-116">Execute：ALU 的两个输入、功能和 CC</a><a href="#section-117">Memory：地址、数据与读写使能</a><a href="#section-118">状态与 PC 更新的优先选择</a><a href="#section-119">一周期内什么变化，时钟沿上什么变化</a><a href="#section-120">课件 pp.47–50 的执行轨迹</a><a href="#section-121">作业 4.51：扩展 iaddq 的完整改动清单</a><a href="#section-122">性能边界与课件勘误</a><a href="#section-123">卷面范围与编号说明</a><a href="#section-124">第 2 讲：位运算、移位与无符号转换（PDF p.1）</a><a href="#section-125">第 3 讲：浮点编码、舍入与运算（PDF pp.1–2）</a><a href="#section-126">第 4 讲：指令、地址与数据流（PDF pp.2–3）</a><a href="#section-127">第 5 讲：条件码、循环与跳转表（PDF p.3）</a><a href="#section-128">第 6 讲：调用、寄存器保存与局部变量（PDF pp.3–4）</a><a href="#section-129">第 7 讲：数组与结构布局（PDF pp.4–5）</a><a href="#section-130">第 8 讲：union 与安全防护（PDF p.5）</a><a href="#section-131">复盘清单</a><a href="#section-132">本章范围</a><a href="#section-133">2025 第一次阶段测验：逐题回查</a><a href="#section-134">范围内的补充例题</a><a href="#section-135">应当明确区分的答案问题</a><a href="#section-136">2025 第 3 题：“首字节”的歧义</a><a href="#section-137">2024：结构体返回值的时机</a><a href="#section-138">2022 自定义浮点：“不溢出域内无舍入”与边界舍入</a><a href="#section-139">参考笔记中需要纠正的说法</a><a href="#section-140">真题驱动的复习闭环</a><a href="#section-141">第 2 讲：表示与整数</a><a href="#section-142">第 3 讲：浮点的术语与设计</a><a href="#section-143">两个事故案例及应当学到什么</a><a href="#section-144">第 4 讲：硬件与指令拓展</a><a href="#section-145">第 5 讲：控制流拓展</a><a href="#section-146">第 6 讲：ABI 与递归拓展</a><a href="#section-147">第 7 讲：数组、对齐与浮点拓展</a><a href="#section-148">第 9 讲研讨 1：体系结构设计（逐项路线）</a><a href="#section-149">第 9 讲研讨 2：逻辑设计（逐项路线）</a><a href="#section-150">第 10 讲研讨 1：指令操作分解（逐项路线）</a><a href="#section-151">第 10 讲研讨 2：SEQ 部件设计（逐项路线）</a><a href="#section-152">指定教材作业：题号与应掌握的方法</a><a href="#section-153">最后一次边界检查清单</a><a href="#section-154">覆盖情况</a><a href="#section-155">逐页主题清单</a><a href="#section-156">ICS01-overview-20260907</a><a href="#section-157">ICS02-bits-bytes-ints-20260910</a><a href="#section-158">ICS03-float-20260914</a><a href="#section-159">ICS04-machine-basics-20260917</a><a href="#section-160">ICS05-machine-control-20260921</a><a href="#section-161">ICS06-machine-procedures-20260924</a><a href="#section-162">ICS07-machine-data-20260928</a><a href="#section-163">ICS08-machine-advanced-20261008</a><a href="#section-164">可核对的外部来源</a><a href="#section-165">使用与维护</a><a href="#section-166">已知限制</a><a href="#section-167">ICS09-Processor Arch-ISA&amp;Logic-20261015</a><a href="#section-168">ICS10-Processor Arch-Sequential-20261019</a><a href="#section-169">2026 第一次测验与新增研讨资料</a><a href="#main">回到顶部 ↑</a></aside></div><script src="app.js"></script></body></html>
+<footer>理解表示，追踪执行。<span><a href="14-coverage.html">资料来源与覆盖范围</a></span></footer></main><aside aria-label="本页目录"><div class="nav-label">本页内容</div><a href="#section-1">资料已经更新到哪里</a><a href="#section-2">第一次测验范围与后续新课</a><a href="#section-3">读题与复习约定</a><a href="#section-4">建议学习路线</a><a href="#section-5">来源与发布边界</a><a href="#section-6">信息就是位加上解释</a><a href="#section-7">从 C 到执行</a><a href="#section-8">处理器与内存</a><a href="#section-9">五个贯穿全课的问题</a><a href="#section-10">层次、抽象与性能</a><a href="#section-11">不属于计算题但课件出现的内容</a><a href="#section-12">自检</a><a href="#section-13">进制、字长与存储单位</a><a href="#section-14">大小端与字符</a><a href="#section-15">布尔代数与位向量</a><a href="#section-16">移位</a><a href="#section-17">1 &lt;&lt; 31 和 1u &lt;&lt; 31 为什么不同</a><a href="#section-18">无符号、原码、反码与补码</a><a href="#section-19">类型转换、扩展、截断</a><a href="#section-20">通常算术转换：先决定共同类型</a><a href="#section-21">加、减、乘与溢出</a><a href="#section-22">模运算恒等式为什么不能替 C 的溢出兜底</a><a href="#section-23">用移位替代常数乘除</a><a href="#section-24">完整算例与常见陷阱</a><a href="#section-25">自检与练习方向</a><a href="#section-26">二进制小数与定点</a><a href="#section-27">通用 IEEE 风格公式</a><a href="#section-28">范围、间距与计数</a><a href="#section-29">1 两侧的间距与舍入区间</a><a href="#section-30">“最小负非规格化”不是负无穷</a><a href="#section-31">编码与解码：完整步骤</a><a href="#section-32">最近偶数舍入</a><a href="#section-33">加法、乘法与异常</a><a href="#section-34">五类异常：触发原因与默认结果</a><a href="#section-35">零、无穷与 NaN</a><a href="#section-36">代数性质与 C 转换</a><a href="#section-37">FP8 与低精度格式：按题设定义</a><a href="#section-38">自检</a><a href="#section-39">历史与抽象层次</a><a href="#section-40">AT&amp;T 语法</a><a href="#section-41">全部通用寄存器与局部访问</a><a href="#section-42">寻址与 LEA</a><a href="#section-43">数据传送和扩展</a><a href="#section-44">算术与逻辑指令</a><a href="#section-45">逐条看数据结果与条件码</a><a href="#section-46">二／三操作数乘法与判零</a><a href="#section-47">位运算与不写回的 test</a><a href="#section-48">移位计数、右移舍入与标志</a><a href="#section-49">双倍宽乘除</a><a href="#section-50">解读代码的方法</a><a href="#section-51">自检</a><a href="#section-52">四个主要条件码</a><a href="#section-53">PF：看低字节的 1，而非数值的奇偶</a><a href="#section-54">条件选择表</a><a href="#section-55">set、jump 与 cmov</a><a href="#section-56">if 与条件表达式</a><a href="#section-57">三种循环与边界</a><a href="#section-58">switch 与跳转表</a><a href="#section-59">自检</a><a href="#section-60">调用要完成三件事</a><a href="#section-61">栈的方向与四条指令</a><a href="#section-62">一次调用的地址跟踪</a><a href="#section-63">System V AMD64 参数与返回值</a><a href="#section-64">caller-saved / callee-saved</a><a href="#section-65">栈帧与局部存储</a><a href="#section-66">递归：每一层有什么不同</a><a href="#section-67">聚合类型传参与返回</a><a href="#section-68">ABI 对比（小班拓展）</a><a href="#section-69">自检</a><a href="#section-70">一维数组与指针算术</a><a href="#section-71">二维、变长与多级数组</a><a href="#section-72">类型声明与 sizeof 表</a><a href="#section-73">结构体布局与对齐</a><a href="#section-74">从汇编反推布局</a><a href="#section-75">SSE / XMM 与 SIMD</a><a href="#section-76">浮点参数与比较</a><a href="#section-77">自检</a><a href="#section-78">union 的分配与位重解释（pp.3～4）</a><a href="#section-79">端序与数据模型（pp.5～10）</a><a href="#section-80">数组、结构体和联合的对照（p.11）</a><a href="#section-81">Linux x86-64 进程内存布局（pp.13～15）</a><a href="#section-82">递归耗尽栈空间（p.16）</a><a href="#section-83">越界不一定立即崩溃（pp.18～20）</a><a href="#section-84">字符串输入为什么容易越界（pp.21～22、41）</a><a href="#section-85">从汇编推导越界位置（pp.23～27）</a><a href="#section-86">控制流破坏与代码注入（pp.28～34）</a><a href="#section-87">历史案例与术语（pp.34～39）</a><a href="#section-88">三层防护与各自限制（pp.40～47）</a><a href="#section-89">金丝雀汇编逐步读（pp.44～47）</a><a href="#section-90">ROP：复用已有指令（pp.48～53）</a><a href="#section-91">相关补充：指针、调试与对象寿命</a><a href="#section-92">C 指针的完整概念</a><a href="#section-93">调试与反汇编</a><a href="#section-94">内存错误与动态栈</a><a href="#section-95">自检与易错点</a><a href="#section-96">ISA：软件与硬件共同遵守的约定</a><a href="#section-97">寄存器编号与 RNONE</a><a href="#section-98">指令格式、语义与长度</a><a href="#section-99">OPq 与条件功能码</a><a href="#section-100">编码练习：从字段到字节</a><a href="#section-101">栈、调用与程序状态</a><a href="#section-102">Y86 的绝对跳转与 x86 的相对跳转</a><a href="#section-103">从 C 翻译为 Y86：一个可运行的完整例子</a><a href="#section-104">CISC、RISC 与课件中的 MIPS 例子</a><a href="#section-105">数字信号、逻辑门与组合电路</a><a href="#section-106">HCL：声明逻辑关系，不是按行执行的 C</a><a href="#section-107">时序电路：寄存器、寄存器堆与状态机</a><a href="#section-108">附加材料：一位存储、锁存器与边沿触发</a><a href="#section-109">自测与来源边界</a><a href="#section-110">从机器状态到六个阶段</a><a href="#section-111">信号不是同义词</a><a href="#section-112">每类指令的六阶段操作</a><a href="#section-113">数值追踪：pop、call、ret</a><a href="#section-114">六张模块图怎么读</a><a href="#section-115">Fetch：字段位置、长度和有效性</a><a href="#section-116">Decode：两个读端口与源寄存器选择</a><a href="#section-117">Execute：ALU 的两个输入、功能和 CC</a><a href="#section-118">Memory：地址、数据与读写使能</a><a href="#section-119">Write back：两个目的选择器与双写端口</a><a href="#section-120">PC update：状态与下一 PC 的优先选择</a><a href="#section-121">一周期内什么变化，时钟沿上什么变化</a><a href="#section-122">课件 pp.47–50 的执行轨迹</a><a href="#section-123">作业 4.51：扩展 iaddq 的完整改动清单</a><a href="#section-124">性能边界与课件勘误</a><a href="#section-125">卷面范围与编号说明</a><a href="#section-126">第 2 讲：位运算、移位与无符号转换（PDF p.1）</a><a href="#section-127">第 3 讲：浮点编码、舍入与运算（PDF pp.1–2）</a><a href="#section-128">第 4 讲：指令、地址与数据流（PDF pp.2–3）</a><a href="#section-129">第 5 讲：条件码、循环与跳转表（PDF p.3）</a><a href="#section-130">第 6 讲：调用、寄存器保存与局部变量（PDF pp.3–4）</a><a href="#section-131">第 7 讲：数组与结构布局（PDF pp.4–5）</a><a href="#section-132">第 8 讲：union 与安全防护（PDF p.5）</a><a href="#section-133">复盘清单</a><a href="#section-134">本章范围</a><a href="#section-135">2025 第一次阶段测验：逐题回查</a><a href="#section-136">范围内的补充例题</a><a href="#section-137">应当明确区分的答案问题</a><a href="#section-138">2025 第 3 题：“首字节”的歧义</a><a href="#section-139">2024：结构体返回值的时机</a><a href="#section-140">2022 自定义浮点：“不溢出域内无舍入”与边界舍入</a><a href="#section-141">参考笔记中需要纠正的说法</a><a href="#section-142">真题驱动的复习闭环</a><a href="#section-143">第 2 讲：表示与整数</a><a href="#section-144">第 3 讲：浮点的术语与设计</a><a href="#section-145">两个事故案例及应当学到什么</a><a href="#section-146">第 4 讲：硬件与指令拓展</a><a href="#section-147">第 5 讲：控制流拓展</a><a href="#section-148">第 6 讲：ABI 与递归拓展</a><a href="#section-149">第 7 讲：数组、对齐与浮点拓展</a><a href="#section-150">第 9 讲研讨 1：体系结构设计（逐项路线）</a><a href="#section-151">第 9 讲研讨 2：逻辑设计（逐项路线）</a><a href="#section-152">第 10 讲研讨 1：指令操作分解（逐项路线）</a><a href="#section-153">第 10 讲研讨 2：SEQ 部件设计（逐项路线）</a><a href="#section-154">指定教材作业：题号与应掌握的方法</a><a href="#section-155">最后一次边界检查清单</a><a href="#section-156">覆盖情况</a><a href="#section-157">逐页主题清单</a><a href="#section-158">ICS01-overview-20260907</a><a href="#section-159">ICS02-bits-bytes-ints-20260910</a><a href="#section-160">ICS03-float-20260914</a><a href="#section-161">ICS04-machine-basics-20260917</a><a href="#section-162">ICS05-machine-control-20260921</a><a href="#section-163">ICS06-machine-procedures-20260924</a><a href="#section-164">ICS07-machine-data-20260928</a><a href="#section-165">ICS08-machine-advanced-20261008</a><a href="#section-166">可核对的外部来源</a><a href="#section-167">使用与维护</a><a href="#section-168">已知限制</a><a href="#section-169">ICS09-Processor Arch-ISA&amp;Logic-20261015</a><a href="#section-170">ICS10-Processor Arch-Sequential-20261019</a><a href="#section-171">2026 第一次测验与新增研讨资料</a><a href="#main">回到顶部 ↑</a></aside></div><script src="app.js"></script></body></html>
