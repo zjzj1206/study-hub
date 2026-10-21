@@ -231,14 +231,14 @@
 <h2 id="section-5">六张模块图怎么读<a class="anchor" href="#section-5" aria-label="链接到本节">#</a></h2>
 <ul>
 <li><strong>蓝色实线</strong> 表示数据、指令字段或寄存器编号的传递；<strong>橙色虚线</strong> 表示控制条件。箭头指向接收信号的单元。</li>
-<li>每张图从左到右读：<strong>信号来自哪里 → 由什么单元选择或计算 → 输出送到哪里</strong>。同名信号在不同图中是同一条连接，不代表额外寄存器或额外周期。</li>
-<li>标为 MUX 的单元是多路选择器，左侧列出全部候选来源，顶部给出选择逻辑的输入。普通计算、存储单元也沿用左输入、上控制、右输出的排布；它们并非 MUX。</li>
+<li>按实际连线追踪 <strong>来源 → 功能单元 → 去向</strong>，主数据通路大多自下而上。实心圆点表示分支连接；交叉但没有圆点的线互不相连。同名跨图信号表示同一条连接，不代表额外寄存器或额外周期。</li>
+<li><strong>梯形是多路选择器</strong>：底部接各候选数据，顶部输出选择结果，侧面的虚线接选择控制。端口数字仅用于区分候选输入，不是指令编码；对应的选择条件列在图下，并可与本节 HCL 逐项对照。浅蓝色矩形是数据通路或存储单元，浅橙色圆角矩形是控制逻辑。</li>
 <li><code>icode</code>、<code>ifun</code>、<code>rA/rB</code> 均来自 Fetch；<code>Cnd</code> 来自 Execute 的条件判断。数据字和地址为 64 位，寄存器编号与 <code>icode/ifun</code> 为 4 位，条件与使能为 1 位。</li>
 <li><code>CLK</code> 是处理器的公共时钟。图中写使能描述正常执行；停止和错误下的状态提交还要服从处理器执行状态控制。六张图均画基础指令集，<code>iaddq</code> 的新增路径见后文扩展清单。</li>
 </ul>
 <h2 id="section-6">Fetch：字段位置、长度和有效性<a class="anchor" href="#section-6" aria-label="链接到本节">#</a></h2>
 <p><a href="seq-fetch.svg"><img src="seq-fetch.svg" alt="Fetch：取指内存、编码选择、字段对齐、长度计算及有效性检查" /></a></p>
-<p>点击图可打开矢量大图，放大后文字与连线仍清晰。</p>
+<p>点击图可打开矢量电路大图，放大后文字、分支点与连线仍清晰。</p>
 <pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">icode</span> <span class="tok-o">=</span> <span class="tok-p">[</span> <span class="tok-n">imem_error</span> <span class="tok-p">:</span> <span class="tok-no">INOP</span><span class="tok-p">;</span> <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-n">imem_icode</span><span class="tok-p">;</span> <span class="tok-p">];</span>
 <span class="tok-kt">int</span> <span class="tok-n">ifun</span>  <span class="tok-o">=</span> <span class="tok-p">[</span> <span class="tok-n">imem_error</span> <span class="tok-p">:</span> <span class="tok-no">FNONE</span><span class="tok-p">;</span> <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-n">imem_ifun</span><span class="tok-p">;</span> <span class="tok-p">];</span>
 <span class="tok-kt">bool</span> <span class="tok-n">need_regids</span> <span class="tok-o">=</span> <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span>
@@ -264,7 +264,7 @@
 </ul>
 <h2 id="section-7">Decode：两个读端口与源寄存器选择<a class="anchor" href="#section-7" aria-label="链接到本节">#</a></h2>
 <p><a href="seq-decode.svg"><img src="seq-decode.svg" alt="Decode：srcA/srcB 的全部来源及寄存器堆的两个读端口" /></a></p>
-<p>点击图可打开矢量大图，放大后文字与连线仍清晰。</p>
+<p>点击图可打开矢量电路大图，放大后文字、分支点与连线仍清晰。</p>
 <pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">srcA</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
     <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IOPQ</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">rA</span><span class="tok-p">;</span>
     <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IPOPQ</span><span class="tok-p">,</span> <span class="tok-no">IRET</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-no">RRSP</span><span class="tok-p">;</span>
@@ -285,7 +285,7 @@
 </ul>
 <h2 id="section-8">Execute：ALU 的两个输入、功能和 CC<a class="anchor" href="#section-8" aria-label="链接到本节">#</a></h2>
 <p><a href="seq-execute.svg"><img src="seq-execute.svg" alt="Execute：ALU 输入与功能选择、条件码写使能以及 Cnd 来源" /></a></p>
-<p>点击图可打开矢量大图，放大后文字与连线仍清晰。</p>
+<p>点击图可打开矢量电路大图，放大后文字、分支点与连线仍清晰。</p>
 <ul>
 <li><strong>ALU 的数据路径</strong>：<code>valA/valB</code> 来自 Decode，<code>valC</code> 来自 Fetch，<code>−8/+8/0</code> 是硬件常量。<code>aluA/aluB</code> 是选择后的输入，运算方向始终为 <code>aluB OP aluA</code>。</li>
 <li><strong>ALU 的控制路径</strong>：<code>icode</code> 选择两侧数据来源，并决定 <code>alufun</code> 取 <code>ifun</code> 还是固定 <code>ALUADD</code>。只有 <code>OPq</code> 将 <code>ifun</code> 解释为算术逻辑功能。</li>
@@ -314,7 +314,7 @@
 </ul>
 <h2 id="section-9">Memory：地址、数据与读写使能<a class="anchor" href="#section-9" aria-label="链接到本节">#</a></h2>
 <p><a href="seq-memory.svg"><img src="seq-memory.svg" alt="Memory：地址与写数据所有来源、读写使能及错误输出" /></a></p>
-<p>点击图可打开矢量大图，放大后文字与连线仍清晰。</p>
+<p>点击图可打开矢量电路大图，放大后文字、分支点与连线仍清晰。</p>
 <pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">mem_addr</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
     <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IMRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span><span class="tok-p">,</span> <span class="tok-no">ICALL</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">valE</span><span class="tok-p">;</span>
     <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IPOPQ</span><span class="tok-p">,</span> <span class="tok-no">IRET</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">valA</span><span class="tok-p">;</span>
@@ -336,7 +336,7 @@
 </ul>
 <h2 id="section-10">Write back：两个目的选择器与双写端口<a class="anchor" href="#section-10" aria-label="链接到本节">#</a></h2>
 <p><a href="seq-writeback.svg"><img src="seq-writeback.svg" alt="Write back：dstE/dstM 的来源、写数据、时钟使能与冲突优先级" /></a></p>
-<p>点击图可打开矢量大图，放大后文字与连线仍清晰。</p>
+<p>点击图可打开矢量电路大图，放大后文字、分支点与连线仍清晰。</p>
 <pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">dstE</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
     <span class="tok-n">icode</span> <span class="tok-o">==</span> <span class="tok-no">IRRMOVQ</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">Cnd</span> <span class="tok-p">:</span> <span class="tok-n">rB</span><span class="tok-p">;</span>
     <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IIRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IOPQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">rB</span><span class="tok-p">;</span>
@@ -355,7 +355,7 @@
 </ul>
 <h2 id="section-11">PC update：状态与下一 PC 的优先选择<a class="anchor" href="#section-11" aria-label="链接到本节">#</a></h2>
 <p><a href="seq-pc-update.svg"><img src="seq-pc-update.svg" alt="PC update：valC/valM/valP 的选择控制、PC 反馈及状态路径" /></a></p>
-<p>点击图可打开矢量大图，放大后文字与连线仍清晰。</p>
+<p>点击图可打开矢量电路大图，放大后文字、分支点与连线仍清晰。</p>
 <pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">Stat</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
     <span class="tok-n">imem_error</span> <span class="tok-o">||</span> <span class="tok-n">dmem_error</span> <span class="tok-p">:</span> <span class="tok-no">SADR</span><span class="tok-p">;</span>
     <span class="tok-o">!</span><span class="tok-n">instr_valid</span> <span class="tok-p">:</span> <span class="tok-no">SINS</span><span class="tok-p">;</span>

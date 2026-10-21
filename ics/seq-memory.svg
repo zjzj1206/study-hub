@@ -1,59 +1,56 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="820" viewBox="0 0 1320 820" role="img" aria-labelledby="title desc">
-<title id="title">04 / MEMORY · 数据内存</title>
-<desc id="desc">蓝色实线为数据或字段输入，橙色虚线为控制。每行从左到右表示来源、功能单元和输出去向；重复信号名表示同一条线。</desc>
-<defs><marker id="data" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#2563a6"/></marker><marker id="ctl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10Z" fill="#b45309"/></marker></defs>
-<rect width="1320" height="820" fill="#f8fafc"/>
-<style>text{font-family:"Noto Sans CJK SC","Microsoft YaHei",sans-serif;fill:#172c45;font-size:18px}.ctl{fill:#92400e;font-size:18px}.label{font-size:20px;font-weight:700}</style>
-<text x="32" y="43" class="label">04 / MEMORY · 数据内存</text>
-<text x="32" y="77" class="">蓝实线 → 数据 / 字段     橙虚线 ⇢ 控制来源与条件     同名信号相连；六阶段在同一周期内传播</text>
-<text x="32" y="111" class="">输入来源（选择器每行是一种候选）</text>
-<text x="615" y="111" class="">功能单元</text>
-<text x="875" y="111" class="">输出与下游去向</text>
-<rect x="20" y="130" width="1280" height="183" rx="12" fill="white" stroke="#d9e2ec"/>
-<text x="38" y="159" class="ctl">icode ← Fetch → mem_addr 选择逻辑</text>
-<path d="M38 173 L710 173" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
-<path d="M710 173 L710 190" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
-<path d="M625 193 L795 207 L795 272 L625 286 Z" fill="#eaf2ff" stroke="#2563a6" stroke-width="2"/>
-<text x="638" y="245.5" class="label">地址 MUX</text>
-<text x="38" y="216" class="">valE ← Execute：rmmovq、mrmovq、pushq、call</text>
-<path d="M594 210 L623 210" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<text x="38" y="247" class="">valA ← Decode：popq、ret（旧 R[%rsp]）</text>
-<path d="M594 241 L623 241" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<text x="38" y="278" class="">0 ← 常量：其余</text>
-<path d="M594 272 L623 272" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<path d="M797 239.5 L855 239.5" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<rect x="860" y="193" width="420" height="93" rx="8" fill="#f0f7fb" stroke="#c4d9e9"/>
-<text x="875" y="216" class="">mem_addr（64 位）→ 数据内存地址端</text>
-<rect x="20" y="325" width="1280" height="183" rx="12" fill="white" stroke="#d9e2ec"/>
-<text x="38" y="354" class="ctl">icode ← Fetch → mem_data 选择逻辑</text>
-<path d="M38 368 L710 368" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
-<path d="M710 368 L710 385" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
-<path d="M625 388 L795 402 L795 467 L625 481 Z" fill="#eaf2ff" stroke="#2563a6" stroke-width="2"/>
-<text x="638" y="440.5" class="label">写数据 MUX</text>
-<text x="38" y="411" class="">valA ← Decode：rmmovq、pushq</text>
-<path d="M594 405 L623 405" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<text x="38" y="442" class="">valP ← Fetch：call（返回地址）</text>
-<path d="M594 436 L623 436" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<text x="38" y="473" class="">0 ← 常量：其余</text>
-<path d="M594 467 L623 467" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<path d="M797 434.5 L855 434.5" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<rect x="860" y="388" width="420" height="93" rx="8" fill="#f0f7fb" stroke="#c4d9e9"/>
-<text x="875" y="411" class="">mem_data（64 位）→ 数据内存写数据端</text>
-<rect x="20" y="520" width="1280" height="183" rx="12" fill="white" stroke="#d9e2ec"/>
-<text x="38" y="549" class="ctl">icode → mem_read：mrmovq/popq/ret；mem_write：rmmovq/pushq/call</text>
-<path d="M38 563 L710 563" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
-<path d="M710 563 L710 580" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
-<rect x="625" y="583" width="170" height="93" rx="8" fill="#eaf2ff" stroke="#2563a6" stroke-width="2"/>
-<text x="638" y="635.5" class="label">数据内存</text>
-<text x="38" y="606" class="">mem_addr ← 地址 MUX</text>
-<path d="M594 600 L623 600" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<text x="38" y="637" class="">mem_data ← 写数据 MUX</text>
-<path d="M594 631 L623 631" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<path d="M797 629.5 L855 629.5" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<rect x="860" y="583" width="420" height="93" rx="8" fill="#f0f7fb" stroke="#c4d9e9"/>
-<text x="875" y="606" class="">读：valM = M8[mem_addr] → 写回 / PC</text>
-<text x="875" y="637" class="">写：M8[mem_addr] ← mem_data（时钟沿）</text>
-<text x="875" y="668" class="">dmem_error → Stat（地址错误）</text>
-<text x="32" y="740" class="">读使能决定是否读，写使能和提交时钟决定是否写；默认地址 0 并不意味着访问地址 0。</text>
-<text x="32" y="776" class="">基础 Y86-64 / SEQ；正常执行的数据通路。停止、异常下的状态提交另由执行状态控制；iaddq 扩展见正文。</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="860" viewBox="0 0 1000 860" role="img" aria-labelledby="title desc"><title id="title">MEMORY / 访存：地址与写数据分别选择</title><desc id="desc">连线式 SEQ 电路图。实线为数据，虚线为控制，圆点表示分支连接，无圆点交叉不连接。</desc>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#243c54"/></marker><marker id="c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#b45309"/></marker></defs><style>text{font-family:"Noto Sans CJK SC","Microsoft YaHei",sans-serif;fill:#172c45;font-size:18px}.label{paint-order:stroke;stroke:white;stroke-width:4px;stroke-linejoin:round}</style>
+<rect width="1000" height="860" fill="white"/>
+<text class="label" x="30" y="38" text-anchor="start" style="font-size:25px;">MEMORY / 访存：地址与写数据分别选择</text>
+<text class="label" x="30" y="72" text-anchor="start" style="font-size:16px;">实线：数据 / 字段　　虚线：控制　　●：连接点　　交叉无点：不连接</text>
+<rect x="300" y="200" width="400" height="170" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="500.0" y="278.5" text-anchor="middle" style="font-size:18px;">数据内存 M8</text>
+<text class="label" x="500.0" y="303.5" text-anchor="middle" style="font-size:18px;">读出组合传播 / 写入在提交时钟沿</text>
+<path d="M485,200 L485,115" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="485" y="103" text-anchor="middle" style="font-size:18px;">valM → Write back / PC update</text>
+<path d="M700,245 L940,245" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="760" y="230" text-anchor="start" style="font-size:17px;">dmem_error → Stat</text>
+<text class="label" x="330" y="350" text-anchor="start" style="font-size:18px;">addr</text>
+<text class="label" x="590" y="350" text-anchor="start" style="font-size:18px;">data</text>
+<rect x="35" y="220" width="180" height="120" rx="10" fill="#fff2df" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="125.0" y="286.0" text-anchor="middle" style="font-size:18px;">访存控制</text>
+<path d="M215,245 L300,245" fill="none" stroke="#b45309" stroke-width="2.3" stroke-dasharray="6 5" marker-end="url(#c)"/>
+<text class="label" x="220" y="237" text-anchor="start" style="font-size:14px;">mem_read</text>
+<path d="M215,285 L300,285" fill="none" stroke="#b45309" stroke-width="2.3" stroke-dasharray="6 5" marker-end="url(#c)"/>
+<text class="label" x="220" y="277" text-anchor="start" style="font-size:14px;">mem_write</text>
+<path d="M125,155 L125,220" fill="none" stroke="#b45309" stroke-width="2.3" stroke-dasharray="6 5" marker-end="url(#c)"/>
+<text class="label" x="125" y="140" text-anchor="middle" style="font-size:16px;">icode ← Fetch</text>
+<path d="M250,390 L250,325 L300,325" fill="none" stroke="#b45309" stroke-width="2.3" stroke-dasharray="6 5" marker-end="url(#c)"/>
+<text class="label" x="250" y="412" text-anchor="middle" style="font-size:16px;">CLK</text>
+<path d="M150 540L170 465H400L420 540Z" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="285.0" y="498" text-anchor="middle" style="font-size:18px;">mem_addr</text>
+<text class="label" x="217.5" y="527" text-anchor="middle" style="font-size:15px;">0</text>
+<text class="label" x="285.0" y="527" text-anchor="middle" style="font-size:15px;">1</text>
+<text class="label" x="352.5" y="527" text-anchor="middle" style="font-size:15px;">2</text>
+<path d="M285,465 L285,420 L360,420 L360,370" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<path d="M217.5,610 L217.5,540" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="217.5" y="638" text-anchor="middle" style="font-size:18px;">valE</text>
+<path d="M285.0,610 L285.0,540" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="285.0" y="638" text-anchor="middle" style="font-size:18px;">valA</text>
+<path d="M352.5,610 L352.5,540" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="352.5" y="638" text-anchor="middle" style="font-size:18px;">0</text>
+<path d="M570 540L590 465H820L840 540Z" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="705.0" y="498" text-anchor="middle" style="font-size:18px;">mem_data</text>
+<text class="label" x="637.5" y="527" text-anchor="middle" style="font-size:15px;">0</text>
+<text class="label" x="705.0" y="527" text-anchor="middle" style="font-size:15px;">1</text>
+<text class="label" x="772.5" y="527" text-anchor="middle" style="font-size:15px;">2</text>
+<path d="M705,465 L705,420 L620,420 L620,370" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<path d="M637.5,610 L637.5,540" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="637.5" y="638" text-anchor="middle" style="font-size:18px;">valA</text>
+<path d="M705.0,610 L705.0,540" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="705.0" y="638" text-anchor="middle" style="font-size:18px;">valP</text>
+<path d="M772.5,610 L772.5,540" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="772.5" y="638" text-anchor="middle" style="font-size:18px;">0</text>
+<path d="M125,340 L125,500 L160,500" fill="none" stroke="#b45309" stroke-width="2.3" stroke-dasharray="6 5" marker-end="url(#c)"/>
+<circle cx="125" cy="405" r="4.5" fill="#b45309"/>
+<path d="M125,405 L75,405 L75,685 L920,685 L920,500 L830,500" fill="none" stroke="#b45309" stroke-width="2.3" stroke-dasharray="6 5" marker-end="url(#c)"/>
+<text class="label" x="30" y="754" text-anchor="start" style="font-size:17px;">mem_addr：valE ← rmmovq/mrmovq/pushq/call；valA ← popq/ret；其余 0。</text>
+<text class="label" x="30" y="781" text-anchor="start" style="font-size:17px;">mem_data：valA ← rmmovq/pushq；valP ← call；其余 0。两者的选择控制均来自 icode。</text>
+<text class="label" x="30" y="808" text-anchor="start" style="font-size:17px;">mem_read：mrmovq/popq/ret；mem_write：rmmovq/pushq/call；其余均不使能。</text>
+<text class="label" x="30" y="835" text-anchor="start" style="font-size:17px;">valE 来自 Execute；valA 来自 Decode；valP 来自 Fetch。popq/ret 用旧 R[%rsp] 读内存。</text>
 </svg>

@@ -1,86 +1,74 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1210" viewBox="0 0 1320 1210" role="img" aria-labelledby="title desc">
-<title id="title">01 / FETCH · 取指</title>
-<desc id="desc">蓝色实线为数据或字段输入，橙色虚线为控制。每行从左到右表示来源、功能单元和输出去向；重复信号名表示同一条线。</desc>
-<defs><marker id="data" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#2563a6"/></marker><marker id="ctl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10Z" fill="#b45309"/></marker></defs>
-<rect width="1320" height="1210" fill="#f8fafc"/>
-<style>text{font-family:"Noto Sans CJK SC","Microsoft YaHei",sans-serif;fill:#172c45;font-size:18px}.ctl{fill:#92400e;font-size:18px}.label{font-size:20px;font-weight:700}</style>
-<text x="32" y="43" class="label">01 / FETCH · 取指</text>
-<text x="32" y="77" class="">蓝实线 → 数据 / 字段     橙虚线 ⇢ 控制来源与条件     同名信号相连；六阶段在同一周期内传播</text>
-<text x="32" y="111" class="">输入来源（选择器每行是一种候选）</text>
-<text x="615" y="111" class="">功能单元</text>
-<text x="875" y="111" class="">输出与下游去向</text>
-<rect x="20" y="130" width="1280" height="183" rx="12" fill="white" stroke="#d9e2ec"/>
-<text x="38" y="159" class="ctl">地址输入决定读取位置；错误输出 imem_error</text>
-<path d="M38 173 L710 173" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
-<path d="M710 173 L710 190" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
-<rect x="625" y="193" width="170" height="93" rx="8" fill="#eaf2ff" stroke="#2563a6" stroke-width="2"/>
-<text x="638" y="245.5" class="label">指令内存</text>
-<text x="38" y="216" class="">PC ← PC 寄存器（64 位地址）</text>
-<path d="M594 210 L623 210" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<path d="M797 239.5 L855 239.5" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<rect x="860" y="193" width="420" height="93" rx="8" fill="#f0f7fb" stroke="#c4d9e9"/>
-<text x="875" y="216" class="">首字节 → imem_icode / imem_ifun</text>
-<text x="875" y="247" class="">后续 9 字节 → 字段对齐单元</text>
-<text x="875" y="278" class="">imem_error → 编码选择器、Stat</text>
-<rect x="20" y="325" width="1280" height="183" rx="12" fill="white" stroke="#d9e2ec"/>
-<text x="38" y="354" class="ctl">imem_error ← 指令内存：1 选常量；0 选首字节</text>
-<path d="M38 368 L710 368" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
-<path d="M710 368 L710 385" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
-<path d="M625 388 L795 402 L795 467 L625 481 Z" fill="#eaf2ff" stroke="#2563a6" stroke-width="2"/>
-<text x="638" y="440.5" class="label">编码 MUX</text>
-<text x="38" y="411" class="">imem_icode / imem_ifun ← 首字节</text>
-<path d="M594 405 L623 405" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<text x="38" y="442" class="">INOP / FNONE ← 固定常量</text>
-<path d="M594 436 L623 436" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<path d="M797 434.5 L855 434.5" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<rect x="860" y="388" width="420" height="93" rx="8" fill="#f0f7fb" stroke="#c4d9e9"/>
-<text x="875" y="411" class="">icode / ifun（各 4 位）</text>
-<text x="875" y="442" class="">icode → 各阶段控制逻辑</text>
-<text x="875" y="473" class="">ifun → ALU 功能 / 条件判断</text>
-<rect x="20" y="520" width="1280" height="183" rx="12" fill="white" stroke="#d9e2ec"/>
-<text x="38" y="549" class="ctl">icode → need_regids（寄存器字段）、need_valC（常数字段）</text>
-<path d="M38 563 L710 563" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
-<path d="M710 563 L710 580" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
-<rect x="625" y="583" width="170" height="93" rx="8" fill="#eaf2ff" stroke="#2563a6" stroke-width="2"/>
-<text x="638" y="635.5" class="label">字段对齐</text>
-<text x="38" y="606" class="">后续字节 ← 指令内存</text>
-<path d="M594 600 L623 600" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<text x="38" y="637" class="">RNONE ← 无寄存器字段时</text>
-<path d="M594 631 L623 631" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<path d="M797 629.5 L855 629.5" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<rect x="860" y="583" width="420" height="93" rx="8" fill="#f0f7fb" stroke="#c4d9e9"/>
-<text x="875" y="606" class="">rA / rB（各 4 位）→ 寄存器选择器</text>
-<text x="875" y="637" class="">valC（64 位）→ Execute / PC update</text>
-<text x="875" y="668" class="">常数起点：PC+1+need_regids</text>
-<rect x="20" y="715" width="1280" height="183" rx="12" fill="white" stroke="#d9e2ec"/>
-<text x="38" y="744" class="ctl">icode → need_regids、need_valC（各 1 位）</text>
-<path d="M38 758 L710 758" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
-<path d="M710 758 L710 775" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
-<rect x="625" y="778" width="170" height="93" rx="8" fill="#eaf2ff" stroke="#2563a6" stroke-width="2"/>
-<text x="638" y="830.5" class="label">PC 增量器</text>
-<text x="38" y="801" class="">PC ← PC 寄存器</text>
-<path d="M594 795 L623 795" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<text x="38" y="832" class="">1 ← 首字节长度</text>
-<path d="M594 826 L623 826" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<text x="38" y="863" class="">need_regids + 8×need_valC ← 长度控制</text>
-<path d="M594 857 L623 857" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<path d="M797 824.5 L855 824.5" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<rect x="860" y="778" width="420" height="93" rx="8" fill="#f0f7fb" stroke="#c4d9e9"/>
-<text x="875" y="801" class="">valP = PC+1+need_regids+8×need_valC</text>
-<text x="875" y="832" class="">valP → Memory（call 返回地址）</text>
-<text x="875" y="863" class="">valP → PC update（顺序地址）</text>
-<rect x="20" y="910" width="1280" height="183" rx="12" fill="white" stroke="#d9e2ec"/>
-<text x="38" y="939" class="ctl">与基础指令的 icode 集合比较（见下方 HCL）</text>
-<path d="M38 953 L710 953" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
-<path d="M710 953 L710 970" fill="none" stroke="#b45309" stroke-width="2"  stroke-dasharray="7 5" marker-end="url(#ctl)"/>
-<rect x="625" y="973" width="170" height="93" rx="8" fill="#eaf2ff" stroke="#2563a6" stroke-width="2"/>
-<text x="638" y="1025.5" class="label">有效性检查</text>
-<text x="38" y="996" class="">icode ← 编码 MUX</text>
-<path d="M594 990 L623 990" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<path d="M797 1019.5 L855 1019.5" fill="none" stroke="#2563a6" stroke-width="2"  marker-end="url(#data)"/>
-<rect x="860" y="973" width="420" height="93" rx="8" fill="#f0f7fb" stroke="#c4d9e9"/>
-<text x="875" y="996" class="">instr_valid（1 位）→ Stat</text>
-<text x="875" y="1027" class="">这里只检查类别，不是完整编码验证</text>
-<text x="32" y="1130" class="">字段对齐的 valC 仅在 need_valC=1 时有意义；按小端序组合 8 字节。无常数字段时不使用该输出。</text>
-<text x="32" y="1166" class="">基础 Y86-64 / SEQ；正常执行的数据通路。停止、异常下的状态提交另由执行状态控制；iaddq 扩展见正文。</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="880" viewBox="0 0 1000 880" role="img" aria-labelledby="title desc"><title id="title">FETCH / 取指：PC → 指令字节 → 字段与顺序地址</title><desc id="desc">连线式 SEQ 电路图。实线为数据，虚线为控制，圆点表示分支连接，无圆点交叉不连接。</desc>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#243c54"/></marker><marker id="c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#b45309"/></marker></defs><style>text{font-family:"Noto Sans CJK SC","Microsoft YaHei",sans-serif;fill:#172c45;font-size:18px}.label{paint-order:stroke;stroke:white;stroke-width:4px;stroke-linejoin:round}</style>
+<rect width="1000" height="880" fill="white"/>
+<text class="label" x="30" y="38" text-anchor="start" style="font-size:25px;">FETCH / 取指：PC → 指令字节 → 字段与顺序地址</text>
+<text class="label" x="30" y="72" text-anchor="start" style="font-size:16px;">实线：数据 / 字段　　虚线：控制　　●：连接点　　交叉无点：不连接</text>
+<rect x="390" y="700" width="110" height="60" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<path d="M402 760l8 -12l8 12" fill="none" stroke="#243c54" stroke-width="2"/>
+<text class="label" x="445.0" y="736.0" text-anchor="middle" style="font-size:18px;">PC</text>
+<rect x="250" y="540" width="380" height="90" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="440.0" y="591.0" text-anchor="middle" style="font-size:18px;">指令内存</text>
+<path d="M445,700 L445,630" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<circle cx="445" cy="665" r="4.5" fill="#243c54"/>
+<rect x="270" y="420" width="120" height="60" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="330.0" y="456.0" text-anchor="middle" style="font-size:18px;">Split</text>
+<rect x="460" y="420" width="170" height="60" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="545.0" y="456.0" text-anchor="middle" style="font-size:18px;">Align</text>
+<path d="M330,540 L330,480" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="335" y="518" text-anchor="start" style="font-size:18px;">Byte 0</text>
+<path d="M545,540 L545,480" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="550" y="518" text-anchor="start" style="font-size:18px;">Bytes 1–9</text>
+<rect x="240" y="310" width="90" height="60" rx="10" fill="#fff2df" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="285.0" y="346.0" text-anchor="middle" style="font-size:18px;">icode</text>
+<rect x="350" y="310" width="90" height="60" rx="10" fill="#fff2df" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="395.0" y="346.0" text-anchor="middle" style="font-size:18px;">ifun</text>
+<path d="M185,290 L255,290 L255,310" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="180" y="282" text-anchor="middle" style="font-size:16px;">INOP</text>
+<path d="M455,290 L425,290 L425,310" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="445" y="282" text-anchor="middle" style="font-size:16px;">FNONE</text>
+<path d="M310,420 L310,390 L285,390 L285,370" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<path d="M350,420 L350,390 L395,390 L395,370" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<path d="M285,310 L285,115" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="285" y="103" text-anchor="middle" style="font-size:18px;">icode</text>
+<path d="M395,310 L395,115" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="395" y="103" text-anchor="middle" style="font-size:18px;">ifun</text>
+<path d="M490,420 L490,115" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="490" y="103" text-anchor="middle" style="font-size:18px;">rA</text>
+<path d="M550,420 L550,115" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="550" y="103" text-anchor="middle" style="font-size:18px;">rB</text>
+<path d="M610,420 L610,115" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="610" y="103" text-anchor="middle" style="font-size:18px;">valC</text>
+<rect x="60" y="190" width="120" height="65" rx="10" fill="#fff2df" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="120.0" y="228.5" text-anchor="middle" style="font-size:18px;">Instr valid</text>
+<path d="M285,220 L180,220" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<circle cx="285" cy="220" r="4.5" fill="#243c54"/>
+<path d="M60,220 L20,220" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="30" y="175" text-anchor="start" style="font-size:16px;">instr_valid → Stat</text>
+<rect x="685" y="170" width="125" height="65" rx="10" fill="#fff2df" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="747.5" y="208.5" text-anchor="middle" style="font-size:18px;">Need valC</text>
+<rect x="685" y="280" width="125" height="65" rx="10" fill="#fff2df" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="747.5" y="318.5" text-anchor="middle" style="font-size:18px;">Need regids</text>
+<path d="M285,145 L655,145 L655,200 L685,200" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<circle cx="285" cy="145" r="4.5" fill="#243c54"/>
+<path d="M285,270 L655,270 L655,310 L685,310" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<circle cx="285" cy="270" r="4.5" fill="#243c54"/>
+<rect x="865" y="190" width="105" height="140" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="917.5" y="253.5" text-anchor="middle" style="font-size:18px;">PC</text>
+<text class="label" x="917.5" y="278.5" text-anchor="middle" style="font-size:18px;">增加</text>
+<path d="M445,665 L920,665 L920,330" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<path d="M810,200 L865,200" fill="none" stroke="#b45309" stroke-width="2.3" stroke-dasharray="6 5" marker-end="url(#c)"/>
+<path d="M810,310 L835,310 L865,310" fill="none" stroke="#b45309" stroke-width="2.3" stroke-dasharray="6 5" marker-end="url(#c)"/>
+<circle cx="835" cy="310" r="4.5" fill="#b45309"/>
+<path d="M835,310 L835,450 L630,450" fill="none" stroke="#b45309" stroke-width="2.3" stroke-dasharray="6 5" marker-end="url(#c)"/>
+<path d="M920,190 L920,115" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="920" y="103" text-anchor="middle" style="font-size:18px;">valP</text>
+<path d="M250,585 L210,585 L210,340 L240,340" fill="none" stroke="#b45309" stroke-width="2.3" stroke-dasharray="6 5" marker-end="url(#c)"/>
+<circle cx="210" cy="585" r="4.5" fill="#b45309"/>
+<path d="M210,395 L465,395 L465,340 L440,340" fill="none" stroke="#b45309" stroke-width="2.3" stroke-dasharray="6 5" marker-end="url(#c)"/>
+<circle cx="210" cy="395" r="4.5" fill="#b45309"/>
+<path d="M210,585 L35,585" fill="none" stroke="#b45309" stroke-width="2.3" stroke-dasharray="6 5" marker-end="url(#c)"/>
+<text class="label" x="38" y="565" text-anchor="start" style="font-size:16px;">imem_error → Stat</text>
+<text class="label" x="30" y="801" text-anchor="start" style="font-size:17px;">icode / ifun 选择：imem_error=1 → INOP / FNONE；否则取 Split 的高 / 低 4 位。</text>
+<text class="label" x="30" y="828" text-anchor="start" style="font-size:17px;">Align：need_regids=1 时分出 rA/rB，否则为 RNONE；常数从 PC+1+need_regids 开始。</text>
+<text class="label" x="30" y="855" text-anchor="start" style="font-size:17px;">valP = PC + 1 + need_regids + 8×need_valC；valC 仅在 need_valC=1 时使用。</text>
 </svg>
