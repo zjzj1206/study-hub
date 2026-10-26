@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>整本复习手册 · ZJZJ / ICS</title><meta name="description" content="北京大学 ICS 复习手册：课程知识、公式推导、边界情况、小班拓展与往年题导航。"><link rel="stylesheet" href="katex/katex.min.css"><link rel="stylesheet" href="style.css"><link rel="icon" href="favicon.svg" type="image/svg+xml"></head><body><a class="skip" href="#main">跳到正文</a><header><a class="brand" href="index.html">ZJZJ<span> / ICS NOTES</span></a><div class="header-right"><a href="https://blog.zjzj.work/">学习空间</a><a href="all.html">整本阅读</a><button type="button" onclick="window.print()">打印</button><button id="menu" aria-expanded="false" aria-controls="chapters">目录</button></div></header><div class="layout"><nav id="chapters" aria-label="章节目录"><div class="nav-label">2026 · 复习手册</div><a  href="00-guide.html">复习范围与使用说明</a><a  href="01-overview.html">01 · 系统概述与基本模型</a><a  href="02-integers.html">02 · 位、字节与整数</a><a  href="03-floating-point.html">03 · 浮点表示、舍入与运算</a><a  href="04-assembly-basics.html">04 · 机器级编程基础</a><a  href="05-control.html">05 · 条件码、分支、循环与 switch</a><a  href="06-procedures.html">06 · 过程调用、栈与 ABI</a><a  href="07-data.html">07 · 数组、结构体、指针与浮点汇编</a><a  href="08-advanced.html">08 · 机器级进阶与内存安全</a><a  href="09-isa-logic.html">09 · Y86-64 指令集与逻辑设计</a><a  href="10-sequential.html">10 · SEQ 顺序处理器与 HCL 控制</a><a  href="11-pipeline.html">11 · PIPE 流水线与冒险控制</a><a  href="12-memory-hierarchy.html">12 · 存储技术、局部性与存储层次</a><a  href="11-quiz01.html">附录 A · 第一次测验答案回查</a><a  href="12-past-papers.html">附录 B · 往年题与勘误</a><a  href="13-seminars.html">附录 C · 小班研讨与作业</a><a  href="14-coverage.html">附录 D · 课件覆盖索引与来源</a><div class="nav-foot">依据本地课件与公开题库<br>更新于 2026.10.26</div></nav><main id="main"><div class="eyebrow">COMPUTER SYSTEMS · PEKING UNIVERSITY</div><h1>复习范围与使用说明</h1>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>整本复习手册 · ZJZJ / ICS</title><meta name="description" content="北京大学 ICS 复习手册：课程知识、公式推导、边界情况、小班拓展与往年题导航。"><link rel="stylesheet" href="katex/katex.min.css"><link rel="stylesheet" href="style.css?v=a60546c16e95"><link rel="icon" href="favicon.svg" type="image/svg+xml"></head><body><a class="skip" href="#main">跳到正文</a><header><a class="brand" href="index.html">ZJZJ<span> / ICS NOTES</span></a><div class="header-right"><a href="https://blog.zjzj.work/">学习空间</a><a href="all.html">整本阅读</a><button type="button" onclick="window.print()">打印</button><button id="menu" aria-expanded="false" aria-controls="chapters">目录</button></div></header><div class="layout"><nav id="chapters" aria-label="章节目录"><div class="nav-label">2026 · 复习手册</div><a  href="00-guide.html">复习范围与使用说明</a><a  href="01-overview.html">01 · 系统概述与基本模型</a><a  href="02-integers.html">02 · 位、字节与整数</a><a  href="03-floating-point.html">03 · 浮点表示、舍入与运算</a><a  href="04-assembly-basics.html">04 · 机器级编程基础</a><a  href="05-control.html">05 · 条件码、分支、循环与 switch</a><a  href="06-procedures.html">06 · 过程调用、栈与 ABI</a><a  href="07-data.html">07 · 数组、结构体、指针与浮点汇编</a><a  href="08-advanced.html">08 · 机器级进阶与内存安全</a><a  href="09-isa-logic.html">09 · Y86-64 指令集与逻辑设计</a><a  href="10-sequential.html">10 · SEQ 顺序处理器与 HCL 控制</a><a  href="11-pipeline.html">11 · PIPE 流水线与冒险控制</a><a  href="12-memory-hierarchy.html">12 · 存储技术、局部性与存储层次</a><a  href="11-quiz01.html">附录 A · 第一次测验答案回查</a><a  href="12-past-papers.html">附录 B · 往年题与勘误</a><a  href="13-seminars.html">附录 C · 小班研讨与作业</a><a  href="14-coverage.html">附录 D · 课件覆盖索引与来源</a><div class="nav-foot">依据本地课件与公开题库<br>更新于 2026.10.26</div></nav><main id="main"><div class="eyebrow">COMPUTER SYSTEMS · PEKING UNIVERSITY</div><h1>复习范围与使用说明</h1>
 <p>本手册以 <strong>2026 年北京大学 ICS 本地课件和小班研讨题</strong>为主线，补充 CS:APP 第 3 版与公开往年题。按定义、操作、边界、例子与题目回查整理，不只保留常考口诀。机器级程序默认 <strong>x86-64、Linux、System V AMD64 ABI、AT&amp;T 汇编</strong>；第 09～11 章改用明确规定的 Y86-64 教学模型。</p>
 <h2 id="section-1">资料已经更新到哪里<a class="anchor" href="#section-1" aria-label="链接到本节">#</a></h2>
 <p>更新日期：<strong>2026-10-26</strong>。本地课件第 1～12 讲已齐；第 8 讲使用 2026-10-08 版 53 页，第 9 讲为 2026-10-15 版 64 页，第 10 讲为 2026-10-19 版 51 页，第 11 讲为 2026-10-22 版 68 页，第 12 讲为 2026-10-26 版 70 页。</p>
@@ -2356,7 +2356,7 @@ t 在 8，u 在 32
 <h1>10 · SEQ 顺序处理器与 HCL 控制</h1>
 <p>依据第 10 讲 2026-10-19 课件全部 51 页及对应研讨单。<a href="09-isa-logic.html">第 09 章</a>规定 Y86 的行为，本章把每类指令拆成相同的六个逻辑阶段，再汇总成控制信号。<strong>SEQ 一条指令占一个长周期，六阶段不是六个时钟周期，也不是六级流水线。</strong></p>
 <h2 id="section-110">先看硬件总图：同一条指令怎样走完整个电路<a class="anchor" href="#section-110" aria-label="链接到本节">#</a></h2>
-<p><a href="hardware-seq.jpg"><img id="seq-hardware" class="hardware-photo" width="1104" height="1276" loading="lazy" decoding="async" src="hardware-seq.jpg" alt="SEQ 硬件结构总图：底部 PC、取指与译码，中部 ALU，上部数据内存与新 PC，以及右侧写回线路" /></a></p>
+<p><a class="figure-link" href="hardware-seq.jpg"><img id="seq-hardware" class="hardware-photo" width="1104" height="1276" loading="lazy" decoding="async" src="hardware-seq.jpg" alt="SEQ 硬件结构总图：底部 PC、取指与译码，中部 ALU，上部数据内存与新 PC，以及右侧写回线路" /></a></p>
 <p>用户提供的 SEQ 硬件结构照片。点击打开原图，手机/平板可放大查看线路；后文的“总图”均指这张图。六张分模块矢量图用来展开局部选择器，阅读时始终回到总图定位它们的位置。</p>
 <h3 id="section-111">读图顺序与图形含义<a class="anchor" href="#section-111" aria-label="链接到本节">#</a></h3>
 <ul>
@@ -2663,7 +2663,7 @@ t 在 8，u 在 32
 <li><strong>从字段追去向</strong>：<code>rA/rB</code> 送编号选择；<code>valC</code> 既通向 ALU A，又沿长线通向顶部新 PC；<code>valP</code> 也分流到新 PC 和 call 的写内存数据选择。<code>icode/ifun</code> 决定上层部件的选择方式，图没有把所有控制扇出都逐根展开。</li>
 <li><strong>左侧的错误线</strong>：<code>imem_error</code> 与 <code>instr_valid</code> 最终送到上方 stat；它们处理“取指是否正常”，与本条跳转条件 Cnd 是两回事。</li>
 </ul>
-<p><a href="seq-fetch.svg"><img src="seq-fetch.svg" alt="Fetch：取指内存、编码选择、字段对齐、长度计算及有效性检查" /></a></p>
+<p><a class="figure-link" href="seq-fetch.svg"><img src="seq-fetch.svg" alt="Fetch：取指内存、编码选择、字段对齐、长度计算及有效性检查" /></a></p>
 <p>点击图可打开矢量电路大图，放大后文字、分支点与连线仍清晰。</p>
 <pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">icode</span> <span class="tok-o">=</span> <span class="tok-p">[</span> <span class="tok-n">imem_error</span> <span class="tok-p">:</span> <span class="tok-no">INOP</span><span class="tok-p">;</span> <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-n">imem_icode</span><span class="tok-p">;</span> <span class="tok-p">];</span>
 <span class="tok-kt">int</span> <span class="tok-n">ifun</span>  <span class="tok-o">=</span> <span class="tok-p">[</span> <span class="tok-n">imem_error</span> <span class="tok-p">:</span> <span class="tok-no">FNONE</span><span class="tok-p">;</span> <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-n">imem_ifun</span><span class="tok-p">;</span> <span class="tok-p">];</span>
@@ -2694,7 +2694,7 @@ t 在 8，u 在 32
 <li><strong>沿 valA 的分叉看用途</strong>：一条送 ALU A，一条向上送内存“数据”，还可送“地址”供 pop/ret 读取旧栈顶；一条线同时有多个下游不表示会多执行一条指令。</li>
 <li><strong>沿 valB 看用途</strong>：主要送 ALU B，作为算术 B 操作数、访存基址或旧 <code>R[%rsp]</code>。寄存器文件右边标 E/M 的线是稍后写回的输入，不是额外两个读口。</li>
 </ul>
-<p><a href="seq-decode.svg"><img src="seq-decode.svg" alt="Decode：srcA/srcB 的全部来源及寄存器堆的两个读端口" /></a></p>
+<p><a class="figure-link" href="seq-decode.svg"><img src="seq-decode.svg" alt="Decode：srcA/srcB 的全部来源及寄存器堆的两个读端口" /></a></p>
 <p>点击图可打开矢量电路大图，放大后文字、分支点与连线仍清晰。</p>
 <pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">srcA</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
     <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IOPQ</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">rA</span><span class="tok-p">;</span>
@@ -2720,7 +2720,7 @@ t 在 8，u 在 32
 <li><strong>沿 valE 向上和向右追踪</strong>：它送内存地址选择器，供 load/store 或压栈访问；也绕到寄存器文件的 E 端口，供算术结果和新的 <code>%rsp</code> 写回。<code>valE</code> 不固定等于“要存入内存的数据”。</li>
 <li><strong>沿 Cnd 的虚线追踪</strong>：它由已保存 CC 和 <code>ifun</code> 决定，向下影响条件传送的 <code>dstE</code>，向上影响顶部新 PC。图中的 CC 更新与 Cnd 判断要分开理解。</li>
 </ul>
-<p><a href="seq-execute.svg"><img src="seq-execute.svg" alt="Execute：ALU 输入与功能选择、条件码写使能以及 Cnd 来源" /></a></p>
+<p><a class="figure-link" href="seq-execute.svg"><img src="seq-execute.svg" alt="Execute：ALU 输入与功能选择、条件码写使能以及 Cnd 来源" /></a></p>
 <p>点击图可打开矢量电路大图，放大后文字、分支点与连线仍清晰。</p>
 <ul>
 <li><strong>ALU 的数据路径</strong>：<code>valA/valB</code> 来自 Decode，<code>valC</code> 来自 Fetch，<code>−8/+8/0</code> 是硬件常量。<code>aluA/aluB</code> 是选择后的输入，运算方向始终为 <code>aluB OP aluA</code>。</li>
@@ -2754,7 +2754,7 @@ t 在 8，u 在 32
 <li><strong>分别追三组输入</strong>：地址选 <code>valE</code> 或旧栈顶 <code>valA</code>；写数据选 <code>valA</code> 或 call 的返回地址 <code>valP</code>；读写使能由 <code>icode</code> 产生。只看某条地址线有数值，不能认定发生了内存访问。</li>
 <li><strong>追输出的两条用途</strong>：数据出口 <code>valM</code> 沿右侧回寄存器 M 端口，也向上送新 PC（ret）；<code>dmem_error</code> 则沿虚线到 stat，不作为返回数据或跳转条件。</li>
 </ul>
-<p><a href="seq-memory.svg"><img src="seq-memory.svg" alt="Memory：地址与写数据所有来源、读写使能及错误输出" /></a></p>
+<p><a class="figure-link" href="seq-memory.svg"><img src="seq-memory.svg" alt="Memory：地址与写数据所有来源、读写使能及错误输出" /></a></p>
 <p>点击图可打开矢量电路大图，放大后文字、分支点与连线仍清晰。</p>
 <pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">mem_addr</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
     <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IMRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span><span class="tok-p">,</span> <span class="tok-no">ICALL</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">valE</span><span class="tok-p">;</span>
@@ -2781,7 +2781,7 @@ t 在 8，u 在 32
 <li><strong>地址线和数据线配对</strong>：<code>dstE</code> 指明 <code>valE</code> 写到哪里，<code>dstM</code> 指明 <code>valM</code> 写到哪里。目的编号由下方控制框生成，不能把 E/M 当成两种寄存器名称。</li>
 <li><strong>为何写回画在译码附近</strong>：读端口和写端口属于同一寄存器堆，所以物理位置靠近；“Write back”是功能步骤，不要求图上另放一个写回存储器。</li>
 </ul>
-<p><a href="seq-writeback.svg"><img src="seq-writeback.svg" alt="Write back：dstE/dstM 的来源、写数据、时钟使能与冲突优先级" /></a></p>
+<p><a class="figure-link" href="seq-writeback.svg"><img src="seq-writeback.svg" alt="Write back：dstE/dstM 的来源、写数据、时钟使能与冲突优先级" /></a></p>
 <p>点击图可打开矢量电路大图，放大后文字、分支点与连线仍清晰。</p>
 <pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">dstE</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
     <span class="tok-n">icode</span> <span class="tok-o">==</span> <span class="tok-no">IRRMOVQ</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">Cnd</span> <span class="tok-p">:</span> <span class="tok-n">rB</span><span class="tok-p">;</span>
@@ -2805,7 +2805,7 @@ t 在 8，u 在 32
 <li><strong>别把回路当作当前指令重取一次</strong>：新 PC 是当前指令产生的候选后继，在提交后成为下一周期的取指地址；数据回路与时钟状态边界共同构成连续执行。</li>
 <li><strong>左上 stat 是另一条链</strong>：<code>imem_error/dmem_error/instr_valid/icode</code> 产生状态，表明正常、地址错、非法指令或停止。Stat 与 Cnd 不相同，也不能用新 PC 的数值替代停止控制。</li>
 </ul>
-<p><a href="seq-pc-update.svg"><img src="seq-pc-update.svg" alt="PC update：valC/valM/valP 的选择控制、PC 反馈及状态路径" /></a></p>
+<p><a class="figure-link" href="seq-pc-update.svg"><img src="seq-pc-update.svg" alt="PC update：valC/valM/valP 的选择控制、PC 反馈及状态路径" /></a></p>
 <p>点击图可打开矢量电路大图，放大后文字、分支点与连线仍清晰。</p>
 <pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">Stat</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
     <span class="tok-n">imem_error</span> <span class="tok-o">||</span> <span class="tok-n">dmem_error</span> <span class="tok-p">:</span> <span class="tok-no">SADR</span><span class="tok-p">;</span>
@@ -2955,7 +2955,7 @@ t 在 8，u 在 32
 <h1>11 · PIPE 流水线与冒险控制</h1>
 <p>依据第 11 讲 2026-10-22 课件全部 68 页与第 11 讲研讨单。先掌握<a href="10-sequential.html">第 10 章 SEQ</a>的指令语义与六阶段操作，再把不同指令的阶段重叠。这里讨论基础 Y86-64、顺序发射和顺序写回的五级 PIPE；所有寄存器名称保留 <code>%</code> 前缀。</p>
 <h2 id="section-133">先看 PIPE 总图：五级如何同时处理不同指令<a class="anchor" href="#section-133" aria-label="链接到本节">#</a></h2>
-<p><a href="hardware-pipe.jpg"><img id="pipe-hardware" class="hardware-photo" width="1155" height="1592" loading="lazy" decoding="async" src="hardware-pipe.jpg" alt="PIPE 硬件结构总图：F/D/E/M/W 流水线寄存器、各阶段部件、右侧前递和 PC 恢复线路" /></a></p>
+<p><a class="figure-link" href="hardware-pipe.jpg"><img id="pipe-hardware" class="hardware-photo" width="1155" height="1592" loading="lazy" decoding="async" src="hardware-pipe.jpg" alt="PIPE 硬件结构总图：F/D/E/M/W 流水线寄存器、各阶段部件、右侧前递和 PC 恢复线路" /></a></p>
 <p>用户提供的 PIPE 硬件结构照片。点击打开原图放大；后文“PIPE 总图”指这张带 <code>Sel+Fwd A / Fwd B</code> 的结构图。它已经包含前递线路，不是还没有冒险处理的 PIPE− 示意图。</p>
 <h3 id="section-134">先认五根横条，再认横条之间的电路<a class="anchor" href="#section-134" aria-label="链接到本节">#</a></h3>
 <ul>
@@ -3132,7 +3132,7 @@ L=kT_{clk},\qquad Q_{ideal}=\frac1{T_{clk}}.</annotation></semantics></math></sp
 </li>
 </ul>
 <p>以下简化图只用于提炼总图的阶段边界和反馈方向，具体端口以<a href="#pipe-hardware">PIPE 原图</a>为准。</p>
-<p><a href="pipe-overview.svg"><img src="pipe-overview.svg" alt="PIPE 五级与反馈路径的简化辅助图" /></a></p>
+<p><a class="figure-link" href="pipe-overview.svg"><img src="pipe-overview.svg" alt="PIPE 五级与反馈路径的简化辅助图" /></a></p>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -3787,7 +3787,7 @@ L=kT_{clk},\qquad Q_{ideal}=\frac1{T_{clk}}.</annotation></semantics></math></sp
 <li><strong>耐久度</strong>：擦写存在寿命限制。课件的约 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>10</mn><mn>5</mn></msup></mrow><annotation encoding="application/x-tex">10^5</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">5</span></span></span></span></span></span></span></span></span></span></span></span> 次是示意量级，不能通用于所有 SLC/MLC/TLC/QLC 或所有温度、纠错配置。Optane/3D XPoint 是课件列举的另一类历史非易失技术例子，不据旧页认定当前在售状态。</li>
 </ul>
 <h2 id="section-159">DRAM 的行列复用、行缓冲与模块并行<a class="anchor" href="#section-159" aria-label="链接到本节">#</a></h2>
-<p><a href="memory-dram.svg"><img src="memory-dram.svg" alt="DRAM 行列选择与八芯片并行示意" /></a></p>
+<p><a class="figure-link" href="memory-dram.svg"><img src="memory-dram.svg" alt="DRAM 行列选择与八芯片并行示意" /></a></p>
 <ul>
 <li><strong><span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo>×</mo><mi>w</mi></mrow><annotation encoding="application/x-tex">d\times w</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7778em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">d</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0269em;">w</span></span></span></span></span> 组织</strong>：有 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi></mrow><annotation encoding="application/x-tex">d</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6944em;"></span><span class="mord mathnormal">d</span></span></span></span></span> 个 supercell，每个含 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>w</mi></mrow><annotation encoding="application/x-tex">w</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0269em;">w</span></span></span></span></span> bit，总容量 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mi>w</mi></mrow><annotation encoding="application/x-tex">dw</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6944em;"></span><span class="mord mathnormal">d</span><span class="mord mathnormal" style="margin-right:0.0269em;">w</span></span></span></span></span> bit。supercell 是一次选中的多位数据单位，不是整行。</li>
 <li><strong>课件 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>16</mn><mo>×</mo><mn>8</mn></mrow><annotation encoding="application/x-tex">16\times8</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">16</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">8</span></span></span></span></span> 芯片</strong>：16 个 8-bit supercell，排成 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>×</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">4\times4</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">4</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">4</span></span></span></span></span>；容量为 128 bit。行和列地址各 2 bit，经同一组 2 根地址线分时传送，而不是同时需要 4 根地址线。</li>
@@ -3935,7 +3935,7 @@ T_{sector}=\frac{60}{vs}\ \mathrm{s},</annotation></semantics></math></span><spa
 <li>循环交换还要保持依赖关系、程序可见效果及数值语义；这里按独立整数数组求和、结果可表示的前提讨论。若原程序有迭代间依赖，或浮点加法重排，须另作判断。</li>
 </ul>
 <h2 id="section-167">存储层次：用局部性组合速度与容量<a class="anchor" href="#section-167" aria-label="链接到本节">#</a></h2>
-<p><a href="memory-hierarchy.svg"><img src="memory-hierarchy.svg" alt="从寄存器到远程存储的层次与块传输" /></a></p>
+<p><a class="figure-link" href="memory-hierarchy.svg"><img src="memory-hierarchy.svg" alt="从寄存器到远程存储的层次与块传输" /></a></p>
 <ul>
 <li>快设备一般更贵、容量较小；慢设备较便宜、容量较大。CPU、SRAM、DRAM、磁盘的性能改进速度不同，单靠主存速度难以填平处理器与存储的差距。</li>
 <li>课件层次自上而下为 L0 寄存器、L1/L2/L3 SRAM Cache、L4 DRAM 主存、L5 本地磁盘、L6 远程存储。这里 L4 是层次图的编号，不表示机器必有一个名为“L4 Cache”的器件。</li>

@@ -33,3 +33,9 @@ main img[src^="pipe-"], main img[src^="memory-"] {display:block;width:100%;heigh
 main .hardware-photo {display:block;width:100%;max-width:100%;height:auto;margin:1.5rem 0;border:1px solid var(--line);border-radius:8px;background:white;scroll-margin-top:100px;}
 main a:has(>.hardware-photo) {display:block;cursor:zoom-in;}
 @media print {main .hardware-photo {max-height:245mm;object-fit:contain;break-inside:avoid;}}
+
+/* Constrain every article image to the text column, including its link wrapper. */
+main {width:100%;min-width:0;}
+main img {display:block;max-width:100%;max-inline-size:100%;height:auto;object-fit:contain;}
+main .figure-link {display:block;width:100%;max-width:100%;min-width:0;margin:1.4rem 0;}
+main .figure-link > img {width:100%;max-width:100%;height:auto;margin:0;}
