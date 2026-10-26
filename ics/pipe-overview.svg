@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="850" viewBox="0 0 1000 850" role="img" aria-labelledby="title desc"><title id="title">PIPE / 五级之间保存字段，后级反馈到前级</title><desc id="desc">连线式 SEQ 电路图。实线为数据，虚线为控制，圆点表示分支连接，无圆点交叉不连接。</desc>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#243c54"/></marker><marker id="c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#b45309"/></marker></defs><style>text{font-family:"Noto Sans CJK SC","Microsoft YaHei",sans-serif;fill:#172c45;font-size:18px}.label{paint-order:stroke;stroke:white;stroke-width:4px;stroke-linejoin:round}</style>
+<rect width="1000" height="850" fill="white"/>
+<text class="label" x="30" y="38" text-anchor="start" style="font-size:25px;">PIPE / 五级之间保存字段，后级反馈到前级</text>
+<text class="label" x="30" y="72" text-anchor="start" style="font-size:16px;">实线：数据 / 字段　　虚线：控制　　●：连接点　　交叉无点：不连接</text>
+<rect x="340" y="640" width="330" height="65" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="505.0" y="678.5" text-anchor="middle" style="font-size:18px;">F 取指</text>
+<rect x="365" y="587" width="280" height="30" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<path d="M377 617l8 -12l8 12" fill="none" stroke="#243c54" stroke-width="2"/>
+<text class="label" x="505.0" y="608.0" text-anchor="middle" style="font-size:18px;">D</text>
+<path d="M505,640 L505,617" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<path d="M505,587 L505,575" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<rect x="340" y="510" width="330" height="65" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="505.0" y="548.5" text-anchor="middle" style="font-size:18px;">D 译码 / 前递选择</text>
+<rect x="365" y="457" width="280" height="30" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<path d="M377 487l8 -12l8 12" fill="none" stroke="#243c54" stroke-width="2"/>
+<text class="label" x="505.0" y="478.0" text-anchor="middle" style="font-size:18px;">E</text>
+<path d="M505,510 L505,487" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<path d="M505,457 L505,445" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<rect x="340" y="380" width="330" height="65" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="505.0" y="418.5" text-anchor="middle" style="font-size:18px;">E 执行</text>
+<rect x="365" y="327" width="280" height="30" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<path d="M377 357l8 -12l8 12" fill="none" stroke="#243c54" stroke-width="2"/>
+<text class="label" x="505.0" y="348.0" text-anchor="middle" style="font-size:18px;">M</text>
+<path d="M505,380 L505,357" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<path d="M505,327 L505,315" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<rect x="340" y="250" width="330" height="65" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="505.0" y="288.5" text-anchor="middle" style="font-size:18px;">M 访存</text>
+<rect x="365" y="197" width="280" height="30" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<path d="M377 227l8 -12l8 12" fill="none" stroke="#243c54" stroke-width="2"/>
+<text class="label" x="505.0" y="218.0" text-anchor="middle" style="font-size:18px;">W</text>
+<path d="M505,250 L505,227" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<path d="M505,197 L505,185" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<rect x="340" y="120" width="330" height="65" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="505.0" y="158.5" text-anchor="middle" style="font-size:18px;">W 写回</text>
+<rect x="65" y="640" width="170" height="65" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="150.0" y="678.5" text-anchor="middle" style="font-size:18px;">PC 选择</text>
+<path d="M235,672 L340,672" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<rect x="275" y="720" width="200" height="30" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<path d="M287 750l8 -12l8 12" fill="none" stroke="#243c54" stroke-width="2"/>
+<text class="label" x="375.0" y="741.0" text-anchor="middle" style="font-size:18px;">F.predPC</text>
+<path d="M400,705 L400,720" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<path d="M275,735 L150,735 L150,705" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="500" y="745" text-anchor="start" style="font-size:16px;">f_predPC → F 寄存器</text>
+<path d="M340,280 L45,280 L45,655 L65,655" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="50" y="255" text-anchor="start" style="font-size:16px;">M_Cnd / M_valA</text>
+<path d="M340,150 L20,150 L20,690 L65,690" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="28" y="130" text-anchor="start" style="font-size:16px;">W_valM（ret）</text>
+<path d="M670,410 L770,410 L770,525 L670,525" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="690" y="396" text-anchor="start" style="font-size:16px;">e_valE</text>
+<path d="M670,280 L835,280 L835,540 L670,540" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="690" y="266" text-anchor="start" style="font-size:16px;">m_valM / M_valE</text>
+<path d="M670,150 L945,150 L945,555 L670,555" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="690" y="136" text-anchor="start" style="font-size:16px;">W_valM / W_valE</text>
+<text class="label" x="690" y="579" text-anchor="start" style="font-size:16px;">前递返回 D 的值选择器</text>
+<text class="label" x="690" y="605" text-anchor="start" style="font-size:16px;">多个匹配：优先最近的写入</text>
+<text class="label" x="30" y="798" text-anchor="start" style="font-size:17px;">矩形之间的小条框是流水线寄存器；一条指令每周期向上推进一级。</text>
+<text class="label" x="30" y="825" text-anchor="start" style="font-size:17px;">取指中的恢复优先于预测；反馈路径不是让指令本身倒流。寄存器写回端口在 D 的寄存器堆中。</text>
+</svg>

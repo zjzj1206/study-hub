@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="860" viewBox="0 0 1000 860" role="img" aria-labelledby="title desc"><title id="title">存储层次 / 越向上越快、越小、每字节越贵</title><desc id="desc">连线式 SEQ 电路图。实线为数据，虚线为控制，圆点表示分支连接，无圆点交叉不连接。</desc>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#243c54"/></marker><marker id="c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#b45309"/></marker></defs><style>text{font-family:"Noto Sans CJK SC","Microsoft YaHei",sans-serif;fill:#172c45;font-size:18px}.label{paint-order:stroke;stroke:white;stroke-width:4px;stroke-linejoin:round}</style>
+<rect width="1000" height="860" fill="white"/>
+<text class="label" x="30" y="38" text-anchor="start" style="font-size:25px;">存储层次 / 越向上越快、越小、每字节越贵</text>
+<text class="label" x="30" y="72" text-anchor="start" style="font-size:16px;">实线：数据 / 字段　　虚线：控制　　●：连接点　　交叉无点：不连接</text>
+<rect x="385.0" y="120" width="230" height="55" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="500.0" y="153.5" text-anchor="middle" style="font-size:18px;">L0  程序寄存器</text>
+<path d="M470,210 L470,175" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<path d="M530,175 L530,210" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<rect x="352.5" y="210" width="295" height="55" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="500.0" y="243.5" text-anchor="middle" style="font-size:18px;">L1  Cache（SRAM）</text>
+<path d="M470,300 L470,265" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<path d="M530,265 L530,300" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<rect x="320.0" y="300" width="360" height="55" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="500.0" y="333.5" text-anchor="middle" style="font-size:18px;">L2  Cache（SRAM）</text>
+<path d="M470,390 L470,355" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<path d="M530,355 L530,390" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<rect x="287.5" y="390" width="425" height="55" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="500.0" y="423.5" text-anchor="middle" style="font-size:18px;">L3  Cache（SRAM）</text>
+<path d="M470,480 L470,445" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<path d="M530,445 L530,480" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<rect x="255.0" y="480" width="490" height="55" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="500.0" y="513.5" text-anchor="middle" style="font-size:18px;">L4  主存（DRAM）</text>
+<path d="M470,570 L470,535" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<path d="M530,535 L530,570" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<rect x="222.5" y="570" width="555" height="55" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="500.0" y="603.5" text-anchor="middle" style="font-size:18px;">L5  本地 SSD / HDD</text>
+<path d="M470,660 L470,625" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<path d="M530,625 L530,660" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<rect x="190.0" y="660" width="620" height="55" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="500.0" y="693.5" text-anchor="middle" style="font-size:18px;">L6  远程存储</text>
+<text class="label" x="80" y="335" text-anchor="start" style="font-size:17px;">向上：取入所需块</text>
+<text class="label" x="755" y="425" text-anchor="start" style="font-size:17px;">向下：写回 / 下传</text>
+<text class="label" x="30" y="808" text-anchor="start" style="font-size:17px;">相邻层的传输单位依层次而异：字、缓存块、页、文件块等。箭头表示数据传输方向。</text>
+<text class="label" x="30" y="835" text-anchor="start" style="font-size:17px;">课件层级编号 L4=DRAM 主存，并非所有机器都配备名为 L4 Cache 的硬件。</text>
+</svg>

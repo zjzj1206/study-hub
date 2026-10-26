@@ -1,0 +1,502 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>11 · PIPE 流水线与冒险控制 · ZJZJ / ICS</title><meta name="description" content="北京大学 ICS 复习手册：课程知识、公式推导、边界情况、小班拓展与往年题导航。"><link rel="stylesheet" href="katex/katex.min.css"><link rel="stylesheet" href="style.css"><link rel="icon" href="favicon.svg" type="image/svg+xml"></head><body><a class="skip" href="#main">跳到正文</a><header><a class="brand" href="index.html">ZJZJ<span> / ICS NOTES</span></a><div class="header-right"><a href="https://blog.zjzj.work/">学习空间</a><a href="all.html">整本阅读</a><button type="button" onclick="window.print()">打印</button><button id="menu" aria-expanded="false" aria-controls="chapters">目录</button></div></header><div class="layout"><nav id="chapters" aria-label="章节目录"><div class="nav-label">2026 · 复习手册</div><a  href="00-guide.html">复习范围与使用说明</a><a  href="01-overview.html">01 · 系统概述与基本模型</a><a  href="02-integers.html">02 · 位、字节与整数</a><a  href="03-floating-point.html">03 · 浮点表示、舍入与运算</a><a  href="04-assembly-basics.html">04 · 机器级编程基础</a><a  href="05-control.html">05 · 条件码、分支、循环与 switch</a><a  href="06-procedures.html">06 · 过程调用、栈与 ABI</a><a  href="07-data.html">07 · 数组、结构体、指针与浮点汇编</a><a  href="08-advanced.html">08 · 机器级进阶与内存安全</a><a  href="09-isa-logic.html">09 · Y86-64 指令集与逻辑设计</a><a  href="10-sequential.html">10 · SEQ 顺序处理器与 HCL 控制</a><a aria-current=page href="11-pipeline.html">11 · PIPE 流水线与冒险控制</a><a  href="12-memory-hierarchy.html">12 · 存储技术、局部性与存储层次</a><a  href="11-quiz01.html">附录 A · 第一次测验答案回查</a><a  href="12-past-papers.html">附录 B · 往年题与勘误</a><a  href="13-seminars.html">附录 C · 小班研讨与作业</a><a  href="14-coverage.html">附录 D · 课件覆盖索引与来源</a><div class="nav-foot">依据本地课件与公开题库<br>更新于 2026.10.26</div></nav><main id="main"><div class="eyebrow">COMPUTER SYSTEMS · PEKING UNIVERSITY</div><h1>11 · PIPE 流水线与冒险控制</h1>
+<p>依据第 11 讲 2026-10-22 课件全部 68 页与第 11 讲研讨单。先掌握<a href="10-sequential.html">第 10 章 SEQ</a>的指令语义与六阶段操作，再把不同指令的阶段重叠。这里讨论基础 Y86-64、顺序发射和顺序写回的五级 PIPE；所有寄存器名称保留 <code>%</code> 前缀。</p>
+<h2 id="section-1">流水线的目标：吞吐量、延迟与时钟周期<a class="anchor" href="#section-1" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>流水化</strong>：在组合电路之间插入流水线寄存器，让不同操作同时占用不同的级。洗车类比中，一辆车依次清洗、冲水、烘干，多辆车可分别占用三个工位；并行复制整套洗车设备则是另一种组织方式。</li>
+<li><strong>延迟 latency</strong>：一个操作从进入到产生最终结果所经历的时间。</li>
+<li><strong>吞吐量 throughput</strong>：单位时间完成的操作数。稳定运行且每周期完成一个操作时，吞吐量为时钟周期的倒数。</li>
+<li><strong>流水线寄存器开销</strong>：用 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>r</mi></mrow><annotation encoding="application/x-tex">r</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0278em;">r</span></span></span></span></span> 概括课件模型中的寄存器、建立时间等时序开销；第 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6595em;"></span><span class="mord mathnormal">i</span></span></span></span></span> 级的组合延迟为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>d</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">d_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>，级数为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi></mrow><annotation encoding="application/x-tex">k</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span></span></span></span></span>。忽略额外时钟偏斜时：</li>
+</ul>
+<div class="math block">
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>T</mi><mrow><mi>c</mi><mi>l</mi><mi>k</mi></mrow></msub><mo>≥</mo><munder><mrow><mi>max</mi><mo>⁡</mo></mrow><mrow><mn>1</mn><mo>≤</mo><mi>i</mi><mo>≤</mo><mi>k</mi></mrow></munder><msub><mi>d</mi><mi>i</mi></msub><mo>+</mo><mi>r</mi><mo separator="true">,</mo><mspace width="2em"/><mi>L</mi><mo>=</mo><mi>k</mi><msub><mi>T</mi><mrow><mi>c</mi><mi>l</mi><mi>k</mi></mrow></msub><mo separator="true">,</mo><mspace width="2em"/><msub><mi>Q</mi><mrow><mi>i</mi><mi>d</mi><mi>e</mi><mi>a</mi><mi>l</mi></mrow></msub><mo>=</mo><mfrac><mn>1</mn><msub><mi>T</mi><mrow><mi>c</mi><mi>l</mi><mi>k</mi></mrow></msub></mfrac><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">T_{clk}\geq\max_{1\leq i\leq k}d_i+r,\qquad
+L=kT_{clk},\qquad Q_{ideal}=\frac1{T_{clk}}.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">c</span><span class="mord mathnormal mtight" style="margin-right:0.0197em;">l</span><span class="mord mathnormal mtight" style="margin-right:0.0315em;">k</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1.5417em;vertical-align:-0.8473em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.4306em;"><span style="top:-2.3479em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span><span class="mrel mtight">≤</span><span class="mord mathnormal mtight">i</span><span class="mrel mtight">≤</span><span class="mord mathnormal mtight" style="margin-right:0.0315em;">k</span></span></span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span><span class="mop">max</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.8473em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0278em;">r</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">L</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">c</span><span class="mord mathnormal mtight" style="margin-right:0.0197em;">l</span><span class="mord mathnormal mtight" style="margin-right:0.0315em;">k</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">i</span><span class="mord mathnormal mtight">d</span><span class="mord mathnormal mtight">e</span><span class="mord mathnormal mtight">a</span><span class="mord mathnormal mtight" style="margin-right:0.0197em;">l</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:2.1574em;vertical-align:-0.836em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">c</span><span class="mord mathnormal mtight" style="margin-right:0.0197em;">l</span><span class="mord mathnormal mtight" style="margin-right:0.0315em;">k</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.836em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord">.</span></span></span></span></span>
+</div>
+<ul>
+<li><strong>有限条指令的填充与排空</strong>：无冒险、每条操作经过全部 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi></mrow><annotation encoding="application/x-tex">k</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span></span></span></span></span> 级、初始为空时，完成 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span></span> 条需要 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>+</mo><mi>k</mi><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">n+k-1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7778em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span></span> 周期。平均吞吐量为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mi mathvariant="normal">/</mi><mo stretchy="false">(</mo><mo stretchy="false">(</mo><mi>n</mi><mo>+</mo><mi>k</mi><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo><msub><mi>T</mi><mrow><mi>c</mi><mi>l</mi><mi>k</mi></mrow></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">n/((n+k-1)T_{clk})</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">n</span><span class="mord">/</span><span class="mopen">((</span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7778em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">c</span><span class="mord mathnormal mtight" style="margin-right:0.0197em;">l</span><span class="mord mathnormal mtight" style="margin-right:0.0315em;">k</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span>；只有 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span></span> 很大时才接近理想值。</li>
+<li><strong>课件数值对比</strong>：总组合延迟均为 300 ps，寄存器开销均为 20 ps。</li>
+</ul>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>组织</th>
+<th>组合延迟分配</th>
+<th>周期</th>
+<th>单操作延迟</th>
+<th>稳态吞吐量</th>
+<th>寄存器开销占周期</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>单级</td>
+<td>300 ps</td>
+<td>320 ps</td>
+<td>320 ps</td>
+<td>3.125 GIPS</td>
+<td>6.25%</td>
+</tr>
+<tr>
+<td>均衡三级</td>
+<td>100、100、100 ps</td>
+<td>120 ps</td>
+<td>360 ps</td>
+<td>8.333 GIPS</td>
+<td>16.67%</td>
+</tr>
+<tr>
+<td>不均衡三级</td>
+<td>50、150、100 ps</td>
+<td>170 ps</td>
+<td>510 ps</td>
+<td>5.882 GIPS</td>
+<td>11.76%</td>
+</tr>
+<tr>
+<td>均衡六级</td>
+<td>每级 50 ps</td>
+<td>70 ps</td>
+<td>420 ps</td>
+<td>14.286 GIPS</td>
+<td>28.57%</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li><strong>划分原则</strong>：尽量平衡各级组合延迟；慢级决定整个周期。增加级数会增加寄存器、功耗和控制复杂度，且使分支恢复等代价上升，不能只按 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>300</mn><mi mathvariant="normal">/</mi><mi>k</mi></mrow><annotation encoding="application/x-tex">300/k</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">300/</span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span></span></span></span></span> 估算周期。</li>
+<li><strong>时钟沿前后</strong>：旧流水线寄存器输出先驱动组合逻辑，候选输入逐渐稳定；时钟沿统一采样。239 ps 与 241 ps 可分别位于 240 ps 采样沿的两侧，300 ps 时组合逻辑仍可能传播，359 ps 时应已满足下一采样沿的建立要求。具体边沿方向以时序图约定为准。</li>
+</ul>
+<h2 id="section-2">数据相关、冒险与资源冲突<a class="anchor" href="#section-2" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>程序次序</strong>：写在前面的指令称为较老指令，后面的称为较年轻指令。正确流水线必须保留 ISA 定义的顺序执行效果。</li>
+<li><strong>RAW，写后读相关</strong>：较老指令写寄存器 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>r</mi></mrow><annotation encoding="application/x-tex">r</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0278em;">r</span></span></span></span></span>，较年轻指令读取该写入产生的值。例如 <code>irmovq $50,%rax</code> 后的 <code>addq %rax,%rbx</code>。相关由程序决定，不因插入前递线路而消失。</li>
+<li><strong>数据冒险</strong>：实现的实际取值时刻早于所需结果可用时刻，以致可能读到错误值。RAW 相关是否造成冒险取决于指令间隔、流水级划分和前递能力。</li>
+<li><strong>WAR，读后写反相关</strong>：较老指令必须先读旧值，较年轻指令再覆盖同名位置。<strong>WAW，写后写输出相关</strong>：两次写入同一位置，最终必须保留较年轻指令的结果。</li>
+<li><strong>本章 WAR/WAW 的边界</strong>：固定阶段读寄存器、顺序流经各级、统一在 W 写回时，年轻指令不会抢在老指令之前读写，因而普通程序寄存器 WAR/WAW 不产生本章的顺序颠倒冒险。可变延迟、乱序完成等设计需要另行处理；内存读写还须分析是否访问同一地址。</li>
+<li><strong>控制冒险</strong>：下一条正确指令地址尚未确定或预测错误，包括条件跳转和返回。</li>
+<li><strong>结构冒险</strong>：同周期多个操作争用不能并行使用的硬件资源。课件以取指与数据内存分开的逻辑接口、足够的寄存器端口等条件避免相应冲突；现实中的共享资源需要额外仲裁。</li>
+</ul>
+<h2 id="section-3">从 SEQ 到 SEQ+，再到 PIPE<a class="anchor" href="#section-3" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>SEQ</strong>：一条指令的取指、译码、执行、访存、写回和下一 PC 计算在同一长周期完成。</li>
+<li><strong>SEQ+</strong>：仍一次执行一条指令，把 PC 选择移到取指开始，用前一条指令已保存的结果决定当前取指地址。原独立 PC 状态由预测/选择所需的等价状态承载；没有凭空消除保存控制流信息的需要。</li>
+<li><strong>PIPE−</strong>：在阶段间加入寄存器，形成 F、D、E、M、W 五级；此处减号表示还未完善冒险处理。不同指令在同周期并行占用不同级。</li>
+<li><strong>PIPE</strong>：在基本流水线之上加入前递、暂停、气泡和控制恢复，使重叠执行保持 ISA 语义。SEQ 的 PC 更新并入 PIPE 的 F 级 PC 选择，所以是五级而非六级。</li>
+</ul>
+<p><a href="pipe-overview.svg"><img src="pipe-overview.svg" alt="PIPE 五级与反馈路径" /></a></p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>流水级</th>
+<th>本周期主要组合操作</th>
+<th>进入该级的寄存器保存什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F Fetch</td>
+<td>选择 <code>f_pc</code>、取指、形成字段和 <code>f_valP</code>、预测后继</td>
+<td>F：<code>predPC</code></td>
+</tr>
+<tr>
+<td>D Decode</td>
+<td>解释源/目的编号；读寄存器与前递选择</td>
+<td>D：<code>stat,icode,ifun,rA,rB,valC,valP</code></td>
+</tr>
+<tr>
+<td>E Execute</td>
+<td>选 ALU 输入、计算 <code>e_valE/e_Cnd</code>、修正条件传送目的</td>
+<td>E：<code>stat,icode,ifun,valC,valA,valB,dstE,dstM,srcA,srcB</code></td>
+</tr>
+<tr>
+<td>M Memory</td>
+<td>按该指令地址/使能读写内存，形成 <code>m_valM/m_stat</code></td>
+<td>M：<code>stat,icode,Cnd,valE,valA,dstE,dstM</code></td>
+</tr>
+<tr>
+<td>W Write back</td>
+<td>将保存的结果写回程序寄存器，产生处理器状态</td>
+<td>W：<code>stat,icode,valE,valM,dstE,dstM</code></td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li><strong>大写与小写前缀</strong>：<code>E_valA</code> 是 E 流水线寄存器当前保存的字段；<code>e_valE</code> 是当前 E 级组合逻辑刚算出的结果。<code>M_valE</code> 与 <code>m_valM</code> 更不能互换。</li>
+<li><strong>逐级传递</strong>：某条指令的字段要与该指令一起前进；F 产生的 <code>valC</code> 先进入 D，再进入 E，不能把当前 F 指令的常数直接送给另一条 E 指令。</li>
+<li><strong>反馈路径</strong>：预测地址送回 F；M 的分支结果和顺序地址修正 F；W 的返回地址修正 F；W 的数据与目的编号送寄存器写端口。前递还增加 E/M/W 到 D 的反馈。</li>
+<li><strong>复用 <code>valA</code></strong>：call/jXX 在 D 将 <code>D_valP</code> 放入 <code>d_valA</code>。call 后续用它存返回地址，jXX 后续用它恢复未跳转地址。因此 <code>M_valA</code> 不总是某个寄存器原值。</li>
+</ul>
+<h2 id="section-4">PC 预测和恢复的完整来源<a class="anchor" href="#section-4" aria-label="链接到本节">#</a></h2>
+<ul>
+<li>普通指令预测 <code>f_valP</code>；call 与所有 jXX 都预测 <code>f_valC</code>。无条件跳转和 call 的目标已在取指字段中，条件跳转则采用“预测跳转成立”。ret 不预测返回栈顶。</li>
+<li>条件分支在 E 算出 <code>e_Cnd</code>；若预测错，时钟沿后分支进入 M，F 从 <code>M_valA</code> 恢复顺序地址。</li>
+<li>ret 在 M 读出返回地址，再存入 W；F 在其处于 W 时选择 <code>W_valM</code>。</li>
+</ul>
+<pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">f_pc</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">M_icode</span> <span class="tok-o">==</span> <span class="tok-no">IJXX</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-o">!</span><span class="tok-n">M_Cnd</span> <span class="tok-p">:</span> <span class="tok-n">M_valA</span><span class="tok-p">;</span>
+    <span class="tok-n">W_icode</span> <span class="tok-o">==</span> <span class="tok-no">IRET</span> <span class="tok-p">:</span> <span class="tok-n">W_valM</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-n">F_predPC</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+<span class="tok-kt">int</span> <span class="tok-n">f_predPC</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">f_icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IJXX</span><span class="tok-p">,</span> <span class="tok-no">ICALL</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">f_valC</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-n">f_valP</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+</code></pre>
+<ul>
+<li><strong>优先级</strong>：HCL 先检查 M 分支恢复，再检查 W-ret，最后选择预测值；实际合法指令序列与冲刷约束使相关冲突受到限制，不应脱离可达状态任意解释组合输入。</li>
+<li><strong>课件勘误</strong>：第 63 页文字的 <code>M_valM</code> 应为 <code>M_valA</code>；分支没有从数据内存读出顺序地址。第 48、55、57 页动画残留的地址或 32 位寄存器字样，按完整 Y86-64 编码重算；例如地址 <code>0x002</code> 的 9 字节 jXX 的顺序地址为 <code>0x00b</code>。</li>
+</ul>
+<h2 id="section-5">先理解停顿：nop、bubble、stall 的区别<a class="anchor" href="#section-5" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>nop 指令</strong>：程序中的真实编码，消耗取指空间，按正常阶段前进且不改变程序寄存器、内存或 CC。静态插 nop 要知道具体硬件时序，增加代码体积，也可能在本可前递时仍浪费周期。</li>
+<li><strong>bubble 气泡</strong>：控制逻辑向某流水线寄存器注入无副作用状态。它占用后续流水线槽，但不是从程序存储器取出的字节，不推进一条原程序指令。</li>
+<li><strong>stall 暂停</strong>：某流水线寄存器在时钟沿保持原字段不变，下一周期继续处理原指令。</li>
+<li><strong>normal 正常</strong>：时钟沿装入前一级组合逻辑给出的候选字段。</li>
+<li><strong>冻结前端、排空后端</strong>：D 等待操作数时冻结 F 和 D，向 E 注入 bubble，让原 E/M/W 指令继续前进。冻结所有级会使生产者也停止，等待的结果永远不能到达。</li>
+<li><strong>为何朴素设计要三个 nop</strong>：课件初始设计的 D 取值不能利用同周期 W 的新结果；生产者 W 与消费者 D 同周期仍可能读旧值。三个 nop 使消费者 D 延后到写回完成之后。加入 W→D 前递后，此约束改变，不能跨实现死记 nop 数量。</li>
+<li><strong>同一寄存器的控制互斥</strong>：正常的控制不得让它同时 <code>stall=1</code> 与 <code>bubble=1</code>；这不是“先做一个再做另一个”。</li>
+</ul>
+<h2 id="section-6">前递：取最近的、已经可用的结果<a class="anchor" href="#section-6" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>前递 forwarding / bypassing</strong>：结果尚未写回程序寄存器时，直接送到消费者 D 级的值选择器，替换过时的寄存器堆读值。</li>
+<li>可用来源依次是 E 的 <code>e_valE</code>，M 的 <code>m_valM/M_valE</code>，W 的 <code>W_valM/W_valE</code>，最后才是寄存器堆读值。</li>
+<li><strong>多重匹配的年龄规则</strong>：E 中的生产者比 M/W 中的年轻，代表顺序执行中更近的一次写；应先取 E，再取 M，再取 W。同一条 pop 同时写两个目的时，M 结果优先于 E 结果。</li>
+<li><strong>条件传送</strong>：比较的是经过条件判定的 <code>e_dstE</code>；条件假时它已被置为 <code>RNONE</code>，不能把未发生的写入前递给消费者。</li>
+<li><strong>有效编号</strong>：只有实际使用的源寄存器和有效目的才代表依赖；<code>RNONE</code> 表示不使用/不写。下面显式加有效源判断，避免把两个 <code>RNONE</code> 相等误读为真实相关。</li>
+</ul>
+<pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">d_valA</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">D_icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">ICALL</span><span class="tok-p">,</span> <span class="tok-no">IJXX</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-n">D_valP</span><span class="tok-p">;</span>
+    <span class="tok-n">d_srcA</span> <span class="tok-o">!=</span> <span class="tok-no">RNONE</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">d_srcA</span> <span class="tok-o">==</span> <span class="tok-n">e_dstE</span> <span class="tok-p">:</span> <span class="tok-n">e_valE</span><span class="tok-p">;</span>
+    <span class="tok-n">d_srcA</span> <span class="tok-o">!=</span> <span class="tok-no">RNONE</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">d_srcA</span> <span class="tok-o">==</span> <span class="tok-n">M_dstM</span> <span class="tok-p">:</span> <span class="tok-n">m_valM</span><span class="tok-p">;</span>
+    <span class="tok-n">d_srcA</span> <span class="tok-o">!=</span> <span class="tok-no">RNONE</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">d_srcA</span> <span class="tok-o">==</span> <span class="tok-n">M_dstE</span> <span class="tok-p">:</span> <span class="tok-n">M_valE</span><span class="tok-p">;</span>
+    <span class="tok-n">d_srcA</span> <span class="tok-o">!=</span> <span class="tok-no">RNONE</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">d_srcA</span> <span class="tok-o">==</span> <span class="tok-n">W_dstM</span> <span class="tok-p">:</span> <span class="tok-n">W_valM</span><span class="tok-p">;</span>
+    <span class="tok-n">d_srcA</span> <span class="tok-o">!=</span> <span class="tok-no">RNONE</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">d_srcA</span> <span class="tok-o">==</span> <span class="tok-n">W_dstE</span> <span class="tok-p">:</span> <span class="tok-n">W_valE</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-n">d_rvalA</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+<span class="tok-kt">int</span> <span class="tok-n">d_valB</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">d_srcB</span> <span class="tok-o">!=</span> <span class="tok-no">RNONE</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">d_srcB</span> <span class="tok-o">==</span> <span class="tok-n">e_dstE</span> <span class="tok-p">:</span> <span class="tok-n">e_valE</span><span class="tok-p">;</span>
+    <span class="tok-n">d_srcB</span> <span class="tok-o">!=</span> <span class="tok-no">RNONE</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">d_srcB</span> <span class="tok-o">==</span> <span class="tok-n">M_dstM</span> <span class="tok-p">:</span> <span class="tok-n">m_valM</span><span class="tok-p">;</span>
+    <span class="tok-n">d_srcB</span> <span class="tok-o">!=</span> <span class="tok-no">RNONE</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">d_srcB</span> <span class="tok-o">==</span> <span class="tok-n">M_dstE</span> <span class="tok-p">:</span> <span class="tok-n">M_valE</span><span class="tok-p">;</span>
+    <span class="tok-n">d_srcB</span> <span class="tok-o">!=</span> <span class="tok-no">RNONE</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">d_srcB</span> <span class="tok-o">==</span> <span class="tok-n">W_dstM</span> <span class="tok-p">:</span> <span class="tok-n">W_valM</span><span class="tok-p">;</span>
+    <span class="tok-n">d_srcB</span> <span class="tok-o">!=</span> <span class="tok-no">RNONE</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">d_srcB</span> <span class="tok-o">==</span> <span class="tok-n">W_dstE</span> <span class="tok-p">:</span> <span class="tok-n">W_valE</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-n">d_rvalB</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+<span class="tok-kt">int</span> <span class="tok-n">e_dstE</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">E_icode</span> <span class="tok-o">==</span> <span class="tok-no">IRRMOVQ</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-o">!</span><span class="tok-n">e_Cnd</span> <span class="tok-p">:</span> <span class="tok-no">RNONE</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-n">E_dstE</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+</code></pre>
+<ul>
+<li><strong>例：两个源可来自不同级</strong>。<code>irmovq $10,%rdx; irmovq $3,%rax; addq %rdx,%rax</code> 中，add 在 D 时第一条在 M、第二条在 E，于是 <code>d_valA=M_valE=10</code>，<code>d_valB=e_valE=3</code>，最终算出 13。</li>
+<li><strong>例：连续覆盖同一寄存器</strong>。连续向 <code>%rax</code> 写 1、2、3，紧接着读取它；即使 E/M/W 都匹配，必须取最近的 3。</li>
+</ul>
+<h2 id="section-7">Load-use：前递仍来不及的相关<a class="anchor" href="#section-7" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><code>mrmovq</code> 和 <code>popq</code> 的内存结果在 M 末端才可用；紧随其后的消费者已经在 D 末端需要该值。E 的 <code>e_valE</code> 只是地址或递增后的栈指针，不能替代将来读出的 <code>valM</code>。</li>
+<li>定义检测条件 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi></mrow><annotation encoding="application/x-tex">L</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal">L</span></span></span></span></span>：E 是读内存到寄存器的指令，且有效目的 <code>E_dstM</code> 匹配 D 的实际源 <code>d_srcA/d_srcB</code>。</li>
+<li>处理方式：F stall、D stall、E bubble；原 E 的 load 正常进 M。下一周期消费者仍在 D，从当前 M 的 <code>m_valM</code> 前递，随后进入 E。<strong>基础 PIPE 的紧邻 load-use 代价为一个周期</strong>。</li>
+</ul>
+<pre><code class="language-asm"><span class="tok-nf">mrmovq</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">(</span><span class="tok-nv">%rbx</span><span class="tok-p">),</span><span class="tok-w"> </span><span class="tok-nv">%rax</span>
+<span class="tok-nf">addq</span><span class="tok-w"> </span><span class="tok-nv">%rax</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rcx</span>
+</code></pre>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>指令 / 周期</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>load</td>
+<td>F</td>
+<td>D</td>
+<td>E</td>
+<td>M</td>
+<td>W</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>add</td>
+<td></td>
+<td>F</td>
+<td>D（等待）</td>
+<td>D（取 m_valM）</td>
+<td>E</td>
+<td>M</td>
+<td>W</td>
+</tr>
+<tr>
+<td>注入的气泡</td>
+<td></td>
+<td></td>
+<td></td>
+<td>E</td>
+<td>M</td>
+<td>W</td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>若 load 后有一条独立指令，再使用加载值，通常已有足够间隔，不需这一次暂停。</li>
+<li><code>mrmovq</code> 后紧邻 <code>rmmovq</code>，即使相关只在存储数据上，<strong>本章把数据统一在 D 确定的实现</strong>仍会按 load-use 暂停；另加晚期存储数据前递的优化不属于本章基础线路。</li>
+<li><code>popq %rsp</code> 的后继若读 <code>%rsp</code>，需要内存弹出值；不得仅前递 E 产生的 <code>R[%rsp]+8</code>。load-use 检测及 M 结果优先共同保证正确。</li>
+</ul>
+<h2 id="section-8">分支预测失败：冲刷两条错误路径指令<a class="anchor" href="#section-8" aria-label="链接到本节">#</a></h2>
+<ul>
+<li>当 E 中 <code>jXX</code> 的 <code>e_Cnd=0</code> 时，预测目标路径已分别占据 D、F；正确指令应从该分支的顺序地址开始。</li>
+<li>时钟沿对 D、E 注入 bubble：原 F 不进入 D，原 D 不进入 E；分支自身正常进入 M。</li>
+<li>下一周期由 M 的 <code>M_valA</code> 选择正确 <code>f_pc</code>。错误路径尚未进入有程序副作用的阶段，冲刷后不允许它们写寄存器、内存或 CC。</li>
+<li><strong>基础预测失败代价为两周期</strong>；预测正确不需要这项罚时。错误路径指令的取指次数不等于应提交的指令数。</li>
+</ul>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>指令 / 周期</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>未成立的 jXX</td>
+<td>F</td>
+<td>D</td>
+<td>E</td>
+<td>M</td>
+<td>W</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>错误目标指令</td>
+<td></td>
+<td>F</td>
+<td>D</td>
+<td>取消</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>错误目标的后继</td>
+<td></td>
+<td></td>
+<td>F</td>
+<td>取消</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>正确顺序指令</td>
+<td></td>
+<td></td>
+<td></td>
+<td>F</td>
+<td>D</td>
+<td>E</td>
+<td>M</td>
+<td>W</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="section-9">ret：等待从栈取回的 PC<a class="anchor" href="#section-9" aria-label="链接到本节">#</a></h2>
+<ul>
+<li>ret 的目标来自 <code>M8[R[%rsp]]</code>，取指时未知。ret 在 D、E、M 的每个周期暂停 F，并向 D 注入 bubble，阻止 ret 后面顺序地址的指令进入执行。</li>
+<li>ret 自身继续向后走；进入 W 后，F 选择 <code>W_valM</code>，恢复正确取指。正常无额外依赖时产生三个空槽，代价为三周期。</li>
+<li>恢复的是栈中的返回地址，与 ret 自身的 <code>valP=PC+1</code> 无关。</li>
+</ul>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>指令 / 周期</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ret</td>
+<td>F</td>
+<td>D</td>
+<td>E</td>
+<td>M</td>
+<td>W</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>正确返回点</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>F</td>
+<td>D</td>
+<td>E</td>
+<td>M</td>
+<td>W</td>
+</tr>
+<tr>
+<td>F 在此前的动作</td>
+<td></td>
+<td>stall</td>
+<td>stall</td>
+<td>stall</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="section-10">三种情况统一成流水线控制<a class="anchor" href="#section-10" aria-label="链接到本节">#</a></h2>
+<p>令 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi></mrow><annotation encoding="application/x-tex">L</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal">L</span></span></span></span></span> 为 load-use，<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi></mrow><annotation encoding="application/x-tex">B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span></span></span></span></span> 为分支预测失败，<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi></mrow><annotation encoding="application/x-tex">R</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span></span></span></span></span> 为 D/E/M 存在 ret；下列布尔量在当前周期计算，控制<strong>下一个时钟沿</strong>的流水线寄存器动作。</p>
+<pre><code class="language-hcl"><span class="tok-kt">bool</span> <span class="tok-n">load_use</span> <span class="tok-o">=</span> <span class="tok-n">E_icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IMRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span> <span class="tok-p">}</span>
+    <span class="tok-o">&amp;&amp;</span> <span class="tok-n">E_dstM</span> <span class="tok-o">!=</span> <span class="tok-no">RNONE</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">E_dstM</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-n">d_srcA</span><span class="tok-p">,</span> <span class="tok-n">d_srcB</span> <span class="tok-p">};</span>
+<span class="tok-kt">bool</span> <span class="tok-n">mispredict</span> <span class="tok-o">=</span> <span class="tok-n">E_icode</span> <span class="tok-o">==</span> <span class="tok-no">IJXX</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-o">!</span><span class="tok-n">e_Cnd</span><span class="tok-p">;</span>
+<span class="tok-kt">bool</span> <span class="tok-n">ret_pending</span> <span class="tok-o">=</span> <span class="tok-no">IRET</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-n">D_icode</span><span class="tok-p">,</span> <span class="tok-n">E_icode</span><span class="tok-p">,</span> <span class="tok-n">M_icode</span> <span class="tok-p">};</span>
+
+<span class="tok-kt">bool</span> <span class="tok-n">F_stall</span> <span class="tok-o">=</span> <span class="tok-n">load_use</span> <span class="tok-o">||</span> <span class="tok-n">ret_pending</span><span class="tok-p">;</span>
+<span class="tok-kt">bool</span> <span class="tok-n">F_bubble</span> <span class="tok-o">=</span> <span class="tok-m">0</span><span class="tok-p">;</span>
+<span class="tok-kt">bool</span> <span class="tok-n">D_stall</span> <span class="tok-o">=</span> <span class="tok-n">load_use</span><span class="tok-p">;</span>
+<span class="tok-kt">bool</span> <span class="tok-n">D_bubble</span> <span class="tok-o">=</span> <span class="tok-n">mispredict</span> <span class="tok-o">||</span> <span class="tok-p">(</span><span class="tok-o">!</span><span class="tok-n">load_use</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">ret_pending</span><span class="tok-p">);</span>
+<span class="tok-kt">bool</span> <span class="tok-n">E_stall</span> <span class="tok-o">=</span> <span class="tok-m">0</span><span class="tok-p">;</span>
+<span class="tok-kt">bool</span> <span class="tok-n">E_bubble</span> <span class="tok-o">=</span> <span class="tok-n">mispredict</span> <span class="tok-o">||</span> <span class="tok-n">load_use</span><span class="tok-p">;</span>
+</code></pre>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>当前情况</th>
+<th>F</th>
+<th>D</th>
+<th>E</th>
+<th>M / W（无异常）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>只存在 load-use</td>
+<td>stall</td>
+<td>stall</td>
+<td>bubble</td>
+<td>normal</td>
+</tr>
+<tr>
+<td>只存在错误预测</td>
+<td>normal</td>
+<td>bubble</td>
+<td>bubble</td>
+<td>normal</td>
+</tr>
+<tr>
+<td>只存在 ret 等待</td>
+<td>stall</td>
+<td>bubble</td>
+<td>normal</td>
+<td>normal</td>
+</tr>
+<tr>
+<td>错误预测且 D 是错误路径 ret</td>
+<td>stall</td>
+<td>bubble</td>
+<td>bubble</td>
+<td>normal</td>
+</tr>
+<tr>
+<td>load-use 且 D 是 ret</td>
+<td>stall</td>
+<td>stall</td>
+<td>bubble</td>
+<td>normal</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="section-11">组合 A：未成立分支后预测到 ret<a class="anchor" href="#section-11" aria-label="链接到本节">#</a></h3>
+<ul>
+<li>E 的分支已知预测错误，D 的 ret 属于要取消的错误路径。两种控制都要求 D bubble，分支还要求 E bubble；F 即使因 ret 暂停，下一周期仍会由 M 分支恢复地址选择覆盖 <code>F_predPC</code>。</li>
+<li>不能因为看见 ret，就坚持等它运行到 W；它不应提交。</li>
+</ul>
+<h3 id="section-12">组合 B：load 写 <code>%rsp</code>，紧跟 ret<a class="anchor" href="#section-12" aria-label="链接到本节">#</a></h3>
+<pre><code class="language-asm"><span class="tok-nf">mrmovq</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">(</span><span class="tok-nv">%rbx</span><span class="tok-p">),</span><span class="tok-w"> </span><span class="tok-nv">%rsp</span>
+<span class="tok-nf">ret</span>
+</code></pre>
+<ul>
+<li>E 的 load 写 <code>%rsp</code>，D 的 ret 要读 <code>%rsp</code>，所以 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>=</mo><mn>1</mn><mo separator="true">,</mo><mi>R</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">L=1,R=1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal">L</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord">1</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span></span>。</li>
+<li>初版 <code>D_bubble = B || R</code> 会同时要求 D stall 与 D bubble，造成冲突，并可能丢掉 ret。</li>
+<li>修正为 <code>D_bubble = B || (!L &amp;&amp; R)</code>：load-use 优先，让 ret 在 D 多等一个周期，E 注入气泡。取到正确 <code>%rsp</code> 后再按 ret 规则继续。</li>
+<li>同一条 E 指令不可能同时是 load 与 jXX，因此基础指令集的 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi></mrow><annotation encoding="application/x-tex">L</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal">L</span></span></span></span></span> 与 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi></mrow><annotation encoding="application/x-tex">B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span></span></span></span></span> 不会同时成立；控制互斥应结合可达指令状态核对。</li>
+</ul>
+<h2 id="section-13">状态、异常与条件码提交<a class="anchor" href="#section-13" aria-label="链接到本节">#</a></h2>
+<ul>
+<li>Fetch 把地址错/非法编码/停止信息存入 <code>f_stat</code>，随该条指令逐级传播；M 的数据内存错误将该条状态改为 ADR。</li>
+<li>程序可见停止状态在 W 判定。年轻指令不能越过较老的错误/停止指令留下额外副作用。</li>
+<li>标准 PIPE 在 <code>m_stat</code> 或 <code>W_stat</code> 为 ADR、INS、HLT 时禁止 E 更新 CC，并通过 M bubble、W stall 保持停止状态。此处是教材实现补充，用于解释为什么“OPq 就写 CC”不是完整控制。</li>
+</ul>
+<pre><code class="language-hcl"><span class="tok-kt">bool</span> <span class="tok-n">set_cc</span> <span class="tok-o">=</span> <span class="tok-n">E_icode</span> <span class="tok-o">==</span> <span class="tok-no">IOPQ</span>
+    <span class="tok-o">&amp;&amp;</span> <span class="tok-o">!</span><span class="tok-p">(</span><span class="tok-n">m_stat</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">SADR</span><span class="tok-p">,</span> <span class="tok-no">SINS</span><span class="tok-p">,</span> <span class="tok-no">SHLT</span> <span class="tok-p">})</span>
+    <span class="tok-o">&amp;&amp;</span> <span class="tok-o">!</span><span class="tok-p">(</span><span class="tok-n">W_stat</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">SADR</span><span class="tok-p">,</span> <span class="tok-no">SINS</span><span class="tok-p">,</span> <span class="tok-no">SHLT</span> <span class="tok-p">});</span>
+<span class="tok-kt">bool</span> <span class="tok-n">M_stall</span> <span class="tok-o">=</span> <span class="tok-m">0</span><span class="tok-p">;</span>
+<span class="tok-kt">bool</span> <span class="tok-n">M_bubble</span> <span class="tok-o">=</span> <span class="tok-n">m_stat</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">SADR</span><span class="tok-p">,</span> <span class="tok-no">SINS</span><span class="tok-p">,</span> <span class="tok-no">SHLT</span> <span class="tok-p">}</span>
+    <span class="tok-o">||</span> <span class="tok-n">W_stat</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">SADR</span><span class="tok-p">,</span> <span class="tok-no">SINS</span><span class="tok-p">,</span> <span class="tok-no">SHLT</span> <span class="tok-p">};</span>
+<span class="tok-kt">bool</span> <span class="tok-n">W_stall</span> <span class="tok-o">=</span> <span class="tok-n">W_stat</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">SADR</span><span class="tok-p">,</span> <span class="tok-no">SINS</span><span class="tok-p">,</span> <span class="tok-no">SHLT</span> <span class="tok-p">};</span>
+<span class="tok-kt">bool</span> <span class="tok-n">W_bubble</span> <span class="tok-o">=</span> <span class="tok-m">0</span><span class="tok-p">;</span>
+</code></pre>
+<h2 id="section-14">周期数、CPI 与研讨题的解题步骤<a class="anchor" href="#section-14" aria-label="链接到本节">#</a></h2>
+<ul>
+<li>五级、空管启动、无缓存等待且计到末条 W 时，基础周期为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>+</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">N+4</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">4</span></span></span></span></span>。若各项罚时独立且不重叠，可写：</li>
+</ul>
+<div class="math block">
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>C</mi><mo>=</mo><mi>N</mi><mo>+</mo><mn>4</mn><mo>+</mo><msub><mi>N</mi><mi>L</mi></msub><mo>+</mo><mn>2</mn><msub><mi>N</mi><mi>B</mi></msub><mo>+</mo><mn>3</mn><msub><mi>N</mi><mi>R</mi></msub><mo separator="true">,</mo><mspace width="2em"/><mi>C</mi><mi>P</mi><mi>I</mi><mo>=</mo><mfrac><mi>C</mi><mi>N</mi></mfrac><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">C=N+4+N_L+2N_B+3N_R,\qquad CPI=\frac CN.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0715em;">C</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">4</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">L</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord">2</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0502em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord">3</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0077em;">R</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.0715em;">C</span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="mord mathnormal" style="margin-right:0.0785em;">I</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:2.0463em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3603em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.109em;">N</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0715em;">C</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord">.</span></span></span></span></span>
+</div>
+<ul>
+<li><span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mi>L</mi></msub></mrow><annotation encoding="application/x-tex">N_L</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">L</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span> 计实际产生的紧邻 load-use 暂停，<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mi>B</mi></msub></mrow><annotation encoding="application/x-tex">N_B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0502em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span> 计实际预测失败分支，<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mi>R</mi></msub></mrow><annotation encoding="application/x-tex">N_R</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0077em;">R</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span> 计需要标准返回等待的 ret；组合冒险、末尾停止和题设计数起点可能使直接相加失效，应以逐周期时序为准。</li>
+<li>稳态、忽略填充排空时，若相应频率为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mi>L</mi></msub><mo separator="true">,</mo><msub><mi>p</mi><mi>B</mi></msub><mo separator="true">,</mo><msub><mi>p</mi><mi>R</mi></msub></mrow><annotation encoding="application/x-tex">p_L,p_B,p_R</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">L</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0502em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0077em;">R</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>，近似 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mi>P</mi><mi>I</mi><mo>=</mo><mn>1</mn><mo>+</mo><msub><mi>p</mi><mi>L</mi></msub><mo>+</mo><mn>2</mn><msub><mi>p</mi><mi>B</mi></msub><mo>+</mo><mn>3</mn><msub><mi>p</mi><mi>R</mi></msub></mrow><annotation encoding="application/x-tex">CPI=1+p_L+2p_B+3p_R</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0715em;">C</span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="mord mathnormal" style="margin-right:0.0785em;">I</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">L</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">2</span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0502em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">3</span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0077em;">R</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>。频率的分母与事件定义必须一致。</li>
+<li><strong>画表流程</strong>：先列正确程序路径与每条指令的源/目的；按正常 F/D/E/M/W 填表；逐周期检查 load-use、分支与 ret；标记 stall/bubble；再按前递优先级填写 D 的实际数据；最后核对寄存器、内存、CC 与总周期数。</li>
+</ul>
+<h2 id="section-15">作业 4.57(A)：只在执行阶段需要加载值时暂停<a class="anchor" href="#section-15" aria-label="链接到本节">#</a></h2>
+<ul>
+<li>本地教材 p.329 的改进称为 <strong>load forwarding</strong>：M 中 load 的 <code>m_valM</code> 可送给当前 E 中 store 的 <code>e_valA</code>，下一时钟沿进入 M 的 <code>valA</code>，供该 store 下一周期写内存。</li>
+<li>对 <code>rmmovq/pushq</code>，若加载结果仅作为待存数据（源 A），可利用此路径免去暂停；若作为地址计算的源 B，E 立即需要，仍必须暂停。</li>
+<li>修正检测条件如下；它是作业扩展，前文基础 PIPE 的 load-use 公式保持原样。</li>
+</ul>
+<pre><code class="language-hcl"><span class="tok-kt">bool</span> <span class="tok-n">load_use_with_lf</span> <span class="tok-o">=</span> <span class="tok-n">E_icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IMRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span> <span class="tok-p">}</span>
+    <span class="tok-o">&amp;&amp;</span> <span class="tok-n">E_dstM</span> <span class="tok-o">!=</span> <span class="tok-no">RNONE</span>
+    <span class="tok-o">&amp;&amp;</span> <span class="tok-p">(</span><span class="tok-n">E_dstM</span> <span class="tok-o">==</span> <span class="tok-n">d_srcB</span>
+        <span class="tok-o">||</span> <span class="tok-p">(</span><span class="tok-n">E_dstM</span> <span class="tok-o">==</span> <span class="tok-n">d_srcA</span>
+            <span class="tok-o">&amp;&amp;</span> <span class="tok-o">!</span><span class="tok-p">(</span><span class="tok-n">D_icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span> <span class="tok-p">})));</span>
+</code></pre>
+<ul>
+<li><strong>例 1</strong>：<code>mrmovq 0(%rcx),%rdx</code> 后跟 <code>pushq %rdx</code>，<code>%rdx</code> 只供写内存，晚期前递可免暂停。</li>
+<li><strong>例 2</strong>：<code>popq %rdx</code> 后跟 <code>rmmovq %rax,0(%rdx)</code>，<code>%rdx</code> 供 ALU 计算地址，必须暂停。</li>
+<li><strong>双重使用</strong>：<code>rmmovq %rdx,0(%rdx)</code> 同时把 <code>%rdx</code> 用于数据和地址，即使源 A 可晚供给，源 B 依赖仍使检测为真。</li>
+</ul>
+<p>来源：第 11 讲课件 pp.1–68、第 11 讲小班研讨单；控制表达式另与本地 CS:APP 官方模拟器 <code>pipe-std.hcl</code> 核对。硬件产品与更复杂的乱序处理器不是本讲 PIPE 模型的默认假设。</p>
+<div class="pager"><a href="10-sequential.html">上一章<br>10 · SEQ 顺序处理器与 HCL 控制</a><a href="12-memory-hierarchy.html">下一章<br>12 · 存储技术、局部性与存储层次</a></div><footer>理解表示，追踪执行。<span><a href="14-coverage.html">资料来源与覆盖范围</a></span></footer></main><aside aria-label="本页目录"><div class="nav-label">本页内容</div><a href="#section-1">流水线的目标：吞吐量、延迟与时钟周期</a><a href="#section-2">数据相关、冒险与资源冲突</a><a href="#section-3">从 SEQ 到 SEQ+，再到 PIPE</a><a href="#section-4">PC 预测和恢复的完整来源</a><a href="#section-5">先理解停顿：nop、bubble、stall 的区别</a><a href="#section-6">前递：取最近的、已经可用的结果</a><a href="#section-7">Load-use：前递仍来不及的相关</a><a href="#section-8">分支预测失败：冲刷两条错误路径指令</a><a href="#section-9">ret：等待从栈取回的 PC</a><a href="#section-10">三种情况统一成流水线控制</a><a href="#section-11">组合 A：未成立分支后预测到 ret</a><a href="#section-12">组合 B：load 写 %rsp，紧跟 ret</a><a href="#section-13">状态、异常与条件码提交</a><a href="#section-14">周期数、CPI 与研讨题的解题步骤</a><a href="#section-15">作业 4.57(A)：只在执行阶段需要加载值时暂停</a><a href="#main">回到顶部 ↑</a></aside></div><script src="app.js"></script></body></html>

@@ -26,3 +26,5 @@ pre .tok-err{color:inherit;background:transparent}
 /* SEQ architecture diagrams: vector source opens at full resolution on click. */
 main img[src^="seq-"] { display:block; width:100%; height:auto; border:1px solid #d9e2ec; border-radius:12px; margin:1.4rem 0; background:#f8fafc; }
 @media print { main img[src^="seq-"] { max-height:235mm; object-fit:contain; break-inside:avoid; } }
+
+main img[src^="pipe-"], main img[src^="memory-"] {display:block;width:100%;height:auto;border:1px solid #d9e2ec;border-radius:12px;margin:1.4rem 0;background:white;}

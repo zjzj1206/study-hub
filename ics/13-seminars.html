@@ -1,5 +1,5 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>13 · 小班拓展、边角知识与作业路线 · ZJZJ / ICS</title><meta name="description" content="北京大学 ICS 复习手册：课程知识、公式推导、边界情况、小班拓展与往年题导航。"><link rel="stylesheet" href="katex/katex.min.css"><link rel="stylesheet" href="style.css"><link rel="icon" href="favicon.svg" type="image/svg+xml"></head><body><a class="skip" href="#main">跳到正文</a><header><a class="brand" href="index.html">ZJZJ<span> / ICS NOTES</span></a><div class="header-right"><a href="https://blog.zjzj.work/">学习空间</a><a href="all.html">整本阅读</a><button type="button" onclick="window.print()">打印</button><button id="menu" aria-expanded="false" aria-controls="chapters">目录</button></div></header><div class="layout"><nav id="chapters" aria-label="章节目录"><div class="nav-label">2026 · 复习手册</div><a  href="00-guide.html">复习范围与使用说明</a><a  href="01-overview.html">01 · 系统概述与基本模型</a><a  href="02-integers.html">02 · 位、字节与整数</a><a  href="03-floating-point.html">03 · 浮点表示、舍入与运算</a><a  href="04-assembly-basics.html">04 · 机器级编程基础</a><a  href="05-control.html">05 · 条件码、分支、循环与 switch</a><a  href="06-procedures.html">06 · 过程调用、栈与 ABI</a><a  href="07-data.html">07 · 数组、结构体、指针与浮点汇编</a><a  href="08-advanced.html">08 · 机器级进阶与内存安全</a><a  href="09-isa-logic.html">09 · Y86-64 指令集与逻辑设计</a><a  href="10-sequential.html">10 · SEQ 顺序处理器与 HCL 控制</a><a  href="11-quiz01.html">11 · 2026 第一次测验：答案回查与复盘</a><a  href="12-past-papers.html">12 · 往年题导航与勘误</a><a aria-current=page href="13-seminars.html">13 · 小班拓展、边角知识与作业路线</a><a  href="14-coverage.html">14 · 课件覆盖索引与来源</a><div class="nav-foot">依据本地课件与公开题库<br>更新于 2026.10.19</div></nav><main id="main"><div class="eyebrow">COMPUTER SYSTEMS · PEKING UNIVERSITY</div><h1>13 · 小班拓展、边角知识与作业路线</h1>
-<p>逐项归并本地第 2～7、9～10 讲研讨主题；本章保留课堂提出的开放讨论与术语，不把它们伪装成只有唯一标准答案的计算题。</p>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>附录 C · 小班研讨与作业 · ZJZJ / ICS</title><meta name="description" content="北京大学 ICS 复习手册：课程知识、公式推导、边界情况、小班拓展与往年题导航。"><link rel="stylesheet" href="katex/katex.min.css"><link rel="stylesheet" href="style.css"><link rel="icon" href="favicon.svg" type="image/svg+xml"></head><body><a class="skip" href="#main">跳到正文</a><header><a class="brand" href="index.html">ZJZJ<span> / ICS NOTES</span></a><div class="header-right"><a href="https://blog.zjzj.work/">学习空间</a><a href="all.html">整本阅读</a><button type="button" onclick="window.print()">打印</button><button id="menu" aria-expanded="false" aria-controls="chapters">目录</button></div></header><div class="layout"><nav id="chapters" aria-label="章节目录"><div class="nav-label">2026 · 复习手册</div><a  href="00-guide.html">复习范围与使用说明</a><a  href="01-overview.html">01 · 系统概述与基本模型</a><a  href="02-integers.html">02 · 位、字节与整数</a><a  href="03-floating-point.html">03 · 浮点表示、舍入与运算</a><a  href="04-assembly-basics.html">04 · 机器级编程基础</a><a  href="05-control.html">05 · 条件码、分支、循环与 switch</a><a  href="06-procedures.html">06 · 过程调用、栈与 ABI</a><a  href="07-data.html">07 · 数组、结构体、指针与浮点汇编</a><a  href="08-advanced.html">08 · 机器级进阶与内存安全</a><a  href="09-isa-logic.html">09 · Y86-64 指令集与逻辑设计</a><a  href="10-sequential.html">10 · SEQ 顺序处理器与 HCL 控制</a><a  href="11-pipeline.html">11 · PIPE 流水线与冒险控制</a><a  href="12-memory-hierarchy.html">12 · 存储技术、局部性与存储层次</a><a  href="11-quiz01.html">附录 A · 第一次测验答案回查</a><a  href="12-past-papers.html">附录 B · 往年题与勘误</a><a aria-current=page href="13-seminars.html">附录 C · 小班研讨与作业</a><a  href="14-coverage.html">附录 D · 课件覆盖索引与来源</a><div class="nav-foot">依据本地课件与公开题库<br>更新于 2026.10.26</div></nav><main id="main"><div class="eyebrow">COMPUTER SYSTEMS · PEKING UNIVERSITY</div><h1>附录 C · 小班研讨与作业</h1>
+<p>逐项归并本地第 2～7、9～12 讲研讨主题；本章保留课堂提出的开放讨论与术语，不把它们伪装成只有唯一标准答案的计算题。</p>
 <h2 id="section-1">第 2 讲：表示与整数<a class="anchor" href="#section-1" aria-label="链接到本节">#</a></h2>
 <p>研讨 1 的进制转换、位运算/逻辑运算、短路与移位见第 02 章。补充的设计问题：二进制容易用两种稳定物理状态表示，数字电路有噪声容限；十六进制是在不损失位边界的前提下缩短书写。8 位字节有历史、字符表示、寻址与硬件生态原因，不是数学上唯一最优方案。字更长能表示更大范围/地址，也提高存储、传输和硬件成本；嵌入式设备可采用不同取舍。</p>
 <p>研讨 2 的原码/反码比较、补码取负证明、混合类型比较、扩展截断、三类加法溢出、常数乘法和大小端均见第 02 章。补码取负证明：w 位下 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∼</mi><mi>x</mi><mo>=</mo><msup><mn>2</mn><mi>w</mi></msup><mo>−</mo><mn>1</mn><mo>−</mo><mi>x</mi></mrow><annotation encoding="application/x-tex">\mathord{\sim}x=2^w-1-x</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord"><span class="mrel">∼</span></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7477em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0269em;">w</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal">x</span></span></span></span></span>，所以 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∼</mi><mi>x</mi><mo>+</mo><mn>1</mn><mo>≡</mo><mo>−</mo><mi>x</mi><mspace></mspace><mspace width="0.4444em"/><mo stretchy="false">(</mo><mrow><mi mathvariant="normal">m</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">d</mi></mrow><mspace width="0.3333em"/><msup><mn>2</mn><mi>w</mi></msup><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\mathord{\sim}x+1\equiv-x\pmod{2^w}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mrel">∼</span></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≡</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord">−</span><span class="mord mathnormal">x</span><span class="mspace allowbreak"></span><span class="mspace" style="margin-right:0.4444em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord"><span class="mord"><span class="mord mathrm">mod</span></span></span><span class="mspace" style="margin-right:0.3333em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0269em;">w</span></span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span>；其位向量意义对所有 x 成立。</p>
@@ -285,7 +285,7 @@
 </table></div>
 <ul>
 <li>完成 iaddq 扩展时检查所有受影响的控制器；只增加 opcode 和 ALU 加法而漏掉取常数、寄存器读写或 CC 都不能正确执行。</li>
-<li>本次课程到 SEQ 顺序实现为止，后续流水线实验另按新课件补充。</li>
+<li>SEQ 之后继续学习<a href="11-pipeline.html">第 11 章 PIPE</a>，把单指令信号表转成逐周期多指令时序。</li>
 </ul>
 <h2 id="section-12">指定教材作业：题号与应掌握的方法<a class="anchor" href="#section-12" aria-label="链接到本节">#</a></h2>
 <div class="table-scroll"><table>
@@ -337,6 +337,16 @@
 <td>p.328：4.51</td>
 <td>把 iaddq 加入 SEQ 的取指、译码、ALU、写回和 CC 控制</td>
 </tr>
+<tr>
+<td>11</td>
+<td>p.329：4.57(A)</td>
+<td>加载值只作存储数据时免暂停；作地址源时仍暂停</td>
+</tr>
+<tr>
+<td>12</td>
+<td>pp.451～452：6.23、6.24</td>
+<td>单扇区平均访问；连续/随机布局的文件读取时间</td>
+</tr>
 </tbody>
 </table></div>
 <p>只列题号与方法，不复刻教材完整题文。不同版次/国际版的题号可能不一致，作者官网也专门提醒国际版习题存在差异。以本地中文版作业单指定页面和题文为准。</p>
@@ -354,4 +364,230 @@
 <li>结构体内部与末尾 padding、union 共享存储是否都算了？</li>
 <li>旧题是否切换 IA-32/Y86-32？修改后的机器是否仍能套原公式？</li>
 </ul>
-<div class="pager"><a href="12-past-papers.html">上一章<br>12 · 往年题导航与勘误</a><a href="14-coverage.html">下一章<br>14 · 课件覆盖索引与来源</a></div><footer>理解表示，追踪执行。<span><a href="14-coverage.html">资料来源与覆盖范围</a></span></footer></main><aside aria-label="本页目录"><div class="nav-label">本页内容</div><a href="#section-1">第 2 讲：表示与整数</a><a href="#section-2">第 3 讲：浮点的术语与设计</a><a href="#section-3">两个事故案例及应当学到什么</a><a href="#section-4">第 4 讲：硬件与指令拓展</a><a href="#section-5">第 5 讲：控制流拓展</a><a href="#section-6">第 6 讲：ABI 与递归拓展</a><a href="#section-7">第 7 讲：数组、对齐与浮点拓展</a><a href="#section-8">第 9 讲研讨 1：体系结构设计（逐项路线）</a><a href="#section-9">第 9 讲研讨 2：逻辑设计（逐项路线）</a><a href="#section-10">第 10 讲研讨 1：指令操作分解（逐项路线）</a><a href="#section-11">第 10 讲研讨 2：SEQ 部件设计（逐项路线）</a><a href="#section-12">指定教材作业：题号与应掌握的方法</a><a href="#section-13">最后一次边界检查清单</a><a href="#main">回到顶部 ↑</a></aside></div><script src="app.js"></script></body></html>
+<h2 id="section-14">第 11 讲研讨 1：流水化与基本数据通路<a class="anchor" href="#section-14" aria-label="链接到本节">#</a></h2>
+<p>正文入口：<a href="11-pipeline.html">11 PIPE</a>。以下对应研讨单第一组全部 9 小问。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>小问</th>
+<th>应展开的内容</th>
+<th>关键检查</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 四种划分</td>
+<td>单级、均衡三级、不均衡三级、六级的周期/延迟/吞吐量</td>
+<td>慢级决定周期，寄存器开销占比随划分改变</td>
+</tr>
+<tr>
+<td>2 时钟图</td>
+<td>沿前组合传播，沿上采样，沿后输出新状态</td>
+<td>不能把组合逻辑稳定等同于架构状态已提交</td>
+</tr>
+<tr>
+<td>3 相关与冒险</td>
+<td>相关是程序要求，冒险取决于实现与时间</td>
+<td>前递消除冒险但不消除 RAW 相关</td>
+</tr>
+<tr>
+<td>4 RAW</td>
+<td>生产者写，年轻消费者读</td>
+<td>比较值可用时刻与消费者需要时刻</td>
+</tr>
+<tr>
+<td>5 WAR/WAW</td>
+<td>反相关与输出相关</td>
+<td>顺序固定阶段 PIPE 普通寄存器不会反序完成</td>
+</tr>
+<tr>
+<td>6 SEQ+</td>
+<td>把 PC 选择移到取指端，以前条保存结果选当前 PC</td>
+<td>仍是顺序实现，不是已经流水化</td>
+</tr>
+<tr>
+<td>7 分级与寄存器</td>
+<td>F/D/E/M/W；列出每级字段与用途</td>
+<td>属于同一指令的字段随它逐级传递</td>
+</tr>
+<tr>
+<td>8 Feedback</td>
+<td>预测、分支恢复、返回地址、寄存器写回</td>
+<td>区分数据反馈和指令流动方向</td>
+</tr>
+<tr>
+<td>9 下一 PC</td>
+<td>预测 valP/valC；M_valA 恢复分支；W_valM 恢复 ret</td>
+<td>分支顺序地址不是 M_valM</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="section-15">第 11 讲研讨 2：冒险与控制组合<a class="anchor" href="#section-15" aria-label="链接到本节">#</a></h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>小问</th>
+<th>应展开的内容</th>
+<th>关键检查</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 代码/时序/线路</td>
+<td>给每条指令编号，选定同一周期标 F～W 占用</td>
+<td>同周期各级属于不同指令</td>
+</tr>
+<tr>
+<td>2 nop</td>
+<td>按朴素读写时序插 0～3 个 nop 比较</td>
+<td>三个 nop 结论依具体无前递时序</td>
+</tr>
+<tr>
+<td>3 bubble 与 nop</td>
+<td>内部空槽 vs 程序中的真实编码</td>
+<td>bubble 不占程序字节</td>
+</tr>
+<tr>
+<td>4 stall</td>
+<td>冻结前端，后端前进，E 注入 bubble</td>
+<td>不能让生产者一起冻结</td>
+</tr>
+<tr>
+<td>5 forwarding</td>
+<td>E/M/W 值进入 D 选择器；最近写优先</td>
+<td>同级 M 数据优先，条件假 cmov 不转发</td>
+</tr>
+<tr>
+<td>6 load-use</td>
+<td>E_dstM 匹配 D 源；一周期等待后取 m_valM</td>
+<td>ALU 地址不是加载值</td>
+</tr>
+<tr>
+<td>7 预测失败</td>
+<td>E 检测，D/E bubble，下一周期从 M_valA 恢复</td>
+<td>两条错误路径指令被取消</td>
+</tr>
+<tr>
+<td>8 ret</td>
+<td>D/E/M 时 F stall、D bubble，W_valM 恢复</td>
+<td>正常代价三周期</td>
+</tr>
+<tr>
+<td>9 综合与组合 A/B</td>
+<td>完整 HCL，尤其 D_bubble=B或非L且R</td>
+<td>load-use+ret 必须 D stall，不能同时 bubble</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>4.57(A) 的新增前递只改变“待存数据可晚给”的情况；正文给出检测公式和地址依赖反例。</li>
+</ul>
+<h2 id="section-16">第 12 讲研讨 1：存储器与设备访问<a class="anchor" href="#section-16" aria-label="链接到本节">#</a></h2>
+<p>正文入口：<a href="12-memory-hierarchy.html">12 存储层次</a>。下面对应第一组全部 9 小问。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>小问</th>
+<th>应展开的内容</th>
+<th>关键检查</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 CPU/总线/主存</td>
+<td>分别画 load/store 地址与数据方向、读写控制</td>
+<td>地址 A 与保存的数据 x/y 分开</td>
+</tr>
+<tr>
+<td>2 RAM 名称</td>
+<td>RAM 包含 SRAM/DRAM，SDRAM 属同步 DRAM，DDR 属双沿接口</td>
+<td>MHz、MT/s、预取宽度分开</td>
+</tr>
+<tr>
+<td>3 SRAM/DRAM</td>
+<td>单元、刷新、速度、密度、成本、可靠性</td>
+<td>SRAM 同样易失，可靠性不等于是否刷新</td>
+</tr>
+<tr>
+<td>4 ROM 家族</td>
+<td>ROM/PROM/EPROM/EEPROM/Flash 的编程和擦除</td>
+<td>固件用途不能反推一定不可重写</td>
+</tr>
+<tr>
+<td>5 DRAM 与模块</td>
+<td>RAS 整行→行缓冲→CAS 列；八 x8 位片并行</td>
+<td>16×8 芯片不是 16 byte×8；模块容量单位核对</td>
+</tr>
+<tr>
+<td>6 HDD 结构/容量</td>
+<td>盘片、盘面、磁道、扇区、柱面、zone</td>
+<td>厂商未给出的物理几何不编造</td>
+</tr>
+<tr>
+<td>7 HDD 访问</td>
+<td>寻道→旋转→传输，RPM 换算与平均时间</td>
+<td>排队/跨轨成本须按题设另计</td>
+</tr>
+<tr>
+<td>8 DMA</td>
+<td>命令/块号/目的地址→设备读取→DMA→中断</td>
+<td>中断通知，不搬运数据内容</td>
+</tr>
+<tr>
+<td>9 SSD 对比</td>
+<td>页读写、块擦除、FTL、回收、磨损、随机/顺序指标</td>
+<td>TBW 与擦除次数不是同一指标</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="section-17">第 12 讲研讨 2：局部性与缓存<a class="anchor" href="#section-17" aria-label="链接到本节">#</a></h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>小问</th>
+<th>应展开的内容</th>
+<th>关键检查</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 一维循环</td>
+<td>区分指令/数据、时间/空间四种分析</td>
+<td>数组顺序访问不等于重复访问同一元素</td>
+</tr>
+<tr>
+<td>2 二维布局</td>
+<td>行优先地址与行/列循环字节步长</td>
+<td>小工作集可能改变命中表现</td>
+</tr>
+<tr>
+<td>3 三维布局</td>
+<td>写线性地址，令最后维最内层</td>
+<td>课件 a[k][i][j] 的下标范围须一起修正</td>
+</tr>
+<tr>
+<td>4 层次原因</td>
+<td>速度/容量/价格差异，加程序局部性</td>
+<td>目标是多数访问快，不是所有访问一样快</td>
+</tr>
+<tr>
+<td>5 真实计算机</td>
+<td>标寄存器、各级缓存、DRAM、SSD 容量与共享范围</td>
+<td>未公开的缓存容量明确留作实机/技术资料核对</td>
+</tr>
+<tr>
+<td>6 Cache 操作</td>
+<td>块、hit/miss、取回、placement/replacement</td>
+<td>地址字节偏移与块号分开</td>
+</tr>
+<tr>
+<td>7 三类 miss</td>
+<td>首次访问、冲突、容量与参考模型</td>
+<td>满缓存不自动说明是容量缺失</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>型号与照片调研使用正文中的厂商原始页面；不以旧课件价格、寿命和型号文字充当当前规格。第 12 讲第二组实际为 7 小问，均已列入。</li>
+</ul>
+<div class="pager"><a href="12-past-papers.html">上一章<br>附录 B · 往年题与勘误</a><a href="14-coverage.html">下一章<br>附录 D · 课件覆盖索引与来源</a></div><footer>理解表示，追踪执行。<span><a href="14-coverage.html">资料来源与覆盖范围</a></span></footer></main><aside aria-label="本页目录"><div class="nav-label">本页内容</div><a href="#section-1">第 2 讲：表示与整数</a><a href="#section-2">第 3 讲：浮点的术语与设计</a><a href="#section-3">两个事故案例及应当学到什么</a><a href="#section-4">第 4 讲：硬件与指令拓展</a><a href="#section-5">第 5 讲：控制流拓展</a><a href="#section-6">第 6 讲：ABI 与递归拓展</a><a href="#section-7">第 7 讲：数组、对齐与浮点拓展</a><a href="#section-8">第 9 讲研讨 1：体系结构设计（逐项路线）</a><a href="#section-9">第 9 讲研讨 2：逻辑设计（逐项路线）</a><a href="#section-10">第 10 讲研讨 1：指令操作分解（逐项路线）</a><a href="#section-11">第 10 讲研讨 2：SEQ 部件设计（逐项路线）</a><a href="#section-12">指定教材作业：题号与应掌握的方法</a><a href="#section-13">最后一次边界检查清单</a><a href="#section-14">第 11 讲研讨 1：流水化与基本数据通路</a><a href="#section-15">第 11 讲研讨 2：冒险与控制组合</a><a href="#section-16">第 12 讲研讨 1：存储器与设备访问</a><a href="#section-17">第 12 讲研讨 2：局部性与缓存</a><a href="#main">回到顶部 ↑</a></aside></div><script src="app.js"></script></body></html>
