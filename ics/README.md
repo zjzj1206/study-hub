@@ -47,3 +47,8 @@ $$
 ## 代码高亮
 
 C、AT&T/x86/Y86 汇编与 HCL 代码在构建时由本地 Pygments 高亮，无需浏览器加载第三方脚本。代码围栏分别使用 c、asm、hcl；text 保持纯文本。verify_code.py 检查高亮后文字与源码逐字一致，并校验源码压缩包包含高亮模块与依赖。
+
+
+## 硬件总图与读图正文
+
+第 10、11 章分别以 `assets/hardware-seq.jpg`、`assets/hardware-pipe.jpg` 两张用户提供的原始照片为总图。图片点击打开原文件；稳定定位点为 `10-sequential.html#seq-hardware` 和 `11-pipeline.html#pipe-hardware`，整本阅读中也保留这两个锚点。正文围绕图内模块、字段、选择器、反馈与状态边界讲解，局部 SVG 作为辅助展开。两张 JPG 随 source.zip 一并提供，不压缩或改写原图。

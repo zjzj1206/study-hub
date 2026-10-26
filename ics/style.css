@@ -28,3 +28,8 @@ main img[src^="seq-"] { display:block; width:100%; height:auto; border:1px solid
 @media print { main img[src^="seq-"] { max-height:235mm; object-fit:contain; break-inside:avoid; } }
 
 main img[src^="pipe-"], main img[src^="memory-"] {display:block;width:100%;height:auto;border:1px solid #d9e2ec;border-radius:12px;margin:1.4rem 0;background:white;}
+
+/* Full hardware photographs remain readable on narrow screens and open as originals. */
+main .hardware-photo {display:block;width:100%;max-width:100%;height:auto;margin:1.5rem 0;border:1px solid var(--line);border-radius:8px;background:white;scroll-margin-top:100px;}
+main a:has(>.hardware-photo) {display:block;cursor:zoom-in;}
+@media print {main .hardware-photo {max-height:245mm;object-fit:contain;break-inside:avoid;}}

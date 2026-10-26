@@ -1,6 +1,72 @@
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>10 · SEQ 顺序处理器与 HCL 控制 · ZJZJ / ICS</title><meta name="description" content="北京大学 ICS 复习手册：课程知识、公式推导、边界情况、小班拓展与往年题导航。"><link rel="stylesheet" href="katex/katex.min.css"><link rel="stylesheet" href="style.css"><link rel="icon" href="favicon.svg" type="image/svg+xml"></head><body><a class="skip" href="#main">跳到正文</a><header><a class="brand" href="index.html">ZJZJ<span> / ICS NOTES</span></a><div class="header-right"><a href="https://blog.zjzj.work/">学习空间</a><a href="all.html">整本阅读</a><button type="button" onclick="window.print()">打印</button><button id="menu" aria-expanded="false" aria-controls="chapters">目录</button></div></header><div class="layout"><nav id="chapters" aria-label="章节目录"><div class="nav-label">2026 · 复习手册</div><a  href="00-guide.html">复习范围与使用说明</a><a  href="01-overview.html">01 · 系统概述与基本模型</a><a  href="02-integers.html">02 · 位、字节与整数</a><a  href="03-floating-point.html">03 · 浮点表示、舍入与运算</a><a  href="04-assembly-basics.html">04 · 机器级编程基础</a><a  href="05-control.html">05 · 条件码、分支、循环与 switch</a><a  href="06-procedures.html">06 · 过程调用、栈与 ABI</a><a  href="07-data.html">07 · 数组、结构体、指针与浮点汇编</a><a  href="08-advanced.html">08 · 机器级进阶与内存安全</a><a  href="09-isa-logic.html">09 · Y86-64 指令集与逻辑设计</a><a aria-current=page href="10-sequential.html">10 · SEQ 顺序处理器与 HCL 控制</a><a  href="11-pipeline.html">11 · PIPE 流水线与冒险控制</a><a  href="12-memory-hierarchy.html">12 · 存储技术、局部性与存储层次</a><a  href="11-quiz01.html">附录 A · 第一次测验答案回查</a><a  href="12-past-papers.html">附录 B · 往年题与勘误</a><a  href="13-seminars.html">附录 C · 小班研讨与作业</a><a  href="14-coverage.html">附录 D · 课件覆盖索引与来源</a><div class="nav-foot">依据本地课件与公开题库<br>更新于 2026.10.26</div></nav><main id="main"><div class="eyebrow">COMPUTER SYSTEMS · PEKING UNIVERSITY</div><h1>10 · SEQ 顺序处理器与 HCL 控制</h1>
 <p>依据第 10 讲 2026-10-19 课件全部 51 页及对应研讨单。<a href="09-isa-logic.html">第 09 章</a>规定 Y86 的行为，本章把每类指令拆成相同的六个逻辑阶段，再汇总成控制信号。<strong>SEQ 一条指令占一个长周期，六阶段不是六个时钟周期，也不是六级流水线。</strong></p>
-<h2 id="section-1">从机器状态到六个阶段<a class="anchor" href="#section-1" aria-label="链接到本节">#</a></h2>
+<h2 id="section-1">先看硬件总图：同一条指令怎样走完整个电路<a class="anchor" href="#section-1" aria-label="链接到本节">#</a></h2>
+<p><a href="hardware-seq.jpg"><img id="seq-hardware" class="hardware-photo" width="1104" height="1276" loading="lazy" decoding="async" src="hardware-seq.jpg" alt="SEQ 硬件结构总图：底部 PC、取指与译码，中部 ALU，上部数据内存与新 PC，以及右侧写回线路" /></a></p>
+<p>用户提供的 SEQ 硬件结构照片。点击打开原图，手机/平板可放大查看线路；后文的“总图”均指这张图。六张分模块矢量图用来展开局部选择器，阅读时始终回到总图定位它们的位置。</p>
+<h3 id="section-2">读图顺序与图形含义<a class="anchor" href="#section-2" aria-label="链接到本节">#</a></h3>
+<ul>
+<li><strong>第一遍，自下而上找部件</strong>：最底部 <code>PC</code> → 左下“指令内存”和右下“PC 增加” → 中下“寄存器文件” → 中部 <code>ALU A / ALU B / ALU fun.</code> 与 ALU → 上方“地址/数据/内存控制”及“数据内存” → 顶部“新 PC”。</li>
+<li><strong>第二遍，追右侧回路</strong>：ALU 的 <code>valE</code>、数据内存的 <code>valM</code> 经右侧长实线送回寄存器文件的 E/M 写端口；顶部“新 PC”的输出再沿最右侧绕回底部 PC。这些回路分别更新程序寄存器与下一条指令地址。</li>
+<li><strong>矩形与圆角框</strong>：蓝色部件包含指令内存、数据内存、寄存器文件、ALU、CC 等；灰色圆角框负责选择或产生控制，例如 <code>srcA/srcB/dstE/dstM</code>、“地址”“数据”“内存控制”和“新 PC”。某部件是否保存状态要结合功能判断，ALU 是组合电路，CC 才保存条件码。</li>
+<li><strong>圆圈只是信号名</strong>：<code>valA</code>、<code>valB</code>、<code>valE</code>、<code>Cnd</code>、<code>Stat</code> 等圆圈用于标识线路，不表示该处另有一级寄存器。不要把圆圈数目当作时钟周期数。</li>
+<li><strong>实线与虚线</strong>：原图实线传递数据、地址或寄存器编号；虚线主要表达控制关系，例如 Cnd 控制目的选择与 PC 选择。注意寄存器编号也是一组线路上的编码，不是寄存器数据本身。交叉是否相连看分支点与线路走向，不能把所有交叉都连起来。</li>
+<li><strong>同一周期的含义</strong>：本图没有 PIPE 那样横贯整张图的 D/E/M/W 流水线寄存器条。当前指令的各组合信号在一个长周期内传播，约定时钟沿再完成正常指令的状态更新。</li>
+</ul>
+<h3 id="section-3">把图中的位置和接下来的小节对应起来<a class="anchor" href="#section-3" aria-label="链接到本节">#</a></h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>总图位置 / 标记</th>
+<th>先看输入从哪里来</th>
+<th>再看输出送往哪里</th>
+<th>本章对应部分</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>底部 PC、指令内存、PC 增加</td>
+<td>PC 是本周期的旧地址</td>
+<td><code>icode/ifun/rA/rB/valC/valP</code> 向上与向侧面分流</td>
+<td>Fetch</td>
+</tr>
+<tr>
+<td>寄存器文件及其上方编号选择框</td>
+<td><code>rA/rB/icode</code>，以及栈寄存器常量</td>
+<td>A/B 读口给 <code>valA/valB</code>；E/M 是两个写口</td>
+<td>Decode / Write back</td>
+</tr>
+<tr>
+<td>ALU A、ALU B、ALU fun.、ALU</td>
+<td><code>valA/valB/valC</code>、固定常量与 <code>ifun/icode</code></td>
+<td><code>valE</code> 同时可能流向内存地址与寄存器写口</td>
+<td>Execute</td>
+</tr>
+<tr>
+<td>CC 与 Cnd</td>
+<td>ALU 候选标志写入 CC，旧 CC 配合 ifun 判断条件</td>
+<td>Cnd 送条件传送目的选择和新 PC 选择</td>
+<td>Execute / PC update</td>
+</tr>
+<tr>
+<td>地址、数据、内存控制、数据内存</td>
+<td>地址与写数据分别选择，读写使能另算</td>
+<td>读出 <code>valM</code>，错误给 <code>dmem_error</code></td>
+<td>Memory</td>
+</tr>
+<tr>
+<td>顶部新 PC、左上 stat</td>
+<td><code>valC/valP/valM/Cnd/icode</code> 与错误信号</td>
+<td>新地址回到底部 PC；Stat 指示执行状态</td>
+<td>PC update / 状态</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li><strong>分清两种“内存”</strong>：底部指令内存给出指令编码，上部数据内存给 load/pop/ret 的数据。图按功能分别画出接口，不意味着程序代码和数据在 ISA 中必定属于两个互不相干的地址空间。</li>
+<li><strong>分清两种“寄存器”</strong>：PC、CC 和寄存器文件属于会保存状态的部件；<code>srcA/dstE</code> 只是组合逻辑选出的编号。本图中的“寄存器文件”即 register file，也常称寄存器堆，不是操作系统文件。</li>
+<li>对照阅读：<a href="11-pipeline.html#pipe-hardware">PIPE 总图</a>保留大量相同功能部件，却在中间插入流水线寄存器，并把多个后级结果反馈给 D 级选择器。</li>
+</ul>
+<h2 id="section-4">从机器状态到六个阶段<a class="anchor" href="#section-4" aria-label="链接到本节">#</a></h2>
 <ul>
 <li><strong>Fetch 取指</strong>：用 PC 读指令字节，得到 <code>icode/ifun</code>、可选 <code>rA/rB</code>、可选常数 valC，同时形成顺序后继 valP。</li>
 <li><strong>Decode 译码/读寄存器</strong>：控制 srcA/srcB 选择需要的寄存器，读出 valA/valB。</li>
@@ -9,7 +75,7 @@
 <li><strong>Write back 写回</strong>：将 valE 写到 dstE、valM 写到 dstM；RNONE 表示该端口不写寄存器。</li>
 <li><strong>PC update 更新 PC</strong>：在 valP、valC、valM 中选择下一 PC。</li>
 </ul>
-<h3 id="section-2">信号不是同义词<a class="anchor" href="#section-2" aria-label="链接到本节">#</a></h3>
+<h3 id="section-5">信号不是同义词<a class="anchor" href="#section-5" aria-label="链接到本节">#</a></h3>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -76,7 +142,7 @@
 <li>数据通路中的“箭头”表示组合信号传播；架构状态在时钟沿才统一提交正常指令的结果。</li>
 <li>以下步骤表假设指令与地址有效；故障状态需走后面的状态控制。</li>
 </ul>
-<h2 id="section-3">每类指令的六阶段操作<a class="anchor" href="#section-3" aria-label="链接到本节">#</a></h2>
+<h2 id="section-6">每类指令的六阶段操作<a class="anchor" href="#section-6" aria-label="链接到本节">#</a></h2>
 <p>共同取指规则：首字节分成 <code>icode:ifun</code>；需要寄存器字节时从 PC+1 读取；常数字段从 PC+1 或 PC+2 开始读取。下表直接用 <code>R[%rsp]</code> 表示该指令执行前的栈指针值。</p>
 <div class="table-scroll"><table>
 <thead>
@@ -221,22 +287,27 @@
 <p><code>call</code> 与 push 共用 <code>R[%rsp]−8</code>，但写数据分别为 valP 和 valA；<code>ret</code> 与 pop 共用从旧栈顶读，但读出值分别流向 PC 和寄存器。</p>
 </li>
 </ul>
-<h3 id="section-4">数值追踪：pop、call、ret<a class="anchor" href="#section-4" aria-label="链接到本节">#</a></h3>
+<h3 id="section-7">数值追踪：pop、call、ret<a class="anchor" href="#section-7" aria-label="链接到本节">#</a></h3>
 <ul>
 <li><strong>pop</strong>：设 <code>%rsp=0x200</code>，<code>M8[0x200]=0x1234</code>。<code>popq %rax</code> 读得 valA=valB=0x200，valE=0x208，valM=0x1234，写回 <code>%rsp=0x208,%rax=0x1234</code>。</li>
 <li><strong>popq %rsp</strong>：同样初值执行 <code>popq %rsp</code>，最终 <code>%rsp=0x1234</code>；不能写成 0x208。</li>
 <li><strong>call</strong>：地址 <code>0x100</code> 的 <code>call 0x300</code>，原 <code>%rsp=0x200</code>，有 valP=0x109、valE=0x1f8，故 <code>M8[0x1f8]=0x109</code>、新 <code>%rsp=0x1f8</code>、新 PC=0x300。</li>
 <li><strong>ret</strong>：被调过程保持该返回栈布局时，ret 读出 0x109，恢复 <code>%rsp=0x200</code>，转回 0x109。返回地址是完整 call 后继，不是 call 首地址加 1。</li>
 </ul>
-<h2 id="section-5">六张模块图怎么读<a class="anchor" href="#section-5" aria-label="链接到本节">#</a></h2>
+<h2 id="section-8">总图与六张局部图怎样配合阅读<a class="anchor" href="#section-8" aria-label="链接到本节">#</a></h2>
 <ul>
-<li><strong>蓝色实线</strong> 表示数据、指令字段或寄存器编号的传递；<strong>橙色虚线</strong> 表示控制条件。箭头指向接收信号的单元。</li>
+<li>以下六张局部矢量图中，<strong>深色实线</strong> 表示数据、指令字段或寄存器编号，<strong>橙色虚线</strong> 表示控制；箭头指向接收端。总图照片使用原书的实线/虚线与配色，两套图例分别适用。</li>
 <li>按实际连线追踪 <strong>来源 → 功能单元 → 去向</strong>，主数据通路大多自下而上。实心圆点表示分支连接；交叉但没有圆点的线互不相连。同名跨图信号表示同一条连接，不代表额外寄存器或额外周期。</li>
 <li><strong>梯形是多路选择器</strong>：底部接各候选数据，顶部输出选择结果，侧面的虚线接选择控制。端口数字仅用于区分候选输入，不是指令编码；对应的选择条件列在图下，并可与本节 HCL 逐项对照。浅蓝色矩形是数据通路或存储单元，浅橙色圆角矩形是控制逻辑。</li>
 <li><code>icode</code>、<code>ifun</code>、<code>rA/rB</code> 均来自 Fetch；<code>Cnd</code> 来自 Execute 的条件判断。数据字和地址为 64 位，寄存器编号与 <code>icode/ifun</code> 为 4 位，条件与使能为 1 位。</li>
 <li><code>CLK</code> 是处理器的公共时钟。图中写使能描述正常执行；停止和错误下的状态提交还要服从处理器执行状态控制。六张图均画基础指令集，<code>iaddq</code> 的新增路径见后文扩展清单。</li>
 </ul>
-<h2 id="section-6">Fetch：字段位置、长度和有效性<a class="anchor" href="#section-6" aria-label="链接到本节">#</a></h2>
+<h2 id="section-9">Fetch：字段位置、长度和有效性<a class="anchor" href="#section-9" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>在总图中定位</strong>：看最底部 PC 向左上接“指令内存”、向右上接“PC 增加”的分叉。它们同时使用当前 PC，分别产生字段与顺序后继 <code>valP</code>。</li>
+<li><strong>从字段追去向</strong>：<code>rA/rB</code> 送编号选择；<code>valC</code> 既通向 ALU A，又沿长线通向顶部新 PC；<code>valP</code> 也分流到新 PC 和 call 的写内存数据选择。<code>icode/ifun</code> 决定上层部件的选择方式，图没有把所有控制扇出都逐根展开。</li>
+<li><strong>左侧的错误线</strong>：<code>imem_error</code> 与 <code>instr_valid</code> 最终送到上方 stat；它们处理“取指是否正常”，与本条跳转条件 Cnd 是两回事。</li>
+</ul>
 <p><a href="seq-fetch.svg"><img src="seq-fetch.svg" alt="Fetch：取指内存、编码选择、字段对齐、长度计算及有效性检查" /></a></p>
 <p>点击图可打开矢量电路大图，放大后文字、分支点与连线仍清晰。</p>
 <pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">icode</span> <span class="tok-o">=</span> <span class="tok-p">[</span> <span class="tok-n">imem_error</span> <span class="tok-p">:</span> <span class="tok-no">INOP</span><span class="tok-p">;</span> <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-n">imem_icode</span><span class="tok-p">;</span> <span class="tok-p">];</span>
@@ -262,7 +333,12 @@
 <li>取指地址错误时输出 nop 型编码，是让下游组合逻辑获得确定输入；Stat 仍报告 ADR，不能因此认为出错指令成功变成可继续执行的 nop。</li>
 <li>这里 <code>instr_valid</code> 是课件给出的<strong>icode 类别检查</strong>，不等于完整验证每种 ifun、寄存器字段与编码组合；模拟器/扩展实现应按实际 ISA 再作检查。</li>
 </ul>
-<h2 id="section-7">Decode：两个读端口与源寄存器选择<a class="anchor" href="#section-7" aria-label="链接到本节">#</a></h2>
+<h2 id="section-10">Decode：两个读端口与源寄存器选择<a class="anchor" href="#section-10" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>在总图中定位</strong>：看取指字段上方、寄存器文件附近的 <code>srcA/srcB</code> 选择框。它们先选“读哪个寄存器”，A/B 端口才输出 <code>valA/valB</code>。</li>
+<li><strong>沿 valA 的分叉看用途</strong>：一条送 ALU A，一条向上送内存“数据”，还可送“地址”供 pop/ret 读取旧栈顶；一条线同时有多个下游不表示会多执行一条指令。</li>
+<li><strong>沿 valB 看用途</strong>：主要送 ALU B，作为算术 B 操作数、访存基址或旧 <code>R[%rsp]</code>。寄存器文件右边标 E/M 的线是稍后写回的输入，不是额外两个读口。</li>
+</ul>
 <p><a href="seq-decode.svg"><img src="seq-decode.svg" alt="Decode：srcA/srcB 的全部来源及寄存器堆的两个读端口" /></a></p>
 <p>点击图可打开矢量电路大图，放大后文字、分支点与连线仍清晰。</p>
 <pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">srcA</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
@@ -283,7 +359,12 @@
 <li><code>mrmovq</code> 只写 dstM；<code>popq</code> 同时写 dstE 和 dstM；<code>rmmovq/jXX</code> 均不写寄存器。</li>
 <li><code>IRRMOVQ</code> 包括条件传送，其 dstE 由 Cnd 使能。RNONE 是抑制端口的编号，不是“向某个假寄存器写零”。</li>
 </ul>
-<h2 id="section-8">Execute：ALU 的两个输入、功能和 CC<a class="anchor" href="#section-8" aria-label="链接到本节">#</a></h2>
+<h2 id="section-11">Execute：ALU 的两个输入、功能和 CC<a class="anchor" href="#section-11" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>在总图中定位</strong>：中间的 ALU 下面是 <code>ALU A/ALU B</code> 两个输入选择，右侧 <code>ALU fun.</code> 选择运算，左侧 CC 保存条件码。三个选择各司其职：数据 A、数据 B、运算类型。</li>
+<li><strong>沿 valE 向上和向右追踪</strong>：它送内存地址选择器，供 load/store 或压栈访问；也绕到寄存器文件的 E 端口，供算术结果和新的 <code>%rsp</code> 写回。<code>valE</code> 不固定等于“要存入内存的数据”。</li>
+<li><strong>沿 Cnd 的虚线追踪</strong>：它由已保存 CC 和 <code>ifun</code> 决定，向下影响条件传送的 <code>dstE</code>，向上影响顶部新 PC。图中的 CC 更新与 Cnd 判断要分开理解。</li>
+</ul>
 <p><a href="seq-execute.svg"><img src="seq-execute.svg" alt="Execute：ALU 输入与功能选择、条件码写使能以及 Cnd 来源" /></a></p>
 <p>点击图可打开矢量电路大图，放大后文字、分支点与连线仍清晰。</p>
 <ul>
@@ -312,7 +393,12 @@
 <li><code>alufun=ifun</code> 仅对 OPq 成立；其他需要 ALU 的指令统一使用加法，不能把 cmov 的条件功能码当成 ALU 运算码。</li>
 <li>上面是课件的正常执行控制。停止或地址错误下，是否提交各状态还需要执行状态/使能控制；不能把这个 set_cc 片段单独当作完整异常处理方案。</li>
 </ul>
-<h2 id="section-9">Memory：地址、数据与读写使能<a class="anchor" href="#section-9" aria-label="链接到本节">#</a></h2>
+<h2 id="section-12">Memory：地址、数据与读写使能<a class="anchor" href="#section-12" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>在总图中定位</strong>：ALU 上方的“地址”和“数据”是两个独立选择器，再上方才是数据内存；左侧“内存控制”单独提供读/写使能。</li>
+<li><strong>分别追三组输入</strong>：地址选 <code>valE</code> 或旧栈顶 <code>valA</code>；写数据选 <code>valA</code> 或 call 的返回地址 <code>valP</code>；读写使能由 <code>icode</code> 产生。只看某条地址线有数值，不能认定发生了内存访问。</li>
+<li><strong>追输出的两条用途</strong>：数据出口 <code>valM</code> 沿右侧回寄存器 M 端口，也向上送新 PC（ret）；<code>dmem_error</code> 则沿虚线到 stat，不作为返回数据或跳转条件。</li>
+</ul>
 <p><a href="seq-memory.svg"><img src="seq-memory.svg" alt="Memory：地址与写数据所有来源、读写使能及错误输出" /></a></p>
 <p>点击图可打开矢量电路大图，放大后文字、分支点与连线仍清晰。</p>
 <pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">mem_addr</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
@@ -334,7 +420,12 @@
 <li>call 的写数据必须是 valP；若错接 valC，就把被调函数地址而非返回地址压栈，ret 将跳错。</li>
 <li>每次正常指令最多进行一次本节所指的数据内存读或写；取指内存访问另算。</li>
 </ul>
-<h2 id="section-10">Write back：两个目的选择器与双写端口<a class="anchor" href="#section-10" aria-label="链接到本节">#</a></h2>
+<h2 id="section-13">Write back：两个目的选择器与双写端口<a class="anchor" href="#section-13" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>在总图中定位</strong>：回到中下部“寄存器文件”右侧 E/M 两个写入口。E 的数据沿右侧长回路来自 ALU 的 <code>valE</code>；M 的数据来自数据内存的 <code>valM</code>。</li>
+<li><strong>地址线和数据线配对</strong>：<code>dstE</code> 指明 <code>valE</code> 写到哪里，<code>dstM</code> 指明 <code>valM</code> 写到哪里。目的编号由下方控制框生成，不能把 E/M 当成两种寄存器名称。</li>
+<li><strong>为何写回画在译码附近</strong>：读端口和写端口属于同一寄存器堆，所以物理位置靠近；“Write back”是功能步骤，不要求图上另放一个写回存储器。</li>
+</ul>
 <p><a href="seq-writeback.svg"><img src="seq-writeback.svg" alt="Write back：dstE/dstM 的来源、写数据、时钟使能与冲突优先级" /></a></p>
 <p>点击图可打开矢量电路大图，放大后文字、分支点与连线仍清晰。</p>
 <pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">dstE</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
@@ -353,7 +444,12 @@
 <li><strong>条件传送的控制路径</strong>：Fetch 的 <code>ifun</code> 与旧 CC 先产生 <code>Cnd</code>；<code>icode</code> 与 <code>Cnd</code> 再决定 <code>dstE</code> 是 <code>rB</code> 还是 <code>RNONE</code>。条件假时 ALU 可以照常算出 <code>valE</code>，但 E 端口不写。</li>
 <li><strong>两个端口属于同一个寄存器堆</strong>：它们在同一提交时钟沿生效。若目的编号相同，以 M 端口为准；因此 <code>popq %rsp</code> 最终得到内存中的弹出值。</li>
 </ul>
-<h2 id="section-11">PC update：状态与下一 PC 的优先选择<a class="anchor" href="#section-11" aria-label="链接到本节">#</a></h2>
+<h2 id="section-14">PC update：状态与下一 PC 的优先选择<a class="anchor" href="#section-14" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>在总图中定位</strong>：顶部横向“新 PC”接收三路候选地址：来自取指的 <code>valP/valC</code>，来自数据内存的 <code>valM</code>；<code>icode</code> 与 Cnd 决定选择。最右侧最外圈长线把结果送回底部 PC。</li>
+<li><strong>别把回路当作当前指令重取一次</strong>：新 PC 是当前指令产生的候选后继，在提交后成为下一周期的取指地址；数据回路与时钟状态边界共同构成连续执行。</li>
+<li><strong>左上 stat 是另一条链</strong>：<code>imem_error/dmem_error/instr_valid/icode</code> 产生状态，表明正常、地址错、非法指令或停止。Stat 与 Cnd 不相同，也不能用新 PC 的数值替代停止控制。</li>
+</ul>
 <p><a href="seq-pc-update.svg"><img src="seq-pc-update.svg" alt="PC update：valC/valM/valP 的选择控制、PC 反馈及状态路径" /></a></p>
 <p>点击图可打开矢量电路大图，放大后文字、分支点与连线仍清晰。</p>
 <pre><code class="language-hcl"><span class="tok-kt">int</span> <span class="tok-n">Stat</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
@@ -374,14 +470,52 @@
 <li>call 总选择 valC；条件跳转只有条件真才选择 valC；ret 选择 valM；普通指令和未跳转的 JXX 选择 valP。</li>
 <li>条件不满足的 cmov 仍取 valP，并且不修改目的寄存器和 CC。</li>
 </ul>
-<h2 id="section-12">一周期内什么变化，时钟沿上什么变化<a class="anchor" href="#section-12" aria-label="链接到本节">#</a></h2>
+<h2 id="section-15">对照总图，完整追踪四种典型情况<a class="anchor" href="#section-15" aria-label="链接到本节">#</a></h2>
+<h3 id="section-16">算术：addq %rax,%rbx<a class="anchor" href="#section-16" aria-label="链接到本节">#</a></h3>
 <ul>
-<li>周期开始时，PC、寄存器堆、CC、数据内存提供旧状态。</li>
-<li>取指、读寄存器、ALU、条件判断、内存读与各选择器在周期内传播，候选写回值和新 PC 逐渐稳定。</li>
-<li>正常指令在约定的上升沿更新状态；新状态出现后，组合网络开始为下一条指令传播。不能因为图上画了“Write back”，就额外给它安排一拍。</li>
-<li>对 <code>rmmovq</code>，更新的是数据内存而不是程序寄存器；对 OPq，寄存器与 CC 更新；对 jXX，主要更新 PC。</li>
+<li><strong>给定旧状态</strong>：<code>R[%rax]=5</code>、<code>R[%rbx]=7</code>。先在底部取指识别 <code>OPq</code>、加法 <code>ifun</code> 和两个寄存器字段。</li>
+<li><strong>走到寄存器文件</strong>：<code>srcA=%rax</code>、<code>srcB=%rbx</code>，A/B 输出 <code>valA=5</code>、<code>valB=7</code>。</li>
+<li><strong>走到 ALU</strong>：ALU A 选 5，ALU B 选 7，ALU fun. 选加法，得到 <code>valE=12</code>；同时形成候选 CC。</li>
+<li><strong>沿右侧写回</strong>：E 数据口收到 12，<code>dstE=%rbx</code>；M 端口不写，数据内存读写均不使能。正常提交后 <code>%rbx=12</code>，CC 更新，顶部新 PC 选择 <code>valP</code>。</li>
 </ul>
-<h3 id="section-13">课件 pp.47–50 的执行轨迹<a class="anchor" href="#section-13" aria-label="链接到本节">#</a></h3>
+<h3 id="section-17">加载：mrmovq 8(%rbx),%rax<a class="anchor" href="#section-17" aria-label="链接到本节">#</a></h3>
+<ul>
+<li><strong>给定旧状态</strong>：<code>R[%rbx]=0x100</code>，<code>M8[0x108]=42</code>。取指把位移 8 放入 <code>valC</code>，寄存器文件 B 口读出 <code>valB=0x100</code>。</li>
+<li><strong>走到 ALU 和地址框</strong>：ALU A 选 <code>valC=8</code>，B 选 <code>valB</code>，产生 <code>valE=0x108</code>；内存“地址”框选 valE，内存控制置读使能。</li>
+<li><strong>走到数据出口</strong>：数据内存给 <code>valM=42</code>，它沿右侧送 M 写数据口；<code>dstM=%rax</code>，所以提交后 <code>%rax=42</code>。E 口不写，不能把算出的地址 0x108 写进 <code>%rax</code>。</li>
+<li><strong>走到顶部</strong>：这条不是 ret，虽然 valM 也连向新 PC 选择器，PC 仍选 <code>valP</code>。接了线不代表每条指令都选择这条输入。</li>
+</ul>
+<h3 id="section-18">调用与返回：call 和 ret 的路线不同<a class="anchor" href="#section-18" aria-label="链接到本节">#</a></h3>
+<ul>
+<li><strong>call 的三条支路</strong>：<code>valC</code> 从取指沿长线送顶部，成为函数入口；<code>valP</code> 送内存“数据”框，作为返回地址保存；旧 <code>R[%rsp]</code> 从 B 口经 ALU 加 −8，得到新栈顶 <code>valE</code>，同时用作写内存地址和 E 口写回的新 <code>%rsp</code>。</li>
+<li><strong>ret 的三条支路</strong>：A/B 口都读旧 <code>R[%rsp]</code>；A 的旧值经内存地址框读取返回地址 <code>valM</code>；B 经 ALU 加 8 得到恢复后的栈指针 <code>valE</code>。最后 valM 向上决定新 PC，valE 经右侧回 E 口更新 <code>%rsp</code>。</li>
+<li><strong>由图解释先后</strong>：压栈写新栈顶，弹栈读旧栈顶；它们由不同输入选择实现，不是执行阶段把 <code>%rsp</code> 先写了一次，再让访存重新读一次寄存器。</li>
+</ul>
+<h3 id="section-19">条件传送与条件跳转：共用 Cnd，控制对象不同<a class="anchor" href="#section-19" aria-label="链接到本节">#</a></h3>
+<ul>
+<li><code>cmovXX</code> 的数据仍可经 ALU 算出，但 Cnd 为假时 <code>dstE=RNONE</code>，切断有效写回；顶部 PC 正常选 <code>valP</code>。</li>
+<li><code>jXX</code> 不需要写程序寄存器；Cnd 为真时顶部选 <code>valC</code>，否则选 <code>valP</code>。它使用左侧已保存 CC，不把自身为其他用途形成的 ALU 结果写成新 CC。</li>
+<li><a href="#seq-hardware">回到 SEQ 总图</a>，分别用手指出“数据怎么走”和“哪个选择器控制是否生效”，再看前面的六阶段表，就能把表中每一格落实到线路。</li>
+</ul>
+<h2 id="section-20">一周期内什么变化，时钟沿上什么变化<a class="anchor" href="#section-20" aria-label="链接到本节">#</a></h2>
+<ul>
+<li>
+<p><strong>对照总图找状态边界</strong>：底部 PC、中下寄存器文件、左侧 CC 和数据内存会保存状态；中间选择器、ALU 及顶部新 PC 先产生候选值。长回线把候选值送到状态输入，不会让状态在逻辑计算尚未结束时随意反复改变。</p>
+</li>
+<li>
+<p>周期开始时，PC、寄存器堆、CC、数据内存提供旧状态。</p>
+</li>
+<li>
+<p>取指、读寄存器、ALU、条件判断、内存读与各选择器在周期内传播，候选写回值和新 PC 逐渐稳定。</p>
+</li>
+<li>
+<p>正常指令在约定的上升沿更新状态；新状态出现后，组合网络开始为下一条指令传播。不能因为图上画了“Write back”，就额外给它安排一拍。</p>
+</li>
+<li>
+<p>对 <code>rmmovq</code>，更新的是数据内存而不是程序寄存器；对 OPq，寄存器与 CC 更新；对 jXX，主要更新 PC。</p>
+</li>
+</ul>
+<h3 id="section-21">课件 pp.47–50 的执行轨迹<a class="anchor" href="#section-21" aria-label="链接到本节">#</a></h3>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -428,7 +562,10 @@
 <li>第 3 周期的计算先使用旧 rbx=0x100；它变成 0x300 后，下一条指令才看到新结果。</li>
 <li>je 必须读取 addq 设置的 ZF。它自身不能把“用于形成地址的 ALU 结果”写成新的标志。</li>
 </ul>
-<h2 id="section-14">作业 4.51：扩展 iaddq 的完整改动清单<a class="anchor" href="#section-14" aria-label="链接到本节">#</a></h2>
+<h2 id="section-22">作业 4.51：扩展 iaddq 的完整改动清单<a class="anchor" href="#section-22" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>在总图上标改动位置</strong>：从取指的常数/长度控制，到 <code>srcB/dstE</code>，再到 ALU A/B 与 CC 写使能，逐个修改。图中 ALU 已有加法通路，新增指令通常重用硬件，重点是把各控制选择接正确。</li>
+</ul>
 <p>设扩展采用 <code>icode=C, ifun=0</code>、<code>FrB</code> 与 8 字节立即数字段，<code>iaddq V,rB</code> 语义为 <code>R[rB] ← R[rB]+V</code>，并更新 CC。这是作业扩展，基础 Y86 指令表未包含它。</p>
 <ul>
 <li><strong>取指</strong>：将该扩展的指令常量名记为 <code>IIADDQ</code>；将它加入 instr_valid、need_regids、need_valC，长度为 10。</li>
@@ -439,12 +576,24 @@
 <li><strong>PC</strong>：普通顺序路径选择 valP，不需增加分支项。</li>
 <li><strong>测试</strong>：正数、负立即数、零结果、有符号溢出以及 <code>rB=%rsp</code> 都应核对；每种测试分别看结果、标志和 PC。</li>
 </ul>
-<h2 id="section-15">性能边界与课件勘误<a class="anchor" href="#section-15" aria-label="链接到本节">#</a></h2>
+<h2 id="section-23">性能边界与课件勘误<a class="anchor" href="#section-23" aria-label="链接到本节">#</a></h2>
 <ul>
-<li><strong>时钟周期下界</strong>：必须覆盖本设计最慢的组合路径及建立/时钟开销。典型长路径涉及取指、寄存器读、ALU、数据内存读与写回选择，不能只按一次加法延迟定频率。</li>
-<li>SEQ 的优点是每条指令使用统一阶段，控制逻辑容易由操作表推导；缺点是所有指令都等待最坏路径，各单元在一个长周期内只有部分时间有用。</li>
-<li>后续流水线可改善吞吐率，但本章不把流水线、缓存或程序优化的旧资料自动并入当前课程范围。</li>
-<li>第 16 页的 popq 编码末半字节应按 ISA 为 F；第 33 页的立即数传送未用寄存器位也应为 F，A0 那一行应是 pushq。第 39 页残留 <code>OPl/rmmovl</code> 字样按本课 64 位模型读为 <code>OPq/rmmovq</code>。</li>
+<li>
+<p><strong>在总图上看关键路径</strong>：对 load，数据沿 <code>PC → 指令内存 → 寄存器读 → ALU 地址 → 数据内存 → M 写口</code> 传播；SEQ 周期必须容纳这样的长路径。PIPE 则把它切在流水线寄存器边界之间，具体见下一章总图。</p>
+</li>
+<li>
+<p><strong>时钟周期下界</strong>：必须覆盖本设计最慢的组合路径及建立/时钟开销。典型长路径涉及取指、寄存器读、ALU、数据内存读与写回选择，不能只按一次加法延迟定频率。</p>
+</li>
+<li>
+<p>SEQ 的优点是每条指令使用统一阶段，控制逻辑容易由操作表推导；缺点是所有指令都等待最坏路径，各单元在一个长周期内只有部分时间有用。</p>
+</li>
+<li>
+<p>后续流水线可改善吞吐率，但本章不把流水线、缓存或程序优化的旧资料自动并入当前课程范围。</p>
+</li>
+<li>
+<p>第 16 页的 popq 编码末半字节应按 ISA 为 F；第 33 页的立即数传送未用寄存器位也应为 F，A0 那一行应是 pushq。第 39 页残留 <code>OPl/rmmovl</code> 字样按本课 64 位模型读为 <code>OPq/rmmovq</code>。</p>
+</li>
 </ul>
+<p>总图来源：用户于 2026-10-26 提供的 SEQ 硬件结构照片，原图保留；局部 SVG 是本手册绘制的展开图。</p>
 <p>来源：本地第 10 讲课件 pp.1–51、第 10 讲小班研讨单；HCL 常量名与六阶段约定以教材第 4 章的 SEQ 模型为准。</p>
-<div class="pager"><a href="09-isa-logic.html">上一章<br>09 · Y86-64 指令集与逻辑设计</a><a href="11-pipeline.html">下一章<br>11 · PIPE 流水线与冒险控制</a></div><footer>理解表示，追踪执行。<span><a href="14-coverage.html">资料来源与覆盖范围</a></span></footer></main><aside aria-label="本页目录"><div class="nav-label">本页内容</div><a href="#section-1">从机器状态到六个阶段</a><a href="#section-2">信号不是同义词</a><a href="#section-3">每类指令的六阶段操作</a><a href="#section-4">数值追踪：pop、call、ret</a><a href="#section-5">六张模块图怎么读</a><a href="#section-6">Fetch：字段位置、长度和有效性</a><a href="#section-7">Decode：两个读端口与源寄存器选择</a><a href="#section-8">Execute：ALU 的两个输入、功能和 CC</a><a href="#section-9">Memory：地址、数据与读写使能</a><a href="#section-10">Write back：两个目的选择器与双写端口</a><a href="#section-11">PC update：状态与下一 PC 的优先选择</a><a href="#section-12">一周期内什么变化，时钟沿上什么变化</a><a href="#section-13">课件 pp.47–50 的执行轨迹</a><a href="#section-14">作业 4.51：扩展 iaddq 的完整改动清单</a><a href="#section-15">性能边界与课件勘误</a><a href="#main">回到顶部 ↑</a></aside></div><script src="app.js"></script></body></html>
+<div class="pager"><a href="09-isa-logic.html">上一章<br>09 · Y86-64 指令集与逻辑设计</a><a href="11-pipeline.html">下一章<br>11 · PIPE 流水线与冒险控制</a></div><footer>理解表示，追踪执行。<span><a href="14-coverage.html">资料来源与覆盖范围</a></span></footer></main><aside aria-label="本页目录"><div class="nav-label">本页内容</div><a href="#section-1">先看硬件总图：同一条指令怎样走完整个电路</a><a href="#section-2">读图顺序与图形含义</a><a href="#section-3">把图中的位置和接下来的小节对应起来</a><a href="#section-4">从机器状态到六个阶段</a><a href="#section-5">信号不是同义词</a><a href="#section-6">每类指令的六阶段操作</a><a href="#section-7">数值追踪：pop、call、ret</a><a href="#section-8">总图与六张局部图怎样配合阅读</a><a href="#section-9">Fetch：字段位置、长度和有效性</a><a href="#section-10">Decode：两个读端口与源寄存器选择</a><a href="#section-11">Execute：ALU 的两个输入、功能和 CC</a><a href="#section-12">Memory：地址、数据与读写使能</a><a href="#section-13">Write back：两个目的选择器与双写端口</a><a href="#section-14">PC update：状态与下一 PC 的优先选择</a><a href="#section-15">对照总图，完整追踪四种典型情况</a><a href="#section-16">算术：addq %rax,%rbx</a><a href="#section-17">加载：mrmovq 8(%rbx),%rax</a><a href="#section-18">调用与返回：call 和 ret 的路线不同</a><a href="#section-19">条件传送与条件跳转：共用 Cnd，控制对象不同</a><a href="#section-20">一周期内什么变化，时钟沿上什么变化</a><a href="#section-21">课件 pp.47–50 的执行轨迹</a><a href="#section-22">作业 4.51：扩展 iaddq 的完整改动清单</a><a href="#section-23">性能边界与课件勘误</a><a href="#main">回到顶部 ↑</a></aside></div><script src="app.js"></script></body></html>
