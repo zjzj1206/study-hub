@@ -11,3 +11,6 @@
 .card-content li>strong:first-child,.proof-content li>strong:first-child{color:var(--accent)}
 .card-content li .katex-display,.proof-content li .katex-display{text-align:left;margin:.8em 0}
 @media(max-width:760px){.card-content>ul,.proof-content>ul{padding-left:1.1em}.card-content li,.proof-content li{padding-left:.1em}}
+
+/* Exact cheat-sheet excerpts remain readable on narrow screens. */
+.card-content img[src^="cheatsheet-lines/"]{display:block;width:100%;height:auto;background:#fff;border:1px solid var(--line);border-radius:5px;margin:12px 0}

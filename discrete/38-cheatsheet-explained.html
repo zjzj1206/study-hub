@@ -1,0 +1,45 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cheat Sheet 逐条解读与证明 · 离散数学与结构 (I)</title><meta name="description" content="离散数学与结构 (I)：集合与逻辑、代数、组合、概率与信息、图论，含可折叠的知识条目、证明与往年试卷。"><link rel="stylesheet" href="katex/katex.min.css"><link rel="stylesheet" href="style.css"><link rel="icon" href="favicon.svg"></head><body><a class="skip" href="#main">跳到正文</a><header><a class="brand" href="index.html">ZJZJ <span>/ DISCRETE</span></a><div><a href="/">学习空间</a><a href="all.html">整本阅读</a><button id="menu" aria-controls="chapters" aria-expanded="false">目录</button></div></header><div class="layout"><nav id="chapters" aria-label="章节目录"><p class="nav-label">离散数学与结构 (I)</p><a href="00-guide.html" >离散数学与结构 (I)</a><a href="01-sets.html" >01 · 集合、关系与无穷</a><a href="02-logic.html" >02 · 命题逻辑与证明系统</a><a href="03-foundations.html" >03 · 一阶逻辑、算术与公理集合论</a><a href="04-number.html" >04 · 初等数论</a><a href="05-groups.html" >05 · 群与同态</a><a href="06-actions.html" >06 · 群作用与 Sylow 定理</a><a href="07-rings.html" >07 · 环、理想与整除结构</a><a href="08-fields.html" >08 · 域、有限域与 Galois 理论</a><a href="09-counting.html" >09 · 组合计数与生成函数</a><a href="10-probability.html" >10 · 概率基础与概率生成函数</a><a href="11-information.html" >11 · 熵、散度与互信息</a><a href="12-concentration.html" >12 · 集中不等式与大偏差</a><a href="13-fourier.html" >13 · 离散 Fourier 变换</a><a href="14-coding.html" >14 · 压缩与信道编码</a><a href="15-markov.html" >15 · 马尔可夫链与混合时间</a><a href="16-graphs.html" >16 · 图论、平面图与谱图论</a><a href="17-method.html" >17 · 概率方法</a><a href="18-exams.html" >18 · 往年试卷与作业</a><a href="19-supplement.html" >19 · 补充试卷：34 题原文整理</a><a href="20-exercise-index.html" >20 · 官方逐题索引与作业入口</a><a href="21-optimization.html" >21 · 线性规划、网络流与稳定匹配</a><a href="22-asymptotics.html" >22 · 渐近分析与估算工具</a><a href="23-coverage.html" >23 · 教材与笔记对照阅读</a><a href="24-knowledge-map.html" >24 · 完整知识目录与学习路线</a><a href="25-cheatsheet.html" >期中 Cheat Sheet · 四面 A4</a><a href="26-cheatsheet-p1-c1.html" >Cheat Sheet 解读 · 第1面左栏 · 集合与序</a><a href="27-cheatsheet-p1-c2.html" >Cheat Sheet 解读 · 第1面中栏 · 命题与一阶逻辑</a><a href="28-cheatsheet-p1-c3.html" >Cheat Sheet 解读 · 第1面右栏 · PA、ZFC 与元定理</a><a href="29-cheatsheet-p2-c1.html" >Cheat Sheet 解读 · 第2面左栏 · 数论</a><a href="30-cheatsheet-p2-c2.html" >Cheat Sheet 解读 · 第2面中栏 · 群与同构</a><a href="31-cheatsheet-p2-c3.html" >Cheat Sheet 解读 · 第2面右栏 · 群作用与 Sylow</a><a href="32-cheatsheet-p3-c1.html" >Cheat Sheet 解读 · 第3面左栏 · 环与理想</a><a href="33-cheatsheet-p3-c2.html" >Cheat Sheet 解读 · 第3面中栏 · 域与有限域</a><a href="34-cheatsheet-p3-c3.html" >Cheat Sheet 解读 · 第3面右栏 · 代数例题</a><a href="35-cheatsheet-p4-c1.html" >Cheat Sheet 解读 · 第4面左栏 · 计数模型</a><a href="36-cheatsheet-p4-c2.html" >Cheat Sheet 解读 · 第4面中栏 · 生成函数与反演</a><a href="37-cheatsheet-p4-c3.html" >Cheat Sheet 解读 · 第4面右栏 · Burnside 与着色</a><a href="38-cheatsheet-explained.html" aria-current="page">Cheat Sheet 逐条解读与证明</a><p class="nav-foot">课程主线与历年拓展<br>系统学习版 · 2026.10.15</p></nav><main id="main"><div class="study-controls" aria-label="阅读展开选项"><button data-study="definitions">只展开定义</button><button data-study="content">展开条目正文</button><button data-study="proofs">展开全部证明</button><button data-study="close">全部收起</button></div><div class="eyebrow">STRUCTURES · PROOFS · CONNECTIONS</div><h1>Cheat Sheet 逐条解读与证明</h1>
+<p>本册按网站当前四面速查表的项目符号逐条对应，共265条。每条保留原文公式，并配相关定义、条件、证明或推导；部分压缩较多的计算与推理另加逐句步骤。</p>
+<p><a href="25-cheatsheet.html">打开速查表及下载页面</a></p>
+<h2 id="38-cheatsheet-explained-section-1">四面十二栏</h2>
+<ul>
+<li>
+<p><a href="26-cheatsheet-p1-c1.html">Cheat Sheet 解读 · 第1面左栏 · 集合与序</a></p>
+</li>
+<li>
+<p><a href="27-cheatsheet-p1-c2.html">Cheat Sheet 解读 · 第1面中栏 · 命题与一阶逻辑</a></p>
+</li>
+<li>
+<p><a href="28-cheatsheet-p1-c3.html">Cheat Sheet 解读 · 第1面右栏 · PA、ZFC 与元定理</a></p>
+</li>
+<li>
+<p><a href="29-cheatsheet-p2-c1.html">Cheat Sheet 解读 · 第2面左栏 · 数论</a></p>
+</li>
+<li>
+<p><a href="30-cheatsheet-p2-c2.html">Cheat Sheet 解读 · 第2面中栏 · 群与同构</a></p>
+</li>
+<li>
+<p><a href="31-cheatsheet-p2-c3.html">Cheat Sheet 解读 · 第2面右栏 · 群作用与 Sylow</a></p>
+</li>
+<li>
+<p><a href="32-cheatsheet-p3-c1.html">Cheat Sheet 解读 · 第3面左栏 · 环与理想</a></p>
+</li>
+<li>
+<p><a href="33-cheatsheet-p3-c2.html">Cheat Sheet 解读 · 第3面中栏 · 域与有限域</a></p>
+</li>
+<li>
+<p><a href="34-cheatsheet-p3-c3.html">Cheat Sheet 解读 · 第3面右栏 · 代数例题</a></p>
+</li>
+<li>
+<p><a href="35-cheatsheet-p4-c1.html">Cheat Sheet 解读 · 第4面左栏 · 计数模型</a></p>
+</li>
+<li>
+<p><a href="36-cheatsheet-p4-c2.html">Cheat Sheet 解读 · 第4面中栏 · 生成函数与反演</a></p>
+</li>
+<li>
+<p><a href="37-cheatsheet-p4-c3.html">Cheat Sheet 解读 · 第4面右栏 · Burnside 与着色</a></p>
+</li>
+</ul>
+<h2 id="38-cheatsheet-explained-section-2">对照复习方法</h2>
+<p>先按 PDF 的面、栏和项目符号找到条目，再展开原文和讲解。建议先自己解释符号与适用条件，再打开内层证明核对。重复知识点保留原位置，便于顺着纸面读。Henkin、Gödel、Zorn 等长理论沿用章节里标明的证明路线；这里不会把证明提纲标成完整形式化证明。</p>
+<div class="pager"><a href="37-cheatsheet-p4-c3.html"><small>上一章</small>Cheat Sheet 解读 · 第4面右栏 · Burnside 与着色</a></div><footer><a href="00-guide.html">资料来源与范围</a><span>先思考，再展开。</span></footer></main><aside aria-label="本页目录"><p class="nav-label">本页内容</p><a href="#38-cheatsheet-explained-section-1">四面十二栏</a><a href="#38-cheatsheet-explained-section-2">对照复习方法</a><a href="#main">回到顶部 ↑</a></aside></div><script src="app.js"></script></body></html>
