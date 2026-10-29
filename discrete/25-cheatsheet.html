@@ -1,0 +1,56 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>期中 Cheat Sheet · 四面 A4 · 离散数学与结构 (I)</title><meta name="description" content="离散数学与结构 (I)：集合与逻辑、代数、组合、概率与信息、图论，含可折叠的知识条目、证明与往年试卷。"><link rel="stylesheet" href="katex/katex.min.css"><link rel="stylesheet" href="style.css"><link rel="icon" href="favicon.svg"></head><body><a class="skip" href="#main">跳到正文</a><header><a class="brand" href="index.html">ZJZJ <span>/ DISCRETE</span></a><div><a href="/">学习空间</a><a href="all.html">整本阅读</a><button id="menu" aria-controls="chapters" aria-expanded="false">目录</button></div></header><div class="layout"><nav id="chapters" aria-label="章节目录"><p class="nav-label">离散数学与结构 (I)</p><a href="00-guide.html" >离散数学与结构 (I)</a><a href="01-sets.html" >01 · 集合、关系与无穷</a><a href="02-logic.html" >02 · 命题逻辑与证明系统</a><a href="03-foundations.html" >03 · 一阶逻辑、算术与公理集合论</a><a href="04-number.html" >04 · 初等数论</a><a href="05-groups.html" >05 · 群与同态</a><a href="06-actions.html" >06 · 群作用与 Sylow 定理</a><a href="07-rings.html" >07 · 环、理想与整除结构</a><a href="08-fields.html" >08 · 域、有限域与 Galois 理论</a><a href="09-counting.html" >09 · 组合计数与生成函数</a><a href="10-probability.html" >10 · 概率基础与概率生成函数</a><a href="11-information.html" >11 · 熵、散度与互信息</a><a href="12-concentration.html" >12 · 集中不等式与大偏差</a><a href="13-fourier.html" >13 · 离散 Fourier 变换</a><a href="14-coding.html" >14 · 压缩与信道编码</a><a href="15-markov.html" >15 · 马尔可夫链与混合时间</a><a href="16-graphs.html" >16 · 图论、平面图与谱图论</a><a href="17-method.html" >17 · 概率方法</a><a href="18-exams.html" >18 · 往年试卷与作业</a><a href="19-supplement.html" >19 · 补充试卷：34 题原文整理</a><a href="20-exercise-index.html" >20 · 官方逐题索引与作业入口</a><a href="21-optimization.html" >21 · 线性规划、网络流与稳定匹配</a><a href="22-asymptotics.html" >22 · 渐近分析与估算工具</a><a href="23-coverage.html" >23 · 教材与笔记对照阅读</a><a href="24-knowledge-map.html" >24 · 完整知识目录与学习路线</a><a href="25-cheatsheet.html" aria-current="page">期中 Cheat Sheet · 四面 A4</a><p class="nav-foot">课程主线与历年拓展<br>系统学习版 · 2026.10.15</p></nav><main id="main"><div class="study-controls" aria-label="阅读展开选项"><button data-study="definitions">只展开定义</button><button data-study="content">展开条目正文</button><button data-study="proofs">展开全部证明</button><button data-study="close">全部收起</button></div><div class="eyebrow">STRUCTURES · PROOFS · CONNECTIONS</div><h1>期中 Cheat Sheet · 四面 A4</h1>
+<p><strong>两张纸，双面共四面。</strong> 范围从集合到计数（含），对应本站第 01–09 章。更新于 2026-10-29。</p>
+<h2 id="25-cheatsheet-section-1">下载与打印</h2>
+<ul>
+<li><a href="downloads/discrete-midterm-cheatsheet.pdf">打开或下载四面版 PDF</a></li>
+<li><a href="downloads/discrete-cheatsheet-editable.zip">下载可编辑源码包（含 PDF、Typst 源码、构建脚本与详细说明）</a></li>
+</ul>
+<p>打印选择：<strong>全部 4 页、A4 横向、实际大小 100%、双面短边翻转</strong>，共两张纸。每面已经排成三栏，请勿再开启“每张多页”。正文和公式为 7.5pt，高公式保留上下间距。</p>
+<h2 id="25-cheatsheet-section-2">四面的内容</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>面</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>集合、关系、无穷与序数；命题和一阶逻辑；PA、ZFC、模型与元定理</td>
+</tr>
+<tr>
+<td>2</td>
+<td>整除、同余、CRT、模幂；群、商群和结构；群作用、类方程与 Sylow</td>
+</tr>
+<tr>
+<td>3</td>
+<td>环、理想和不可约判定；域扩张、有限域与 Galois；代数计算和旧期中题型</td>
+</tr>
+<tr>
+<td>4</td>
+<td>计数模型、容斥、Stirling 数；生成函数与反演；Burnside、Pólya 和着色例题</td>
+</tr>
+</tbody>
+</table></div>
+<p>内容包括定义、定理条件、公式、短证明、计算模板与反例。它用于考试速查；需要完整长证明时，回到本站相应章节阅读。</p>
+<h2 id="25-cheatsheet-section-3">自己修改与重新构建</h2>
+<p>解压源码包后，内容位于 <code>cheatsheet/sections/</code>，每个 <code>.typ</code> 文件对应一栏。排版参数位于 <code>cheatsheet/main.typ</code>，完整修改说明见 <code>cheatsheet/README.md</code>。</p>
+<p>在解压目录运行：</p>
+<pre><code class="language-bash">bash cheatsheet/build.sh
+</code></pre>
+<p>第一次需要联网，脚本会建立独立 Python 环境并安装固定版本依赖；之后可离线构建。需要 Python 3.10+、venv 和中文字体。本版使用 Noto Serif CJK SC 与 Noto Sans CJK SC，换字体后请重新检查排版。</p>
+<p>输出为 <code>output/pdf/discrete-midterm-cheatsheet.pdf</code>。构建会检查已知公式语法风险、各栏高度、A4 纸张和总页数必须为 4；失败时保留原 PDF。</p>
+<p>Windows 用户可在解压目录运行：</p>
+<pre><code class="language-powershell">python -m venv .venv
+.venv\Scripts\python -m pip install -r cheatsheet\requirements.txt
+.venv\Scripts\python cheatsheet\build.py
+</code></pre>
+<h2 id="25-cheatsheet-section-4">复习时配合使用</h2>
+<ul>
+<li><a href="01-sets.html">从集合与无穷开始</a></li>
+<li><a href="09-counting.html">计数与生成函数</a></li>
+<li><a href="24-knowledge-map.html">完整知识目录</a></li>
+<li><a href="20-exercise-index.html">官方作业与试卷索引</a></li>
+</ul>
+<div class="pager"><a href="24-knowledge-map.html"><small>上一章</small>24 · 完整知识目录与学习路线</a></div><footer><a href="00-guide.html">资料来源与范围</a><span>先思考，再展开。</span></footer></main><aside aria-label="本页目录"><p class="nav-label">本页内容</p><a href="#25-cheatsheet-section-1">下载与打印</a><a href="#25-cheatsheet-section-2">四面的内容</a><a href="#25-cheatsheet-section-3">自己修改与重新构建</a><a href="#25-cheatsheet-section-4">复习时配合使用</a><a href="#main">回到顶部 ↑</a></aside></div><script src="app.js"></script></body></html>
