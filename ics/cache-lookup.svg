@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="900" viewBox="0 0 1000 900" role="img" aria-labelledby="title desc"><title id="title">Cache 读访问 / 索引选组、标记比较、偏移选字节</title><desc id="desc">连线式 SEQ 电路图。实线为数据，虚线为控制，圆点表示分支连接，无圆点交叉不连接。</desc>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#243c54"/></marker><marker id="c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#b45309"/></marker></defs><style>text{font-family:"Noto Sans CJK SC","Microsoft YaHei",sans-serif;fill:#172c45;font-size:18px}.label{paint-order:stroke;stroke:white;stroke-width:4px;stroke-linejoin:round}</style>
+<rect width="1000" height="900" fill="white"/>
+<text class="label" x="30" y="38" text-anchor="start" style="font-size:25px;">Cache 读访问 / 索引选组、标记比较、偏移选字节</text>
+<text class="label" x="30" y="72" text-anchor="start" style="font-size:16px;">实线：数据 / 字段　　虚线：控制　　●：连接点　　交叉无点：不连接</text>
+<rect x="100" y="130" width="300" height="60" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="250.0" y="166.0" text-anchor="middle" style="font-size:18px;">tag：T（t 位）</text>
+<rect x="400" y="130" width="200" height="60" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="500.0" y="166.0" text-anchor="middle" style="font-size:18px;">index：j（s 位）</text>
+<rect x="600" y="130" width="200" height="60" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="700.0" y="166.0" text-anchor="middle" style="font-size:18px;">offset：o（b 位）</text>
+<rect x="410" y="270" width="180" height="55" rx="10" fill="#fff2df" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="500.0" y="303.5" text-anchor="middle" style="font-size:18px;">组选择：j</text>
+<path d="M500,190 L500,270" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<rect x="80" y="390" width="360" height="100" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="260.0" y="433.5" text-anchor="middle" style="font-size:18px;">路 0</text>
+<text class="label" x="260.0" y="458.5" text-anchor="middle" style="font-size:18px;">valid / tag / B 字节数据</text>
+<rect x="560" y="390" width="360" height="100" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="740.0" y="433.5" text-anchor="middle" style="font-size:18px;">路 1</text>
+<text class="label" x="740.0" y="458.5" text-anchor="middle" style="font-size:18px;">valid / tag / B 字节数据</text>
+<path d="M455,325 L455,355 L260,355 L260,390" fill="none" stroke="#b45309" stroke-width="2.3" stroke-dasharray="6 5" marker-end="url(#c)"/>
+<path d="M545,325 L545,355 L740,355 L740,390" fill="none" stroke="#b45309" stroke-width="2.3" stroke-dasharray="6 5" marker-end="url(#c)"/>
+<rect x="180" y="560" width="160" height="70" rx="10" fill="#fff2df" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="260.0" y="601.0" text-anchor="middle" style="font-size:18px;">v 且 tag=T</text>
+<path d="M200,490 L200,560" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="260" y="655" text-anchor="middle" style="font-size:18px;">hit0</text>
+<rect x="660" y="560" width="160" height="70" rx="10" fill="#fff2df" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="740.0" y="601.0" text-anchor="middle" style="font-size:18px;">v 且 tag=T</text>
+<path d="M680,490 L680,560" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="740" y="655" text-anchor="middle" style="font-size:18px;">hit1</text>
+<path d="M250,190 L250,225 L30,225 L30,595 L180,595" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<path d="M250,225 L940,225 L940,595 L820,595" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<circle cx="250" cy="225" r="4.5" fill="#243c54"/>
+<rect x="450" y="710" width="200" height="60" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="550.0" y="746.0" text-anchor="middle" style="font-size:18px;">命中路 / 字节选择</text>
+<path d="M340,595 L395,595 L395,680 L480,680 L480,710" fill="none" stroke="#b45309" stroke-width="2.3" stroke-dasharray="6 5" marker-end="url(#c)"/>
+<path d="M660,595 L610,595 L610,680 L550,680 L550,710" fill="none" stroke="#b45309" stroke-width="2.3" stroke-dasharray="6 5" marker-end="url(#c)"/>
+<path d="M350,490 L350,740 L450,740" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="355" y="700" text-anchor="start" style="font-size:15px;">data0</text>
+<path d="M850,490 L850,740 L650,740" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="855" y="700" text-anchor="start" style="font-size:15px;">data1</text>
+<path d="M700,190 L700,250 L975,250 L975,800 L620,800 L620,770" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="780" y="790" text-anchor="start" style="font-size:15px;">块内偏移 o</text>
+<path d="M500,770 L500,820" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="500" y="850" text-anchor="middle" style="font-size:18px;">命中：返回数据；两路均未命中：请求下一级装块</text>
+<text class="label" x="30" y="875" text-anchor="start" style="font-size:17px;">图示 E=2；更多路重复比较逻辑。地址没有单独的“路号”位域。</text>
+</svg>

@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="730" viewBox="0 0 1000 730" role="img" aria-labelledby="title desc"><title id="title">矩阵分块 / 同时保留 A、B、C 的三个子块</title><desc id="desc">连线式 SEQ 电路图。实线为数据，虚线为控制，圆点表示分支连接，无圆点交叉不连接。</desc>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#243c54"/></marker><marker id="c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#b45309"/></marker></defs><style>text{font-family:"Noto Sans CJK SC","Microsoft YaHei",sans-serif;fill:#172c45;font-size:18px}.label{paint-order:stroke;stroke:white;stroke-width:4px;stroke-linejoin:round}</style>
+<rect width="1000" height="730" fill="white"/>
+<text class="label" x="30" y="38" text-anchor="start" style="font-size:25px;">矩阵分块 / 同时保留 A、B、C 的三个子块</text>
+<text class="label" x="30" y="72" text-anchor="start" style="font-size:16px;">实线：数据 / 字段　　虚线：控制　　●：连接点　　交叉无点：不连接</text>
+<text class="label" x="175" y="140" text-anchor="middle" style="font-size:25px;">A</text>
+<rect x="65" y="190" width="220" height="220" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<path d="M120,190 L120,410" fill="none" stroke="#243c54" stroke-width="2.3"/>
+<path d="M65,245 L285,245" fill="none" stroke="#243c54" stroke-width="2.3"/>
+<path d="M175,190 L175,410" fill="none" stroke="#243c54" stroke-width="2.3"/>
+<path d="M65,300 L285,300" fill="none" stroke="#243c54" stroke-width="2.3"/>
+<path d="M230,190 L230,410" fill="none" stroke="#243c54" stroke-width="2.3"/>
+<path d="M65,355 L285,355" fill="none" stroke="#243c54" stroke-width="2.3"/>
+<rect x="177" y="247" width="51" height="51" fill="#b7e1db"/>
+<text class="label" x="175" y="460" text-anchor="middle" style="font-size:18px;">q × q 子块</text>
+<text class="label" x="475" y="140" text-anchor="middle" style="font-size:25px;">B</text>
+<rect x="365" y="190" width="220" height="220" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<path d="M420,190 L420,410" fill="none" stroke="#243c54" stroke-width="2.3"/>
+<path d="M365,245 L585,245" fill="none" stroke="#243c54" stroke-width="2.3"/>
+<path d="M475,190 L475,410" fill="none" stroke="#243c54" stroke-width="2.3"/>
+<path d="M365,300 L585,300" fill="none" stroke="#243c54" stroke-width="2.3"/>
+<path d="M530,190 L530,410" fill="none" stroke="#243c54" stroke-width="2.3"/>
+<path d="M365,355 L585,355" fill="none" stroke="#243c54" stroke-width="2.3"/>
+<rect x="422" y="302" width="51" height="51" fill="#b7e1db"/>
+<text class="label" x="475" y="460" text-anchor="middle" style="font-size:18px;">q × q 子块</text>
+<text class="label" x="775" y="140" text-anchor="middle" style="font-size:25px;">C</text>
+<rect x="665" y="190" width="220" height="220" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<path d="M720,190 L720,410" fill="none" stroke="#243c54" stroke-width="2.3"/>
+<path d="M665,245 L885,245" fill="none" stroke="#243c54" stroke-width="2.3"/>
+<path d="M775,190 L775,410" fill="none" stroke="#243c54" stroke-width="2.3"/>
+<path d="M665,300 L885,300" fill="none" stroke="#243c54" stroke-width="2.3"/>
+<path d="M830,190 L830,410" fill="none" stroke="#243c54" stroke-width="2.3"/>
+<path d="M665,355 L885,355" fill="none" stroke="#243c54" stroke-width="2.3"/>
+<rect x="722" y="247" width="51" height="51" fill="#b7e1db"/>
+<text class="label" x="775" y="460" text-anchor="middle" style="font-size:18px;">q × q 子块</text>
+<text class="label" x="324" y="300" text-anchor="middle" style="font-size:28px;">×</text>
+<text class="label" x="625" y="300" text-anchor="middle" style="font-size:28px;">→</text>
+<rect x="230" y="520" width="540" height="70" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="500.0" y="561.0" text-anchor="middle" style="font-size:18px;">C[ii,jj] += A[ii,kk] × B[kk,jj]</text>
+<path d="M175,410 L175,555 L230,555" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<path d="M475,410 L475,520" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<path d="M770,555 L920,555 L920,300 L885,300" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="30" y="678" text-anchor="start" style="font-size:17px;">对固定 C 子块，沿 kk 逐段累加；每个 A/B 子块装入后在内层重复使用。</text>
+<text class="label" x="30" y="705" text-anchor="start" style="font-size:17px;">double 元素：三个子块约需 24q² byte；实际选 q 还要留容量和映射余量。</text>
+</svg>

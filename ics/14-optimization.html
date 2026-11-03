@@ -1,0 +1,295 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>14 · 程序优化、依赖链与指令级并行 · ZJZJ / ICS</title><meta name="description" content="北京大学 ICS 复习手册：课程知识、公式推导、边界情况、小班拓展与往年题导航。"><link rel="stylesheet" href="katex/katex.min.css"><link rel="stylesheet" href="style.css?v=a60546c16e95"><link rel="icon" href="favicon.svg" type="image/svg+xml"></head><body><a class="skip" href="#main">跳到正文</a><header><a class="brand" href="index.html">ZJZJ<span> / ICS NOTES</span></a><div class="header-right"><a href="https://blog.zjzj.work/">学习空间</a><a href="all.html">整本阅读</a><button type="button" onclick="window.print()">打印</button><button id="menu" aria-expanded="false" aria-controls="chapters">目录</button></div></header><div class="layout"><nav id="chapters" aria-label="章节目录"><div class="nav-label">2026 · 复习手册</div><a  href="00-guide.html">复习范围与使用说明</a><a  href="01-overview.html">01 · 系统概述与基本模型</a><a  href="02-integers.html">02 · 位、字节与整数</a><a  href="03-floating-point.html">03 · 浮点表示、舍入与运算</a><a  href="04-assembly-basics.html">04 · 机器级编程基础</a><a  href="05-control.html">05 · 条件码、分支、循环与 switch</a><a  href="06-procedures.html">06 · 过程调用、栈与 ABI</a><a  href="07-data.html">07 · 数组、结构体、指针与浮点汇编</a><a  href="08-advanced.html">08 · 机器级进阶与内存安全</a><a  href="09-isa-logic.html">09 · Y86-64 指令集与逻辑设计</a><a  href="10-sequential.html">10 · SEQ 顺序处理器与 HCL 控制</a><a  href="11-pipeline.html">11 · PIPE 流水线与冒险控制</a><a  href="12-memory-hierarchy.html">12 · 存储技术、局部性与存储层次</a><a  href="13-cache-memories.html">13 · Cache 组织、访问与局部性优化</a><a aria-current=page href="14-optimization.html">14 · 程序优化、依赖链与指令级并行</a><a  href="11-quiz01.html">附录 A · 第一次测验答案回查</a><a  href="12-past-papers.html">附录 B · 往年题与勘误</a><a  href="13-seminars.html">附录 C · 小班研讨与作业</a><a  href="14-coverage.html">附录 D · 课件覆盖索引与来源</a><div class="nav-foot">依据本地课件与公开题库<br>更新于 2026.11.03</div></nav><main id="main"><div class="eyebrow">COMPUTER SYSTEMS · PEKING UNIVERSITY</div><h1>14 · 程序优化、依赖链与指令级并行</h1>
+<p>依据第14讲 2026-11-02 课件全部69页、第14讲研讨单，并补充教材 combine1～4 的分步说明。主线是：先保持语义正确，再减少重复工作和访存，最后通过数据依赖图判断怎样利用执行部件的并行能力。第13章解决“数据怎么更快取到”，本章继续解决“取到之后怎样更快算完”。</p>
+<h2 id="section-1">先问优化什么：算法、常数与机器瓶颈<a class="anchor" href="#section-1" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>渐近复杂度</strong>描述规模增加时的增长趋势；同为 O(n) 的程序仍可能因函数调用、缓存行为和依赖链而相差很大。先选合适算法，再优化热点常数，避免把低效算法仅仅写得更复杂。</li>
+<li><strong>分层优化</strong>：算法与数据表示 → 过程接口 → 循环结构 → 指令与执行资源。测量最内层热点，而不是凭源代码行数判断。</li>
+<li><strong>编译器常做的事</strong>：寄存器分配、指令选择/调度、死代码删除、常量传播、公共表达式与循环优化。能否做具体变换取决于是否可证明合法，以及目标机器/编译选项。</li>
+<li><strong>根本约束</strong>：保留语言要求的可观察行为。指针重叠、函数副作用、浮点舍入、volatile/原子访问等都可能限制重排。</li>
+<li><strong>正确性边界</strong>：无符号算术按模 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mi>w</mi></msup></mrow><annotation encoding="application/x-tex">2^w</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0269em;">w</span></span></span></span></span></span></span></span></span></span></span></span> 定义；有符号整数溢出在 C 中不是可移植回绕；浮点运算不是实数运算。后文涉及重结合时会明确这些条件。</li>
+</ul>
+<h2 id="section-2">Code motion：循环不变量提到外面<a class="anchor" href="#section-2" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>循环不变量</strong>是在该循环各次迭代中保持同一值的表达式。若无额外副作用、异常或访问有效性变化，可减少它的执行频率。</li>
+<li><strong>课件 set_row</strong>：<code>a[i*n+j]=b[j]</code> 中，i、n 在内层不变；可把 i*n 和行首地址提前算好，内层只更新 j 或指针。</li>
+<li><strong>变换前提</strong>：提前执行不会使原来 n=0 时不发生的非法内存访问、除零等变成必然发生；也不能因改用更窄类型截断结果。第6页的临时 <code>int ni</code> 不适合通用 long 下标，第7页的 <code>long ni</code> 更符合原类型。</li>
+</ul>
+<pre><code class="language-c"><span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-nf">copy_row</span><span class="tok-p">(</span><span class="tok-kt">double</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">a</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">double</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">b</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-k">for</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-n">j</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-n">j</span><span class="tok-w"> </span><span class="tok-o">&lt;</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-o">++</span><span class="tok-n">j</span><span class="tok-p">)</span>
+<span class="tok-w">        </span><span class="tok-n">a</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-o">*</span><span class="tok-n">n</span><span class="tok-o">+</span><span class="tok-n">j</span><span class="tok-p">]</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-n">b</span><span class="tok-p">[</span><span class="tok-n">j</span><span class="tok-p">];</span>
+<span class="tok-p">}</span>
+</code></pre>
+<ul>
+<li><strong>本机编译结果</strong>：GCC 13.3.0、x86-64、<code>-O2 -fno-tree-vectorize</code>；下面省略指令标签之外的函数元数据，不改循环中的指令。<code>imulq</code> 与 <code>leaq</code> 在回跳标签之前，每次函数调用只需算一次行地址。</li>
+</ul>
+<pre><code class="language-asm"><span class="tok-w">    </span><span class="tok-nf">testq</span><span class="tok-w"> </span><span class="tok-nv">%rcx</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rcx</span>
+<span class="tok-w">    </span><span class="tok-nf">je</span><span class="tok-w"> </span><span class="tok-no">.L1</span>
+<span class="tok-w">    </span><span class="tok-nf">imulq</span><span class="tok-w"> </span><span class="tok-nv">%rcx</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rdx</span>
+<span class="tok-w">    </span><span class="tok-nf">xorl</span><span class="tok-w"> </span><span class="tok-nv">%eax</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%eax</span>
+<span class="tok-w">    </span><span class="tok-nf">leaq</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-nv">%rdi</span><span class="tok-p">,</span><span class="tok-nv">%rdx</span><span class="tok-p">,</span><span class="tok-mi">8</span><span class="tok-p">),</span><span class="tok-w"> </span><span class="tok-nv">%rdx</span>
+<span class="tok-nl">.L3:</span>
+<span class="tok-w">    </span><span class="tok-nf">movsd</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-nv">%rsi</span><span class="tok-p">,</span><span class="tok-nv">%rax</span><span class="tok-p">,</span><span class="tok-mi">8</span><span class="tok-p">),</span><span class="tok-w"> </span><span class="tok-nv">%xmm0</span>
+<span class="tok-w">    </span><span class="tok-nf">movsd</span><span class="tok-w"> </span><span class="tok-nv">%xmm0</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-nv">%rdx</span><span class="tok-p">,</span><span class="tok-nv">%rax</span><span class="tok-p">,</span><span class="tok-mi">8</span><span class="tok-p">)</span>
+<span class="tok-w">    </span><span class="tok-nf">addq</span><span class="tok-w"> </span><span class="tok-no">$1</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rax</span>
+<span class="tok-w">    </span><span class="tok-nf">cmpq</span><span class="tok-w"> </span><span class="tok-nv">%rax</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%rcx</span>
+<span class="tok-w">    </span><span class="tok-nf">jne</span><span class="tok-w"> </span><span class="tok-no">.L3</span>
+<span class="tok-nl">.L1:</span>
+<span class="tok-w">    </span><span class="tok-nf">ret</span>
+</code></pre>
+<ul>
+<li>可下载<a href="optimization-examples.c">完整示例源码</a>、<a href="optimization-O0.s">O0 汇编</a>、<a href="optimization-O2.s">O2 汇编</a>与<a href="optimization-compiler.txt">编译器版本</a>。同样写法在不同版本、目标和选项下未必产生相同标签或指令序列；本例展示的是实际观察。</li>
+</ul>
+<h2 id="section-3">Strength reduction：减轻昂贵运算与归纳变量更新<a class="anchor" href="#section-3" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>强度削弱</strong>：用较低成本的等价操作替代较高成本操作，或把重复乘法改成递增关系。是否更快依具体指令、依赖关系与机器资源而定。</li>
+<li><strong>无符号例</strong>：<code>uint64_t times16(uint64_t x) { return x*16; }</code> 在本机 O2 编译为 <code>movq %rdi,%rax; salq $4,%rax</code>，不必人工把所有乘法写成移位。</li>
+<li><strong>地址归纳变量</strong>：第i行起点原为 i*n；已知下一行起点只多n，可维护 <code>offset += n</code> 或递增行指针。x86 的缩放寻址也可能吸收常数乘法，因此少一个 C 乘号不一定少一条机器指令。</li>
+<li><strong>合法性</strong>：不能把 signed 的 <code>x*16</code> 无条件替换为 <code>x&lt;&lt;4</code>，特别是负数和溢出；不能把负整数除以2直接换成算术右移而忽略向零截断。应先依据类型和值域证明等价。</li>
+</ul>
+<h2 id="section-4">Common subexpressions：复用真正未改变的表达式<a class="anchor" href="#section-4" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>公共子表达式</strong>：若操作数和相关内存内容未改变，多次求值可以共享结果。课件邻域求和把 <code>(i-1)*n+j</code> 等统一为 <code>p=i*n+j</code> 后的 <code>p-n,p+n,p-1,p+1</code>。</li>
+<li><strong>自拟例</strong>：<code>(x+y)*(x+y+1)</code> 使用两次 x+y；无符号版本在本机 O2 中先执行一次 <code>addq %rsi,%rdi</code>，再用 <code>leaq 1(%rdi),%rax</code> 和 <code>imulq %rdi,%rax</code> 形成结果。</li>
+<li><strong>内存表达式的条件更强</strong>：两次 <code>*p</code> 之间若有可能写到同地址的操作或调用，就不能仅凭源码相同认定值相同。volatile 读取也可能要求保留多次访问。</li>
+</ul>
+<h2 id="section-5">冒泡排序：从伪代码消除重复工作<a class="anchor" href="#section-5" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>先理解课件的一基下标</strong>：逻辑数组编号从1开始，int元素4 byte，则逻辑 A[j] 对应字节偏移 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo stretchy="false">(</mo><mi>j</mi><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">4(j-1)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">4</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.0572em;">j</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span></span>，A[j+1] 对应4j。不能把这个式子直接套到零基 C 数组。</li>
+<li><strong>第11～13页，地址代数简化</strong>：合并重复的 j−1、j+1−1、4倍缩放；每次比较/交换使用同一对已算出的偏移。</li>
+<li><strong>第14～15页，复用已加载值</strong>：比较时已读出旧 A[j] 和 A[j+1]，交换时直接写回这两个临时值，避免再从内存读取。</li>
+<li><strong>第16～18页，归纳变量与循环不变量</strong>：偏移每次增加4，而不是每轮重新乘；外层本轮的边界4i提前算好；再按合法性把乘4降低为适合目标机器的操作。</li>
+<li><strong>指令计数的口径</strong>：课件伪代码内层从25条降到9条，表示这套中间代码路径上的工作减少；实际机器仍需寄存器分配、指令选择和调度，不能据此直接宣称25/9倍加速。</li>
+<li><strong>未改变算法复杂度</strong>：这些仍是冒泡排序的二次复杂度，只减少每次循环的常数。若目标允许换算法，选择合适排序算法可能收益更大。</li>
+</ul>
+<h2 id="section-6">优化障碍一：函数调用与隐藏的重复扫描<a class="anchor" href="#section-6" aria-label="链接到本节">#</a></h2>
+<pre><code class="language-c"><span class="tok-cm">/* This version may rescan the whole string at every loop test. */</span>
+<span class="tok-k">for</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-w"> </span><span class="tok-o">&lt;</span><span class="tok-w"> </span><span class="tok-n">strlen</span><span class="tok-p">(</span><span class="tok-n">s</span><span class="tok-p">);</span><span class="tok-w"> </span><span class="tok-o">++</span><span class="tok-n">i</span><span class="tok-p">)</span>
+<span class="tok-w">    </span><span class="tok-k">if</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-n">s</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">]</span><span class="tok-w"> </span><span class="tok-o">&gt;=</span><span class="tok-w"> </span><span class="tok-sc">&#39;A&#39;</span><span class="tok-w"> </span><span class="tok-o">&amp;&amp;</span><span class="tok-w"> </span><span class="tok-n">s</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">]</span><span class="tok-w"> </span><span class="tok-o">&lt;=</span><span class="tok-w"> </span><span class="tok-sc">&#39;Z&#39;</span><span class="tok-p">)</span>
+<span class="tok-w">        </span><span class="tok-n">s</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">]</span><span class="tok-w"> </span><span class="tok-o">+=</span><span class="tok-w"> </span><span class="tok-sc">&#39;a&#39;</span><span class="tok-w"> </span><span class="tok-o">-</span><span class="tok-w"> </span><span class="tok-sc">&#39;A&#39;</span><span class="tok-p">;</span>
+</code></pre>
+<ul>
+<li><strong>成本推导</strong>：长度为n的常规 NUL 结尾字符串，每次 strlen 从同一个 s 开始扫描约n个字符；循环条件检查约n+1次，故扫描总量为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Θ</mi><mo stretchy="false">(</mo><msup><mi>n</mi><mn>2</mn></msup><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\Theta(n^2)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord">Θ</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">n</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span>。第24页写成 n、n−1、…、1 不符合该调用起点，虽然数量级同为二次。</li>
+<li>若转换只改变字母大小写，不增删 NUL、字符串保持合法且可写，可提前求 <code>size_t len=strlen(s)</code>，使总体变成一次扫描长度加一次转换，<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Θ</mi><mo stretchy="false">(</mo><mi>n</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\Theta(n)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">Θ</span><span class="mopen">(</span><span class="mord mathnormal">n</span><span class="mclose">)</span></span></span></span></span>。</li>
+<li><strong>为什么一般调用不能任意外提</strong>：函数可能修改全局计数、读取可变状态；同样参数不保证同样返回值，也不保证“减少调用次数”没有可观察影响。课件自定义 strlen 的 lencnt 就是反例。</li>
+<li><strong>现代编译器的区别</strong>：已知标准库函数、内联、过程间分析和 LTO 可以增加可证明的信息。课件“只能分析同一文件”不应当作现代编译器绝对限制；仍需以实际优化结果和语义前提为准。<a href="https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html">GCC 优化选项说明</a></li>
+<li><strong>实用方法</strong>：在程序员能证明条件不变时显式缓存结果；内联/可见定义可以帮助分析，但 <code>inline</code> 关键字不是保证优化一定发生的命令。</li>
+</ul>
+<h2 id="section-7">优化障碍二：内存别名与写入次数<a class="anchor" href="#section-7" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>别名 aliasing</strong>：不同指针或下标表达式引用同一个存储位置。地址不等的指针也可能指向重叠区域，因此只检查 <code>a != b</code> 不足以证明不重叠。</li>
+<li>课件行求和原版每次迭代更新 b[i]：</li>
+</ul>
+<pre><code class="language-c"><span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-nf">sum_rows1</span><span class="tok-p">(</span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">double</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">a</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">double</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">b</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-k">for</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-w"> </span><span class="tok-o">&lt;</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-o">++</span><span class="tok-n">i</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">        </span><span class="tok-n">b</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">]</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span>
+<span class="tok-w">        </span><span class="tok-k">for</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-n">j</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-n">j</span><span class="tok-w"> </span><span class="tok-o">&lt;</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-o">++</span><span class="tok-n">j</span><span class="tok-p">)</span>
+<span class="tok-w">            </span><span class="tok-n">b</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">]</span><span class="tok-w"> </span><span class="tok-o">+=</span><span class="tok-w"> </span><span class="tok-n">a</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-o">*</span><span class="tok-n">n</span><span class="tok-o">+</span><span class="tok-n">j</span><span class="tok-p">];</span>
+<span class="tok-w">    </span><span class="tok-p">}</span>
+<span class="tok-p">}</span>
+</code></pre>
+<ul>
+<li>若 b 指向 a 的内部，写 b[i] 可能改变后续读取的 a。编译器不能在所有合法重叠输入上擅自改成“只在最后写一次”。</li>
+<li><strong>可验证反例</strong>：<code>a={0,1,2,4,8,16,32,64,128}</code>，<code>b=a+3</code>，n=3；原函数结果 b 为 <code>{3,22,224}</code>。第二行求和时 b[1] 就是 a[4]，先清零且中途自我累加，不能当作原来的8。</li>
+<li>改成局部累计后最后写的版本：</li>
+</ul>
+<pre><code class="language-c"><span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-nf">sum_rows2</span><span class="tok-p">(</span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">double</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">a</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">double</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">b</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-k">for</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-w"> </span><span class="tok-o">&lt;</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-o">++</span><span class="tok-n">i</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">        </span><span class="tok-kt">double</span><span class="tok-w"> </span><span class="tok-n">val</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span>
+<span class="tok-w">        </span><span class="tok-k">for</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-n">j</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-n">j</span><span class="tok-w"> </span><span class="tok-o">&lt;</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-o">++</span><span class="tok-n">j</span><span class="tok-p">)</span>
+<span class="tok-w">            </span><span class="tok-n">val</span><span class="tok-w"> </span><span class="tok-o">+=</span><span class="tok-w"> </span><span class="tok-n">a</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-o">*</span><span class="tok-n">n</span><span class="tok-o">+</span><span class="tok-n">j</span><span class="tok-p">];</span>
+<span class="tok-w">        </span><span class="tok-n">b</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">]</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-n">val</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-p">}</span>
+<span class="tok-p">}</span>
+</code></pre>
+<ul>
+<li>同一个重叠输入会得到 <code>{3,27,224}</code>，因此这是一个有前提的算法实现选择，而不是对原函数所有输入的等价替换。若契约规定输出区与输入区不重叠，则可使用局部累计，减少内层 store 并使累加更容易驻留寄存器。</li>
+<li><strong>restrict</strong> 可表达满足相应 C 访问规则的独占访问契约，但不是运行时检查或“禁止别名”的自动修复。调用者违约会导致未定义行为；不应仅为追求速度添加而不核对接口。</li>
+</ul>
+<h2 id="section-8">combine1～4：一步一步删掉循环内开销<a class="anchor" href="#section-8" aria-label="链接到本节">#</a></h2>
+<ul>
+<li>向量结构保存长度 len 和数据指针 data。<code>get_vec_element</code> 每次检查下标并经接口取元素；规约 reduction 将 n 个元素用某个 OP 合成一个结果。</li>
+<li><strong>单位元 IDENT</strong>：加法为0、乘法为1；因此空向量结果也有定义。直接取第一个元素初始化的写法需另处理n=0。</li>
+</ul>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>版本</th>
+<th>相对前版改变</th>
+<th>主要减少什么</th>
+<th>合法性要点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>combine1</td>
+<td>每轮取长度、调元素接口、通过 dest 累加</td>
+<td>原始基准</td>
+<td>dest 与数据重叠时也可能有额外行为</td>
+</tr>
+<tr>
+<td>combine2</td>
+<td>长度放到循环外</td>
+<td>重复长度查询</td>
+<td>循环中长度确实不变</td>
+</tr>
+<tr>
+<td>combine3</td>
+<td>取数据首指针，直接索引</td>
+<td>逐元素调用与边界检查</td>
+<td>索引已保证在有效长度内</td>
+</tr>
+<tr>
+<td>combine4</td>
+<td>局部变量累计，末尾写 dest</td>
+<td>每轮内存读改写与潜在别名障碍</td>
+<td>输入/输出契约允许推迟写入</td>
+</tr>
+</tbody>
+</table></div>
+<pre><code class="language-c"><span class="tok-cm">/* Contract: dest does not overlap d[0..n), and values remain readable. */</span>
+<span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-nf">combine4_sum</span><span class="tok-p">(</span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">double</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">d</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">double</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">dest</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-kt">double</span><span class="tok-w"> </span><span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mf">0.0</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-k">for</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-w"> </span><span class="tok-o">&lt;</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-o">++</span><span class="tok-n">i</span><span class="tok-p">)</span>
+<span class="tok-w">        </span><span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">+</span><span class="tok-w"> </span><span class="tok-n">d</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">];</span>
+<span class="tok-w">    </span><span class="tok-o">*</span><span class="tok-n">dest</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-n">x</span><span class="tok-p">;</span>
+<span class="tok-p">}</span>
+</code></pre>
+<ul>
+<li><strong>课件性能观察</strong>：本例历史机器中 combine4 的整数加/乘、double加/乘约为1.27/3.01/3.01/5.01 CPE；它表明通用开销减少后，剩下的主要限制转为运算依赖和硬件资源。</li>
+<li>不能把这个数字复制成当前机器实测，或据结果倒推某个优化级别永远做哪些变换。</li>
+</ul>
+<h2 id="section-9">CPE：每元素周期数与测量方法<a class="anchor" href="#section-9" aria-label="链接到本节">#</a></h2>
+<ul>
+<li>对长度n的输入，用周期数拟合：</li>
+</ul>
+<div class="math block">
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>T</mi><mo stretchy="false">(</mo><mi>n</mi><mo stretchy="false">)</mo><mo>≈</mo><msub><mi>T</mi><mn>0</mn></msub><mo>+</mo><mrow><mi mathvariant="normal">C</mi><mi mathvariant="normal">P</mi><mi mathvariant="normal">E</mi></mrow><mo>⋅</mo><mi>n</mi><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">T(n)\approx T_0+\mathrm{CPE}\cdot n.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">T</span><span class="mopen">(</span><span class="mord mathnormal">n</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord"><span class="mord mathrm">CPE</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span><span class="mord">.</span></span></span></span></span>
+</div>
+<ul>
+<li><strong>CPE 是斜率</strong>，固定开销 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>T</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">T_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span> 不应简单按一个很短输入均摊后就当稳态性能。对内积，一个元素指一对输入完成的一次内积贡献，分母不能误用2n。</li>
+<li><strong>可以小于1</strong>：每周期处理多个元素时就会如此；这不违反一条标量运算本身需要多个周期。</li>
+<li><strong>测量要点</strong>：相同编译器、选项、输入类型与硬件；预热或明确冷启动；多次测量；保留计算结果；区分工作集是否驻留缓存；不要把打印、分配和初始化都混入内层热点。</li>
+<li>优化比较先检查输出、边界和语义，再看耗时。开启向量化、FMA或 fast-math 时，另说明对数值与目标 ISA 的影响。</li>
+</ul>
+<h2 id="section-10">从 PIPE 到现代超标量处理器<a class="anchor" href="#section-10" aria-label="链接到本节">#</a></h2>
+<p><a class="figure-link" href="optimization-cpu.svg"><img src="optimization-cpu.svg" alt="现代处理器前端、执行资源与顺序退休" /></a></p>
+<ul>
+<li><strong>前端</strong>取指并预测路径，译码成可执行操作；<strong>执行端</strong>有多种算术、load/store、分支等功能资源，能在依赖允许时调度多条独立操作；<strong>退休 retirement</strong>按程序顺序确认结果，使架构状态保持正确。</li>
+<li><strong>超标量 superscalar</strong>强调一个周期可发射/执行多条操作；<strong>乱序执行</strong>强调准备好的年轻操作可以先算。两者相关但概念不同，也不等同于 SIMD。</li>
+<li><strong>与五级 PIPE 对照</strong>：仍有取指/译码/执行/访存/写回等功能，但不再是“一条指令固定每周期走一个单独的 E”模型；多种执行单元和可变延迟需要依赖跟踪及顺序提交。</li>
+<li><strong>推测执行</strong>可以先计算候选结果，预测正确且满足提交条件后再成为架构可见效果；不能说分支预测允许任意修改程序寄存器和内存然后忽略错误。</li>
+<li><strong>课件第43页口径</strong>：8个执行端口/功能资源可支持多种指令类别，列表中的2 load、4 integer、2 FP multiply等能力有重叠，不能把这些类别数字相加当作互不共享的独立单元总数。</li>
+</ul>
+<h2 id="section-11">功能部件的延迟与吞吐：两个下界<a class="anchor" href="#section-11" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>延迟 D</strong>：一次操作从输入就绪到结果可供依赖者使用的周期数。</li>
+<li><strong>发射间隔 I</strong>：同一资源接受下一次独立操作需要间隔的周期。完全流水化的运算可 D&gt;1 但 I=1；非流水化资源可能在整个运算期间不能再接一个。</li>
+<li><strong>课件3周期乘法器</strong>：a<em>b 在第1周期启动、a</em>c在第2周期启动；后者结果约在第4周期结束可用，依赖两者的 p1*p2 到第5周期启动，第7周期完成。独立乘法可重叠，依赖者仍要等。</li>
+<li>若操作延迟D，有K条独立累加链，运算资源总吞吐为R次/周期、load资源可提供 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mi>L</mi></msub></mrow><annotation encoding="application/x-tex">R_L</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0077em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">L</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span> 个输入元素/周期，则稳态下界近似为：</li>
+</ul>
+<div class="math block">
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mrow><mi mathvariant="normal">C</mi><mi mathvariant="normal">P</mi><mi mathvariant="normal">E</mi></mrow><mo>≥</mo><mi>max</mi><mo>⁡</mo><mrow><mo fence="true">(</mo><mfrac><mi>D</mi><mi>K</mi></mfrac><mo separator="true">,</mo><mfrac><mn>1</mn><mi>R</mi></mfrac><mo separator="true">,</mo><mfrac><mn>1</mn><msub><mi>R</mi><mi>L</mi></msub></mfrac><mo fence="true">)</mo></mrow><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">\mathrm{CPE}\geq\max\left(\frac DK,\frac1R,\frac1{R_L}\right).</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8193em;vertical-align:-0.136em;"></span><span class="mord"><span class="mord mathrm">CPE</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:2.4em;vertical-align:-0.95em;"></span><span class="mop">max</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size3">(</span></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3603em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0715em;">K</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0278em;">D</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0077em;">R</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0077em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">L</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.836em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mclose delimcenter" style="top:0em;"><span class="delimsizing size3">)</span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">.</span></span></span></span></span>
+</div>
+<ul>
+<li>实际还可能受前端、地址生成、缓存带宽、寄存器压力、分支等约束。公式是同类每元素一次规约的简化模型，内积还包含乘法和两路加载等额外资源需求。</li>
+</ul>
+<h2 id="section-12">先画依赖链：指令少了，为什么仍不快<a class="anchor" href="#section-12" aria-label="链接到本节">#</a></h2>
+<p><a class="figure-link" href="optimization-dependencies.svg"><img src="optimization-dependencies.svg" alt="串行累计、重结合与双累加器的依赖图" /></a></p>
+<ul>
+<li>普通累计 <code>x=x OP d[i]</code> 中，每次新x依赖旧x。对n个元素，关键链大约n个运算，即使有多个空闲乘法器，也不能提前得到链上未来x。</li>
+<li>若每次乘法延迟3周期，单链乘法规约的延迟下界约3 CPE；浮点乘法延迟5周期，则约5 CPE。这解释 combine4 为什么接近相应延迟下界。</li>
+<li><strong>关键路径</strong>是依赖图中决定完成时间的最长依赖链，不是代码中字符最多的语句，也不是所有指令延迟直接相加。</li>
+</ul>
+<h2 id="section-13">循环展开 2×1：减少控制，但保留串行链<a class="anchor" href="#section-13" aria-label="链接到本节">#</a></h2>
+<pre><code class="language-c"><span class="tok-cm">/* Illustrative body: process a pair, then handle any odd tail separately. */</span>
+<span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-n">OP</span><span class="tok-w"> </span><span class="tok-n">d</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">])</span><span class="tok-w"> </span><span class="tok-n">OP</span><span class="tok-w"> </span><span class="tok-n">d</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-o">+</span><span class="tok-mi">1</span><span class="tok-p">];</span>
+<span class="tok-n">i</span><span class="tok-w"> </span><span class="tok-o">+=</span><span class="tok-w"> </span><span class="tok-mi">2</span><span class="tok-p">;</span>
+</code></pre>
+<ul>
+<li>一次迭代处理两个元素，循环计数、比较和分支次数减少，容易暴露更多独立加载。</li>
+<li>但两个 OP 都在x的依赖链上；每2元素仍串行2次运算，关键链每元素仍是D。因而整数加可能因控制开销下降而改善，延迟已占主导的乘法/浮点未必改善。</li>
+<li><strong>尾部</strong>：n奇数时还需处理最后一个；n=0/1 时不得形成无符号 <code>n-1</code> 下溢并越界。下载代码用 <code>n-i&gt;=2</code> 的条件，并维持 i≤n。</li>
+<li>上述 <code>OP</code> 是课件的运算占位符，不是可直接编译的 C 运算符；完整可编译版本见下载源码。</li>
+</ul>
+<h2 id="section-14">重结合 2×1a：每两个元素只向主链加入一次<a class="anchor" href="#section-14" aria-label="链接到本节">#</a></h2>
+<pre><code class="language-c"><span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-n">OP</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-n">d</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">]</span><span class="tok-w"> </span><span class="tok-n">OP</span><span class="tok-w"> </span><span class="tok-n">d</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-o">+</span><span class="tok-mi">1</span><span class="tok-p">]);</span>
+</code></pre>
+<ul>
+<li>内层括号中的两个输入不依赖旧x，可以提前并行计算各对；随后每一对只需一次运算接到主x链。</li>
+<li>主链约有n/2次运算，所以在其他资源足够时 CPE 接近D/2；前面的成对预计算并不是消失，而是有机会与主链重叠。</li>
+<li>第50页的近似时间需计入启动/收尾；短向量不能直接把稳态D/2当作精确总周期。</li>
+</ul>
+<h2 id="section-15">双累加器 2×2：制造两条独立链<a class="anchor" href="#section-15" aria-label="链接到本节">#</a></h2>
+<pre><code class="language-c"><span class="tok-n">x0</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-n">x0</span><span class="tok-w"> </span><span class="tok-n">OP</span><span class="tok-w"> </span><span class="tok-n">d</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">];</span>
+<span class="tok-n">x1</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-n">x1</span><span class="tok-w"> </span><span class="tok-n">OP</span><span class="tok-w"> </span><span class="tok-n">d</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-o">+</span><span class="tok-mi">1</span><span class="tok-p">];</span>
+<span class="tok-cm">/* After the loop and tail, combine the two partial results. */</span>
+<span class="tok-n">result</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-n">x0</span><span class="tok-w"> </span><span class="tok-n">OP</span><span class="tok-w"> </span><span class="tok-n">x1</span><span class="tok-p">;</span>
+</code></pre>
+<ul>
+<li>偶数与奇数元素分别累加，每条链长度约n/2，两条链可交错利用流水化资源；最后再合并。</li>
+<li>与2×1a都可能达到D/2，但依赖图不同：前者成对预结合后接一条主链，后者是两条完整独立链。</li>
+<li><strong>展开因子 L 与累加器数 K 分开</strong>：L 表示每次迭代处理几元素，K 表示独立依赖链数；只增加L而保持K=1，不会自动消除单链延迟。本课简单模板取L为K倍数，其他实现可另外设计尾部。</li>
+<li><strong>扩大到K条</strong>：D/K降到吞吐下界附近后，继续增加K收益减少，甚至因寄存器溢出、代码变大、前端压力而变慢。短输入的初始化、尾部、最终合并也更明显。</li>
+<li><strong>课件浮点乘法例</strong>：D≈5，总吞吐约2次/周期，想接近0.5 CPE需约 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo>≥</mo><mn>5</mn><mi mathvariant="normal">/</mi><mn>0.5</mn><mo>=</mo><mn>10</mn></mrow><annotation encoding="application/x-tex">K\geq5/0.5=10</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8193em;vertical-align:-0.136em;"></span><span class="mord mathnormal" style="margin-right:0.0715em;">K</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">5/0.5</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">10</span></span></span></span></span> 条独立链；这解释第55页K=10接近0.51，而不是“展开到10就一定足够”。</li>
+<li><strong>课件整数加勘误</strong>：第56页文字写吞吐下界1.00，但同页约0.54的结果及第57页对应0.50下界表明该处标注不一致。应按两路加载等资源限制理解，不把1.00当成严格不可能突破的定理。</li>
+</ul>
+<h2 id="section-16">重结合何时会改变结果<a class="anchor" href="#section-16" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>浮点不满足结合律</strong>。以通常 binary64、逐步舍入为例：</li>
+</ul>
+<div class="math block">
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mo stretchy="false">(</mo><msup><mn>10</mn><mn>16</mn></msup><mo>+</mo><mo stretchy="false">(</mo><mo>−</mo><msup><mn>10</mn><mn>16</mn></msup><mo stretchy="false">)</mo><mo stretchy="false">)</mo><mo>+</mo><mn>1</mn><mo>=</mo><mn>1</mn><mo separator="true">,</mo><mspace width="2em"/><msup><mn>10</mn><mn>16</mn></msup><mo>+</mo><mo stretchy="false">(</mo><mo stretchy="false">(</mo><mo>−</mo><msup><mn>10</mn><mn>16</mn></msup><mo stretchy="false">)</mo><mo>+</mo><mn>1</mn><mo stretchy="false">)</mo><mo>=</mo><mn>0.</mn></mrow><annotation encoding="application/x-tex">(10^{16}+(-10^{16}))+1=1,\qquad
+10^{16}+((-10^{16})+1)=0.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1.1141em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">16</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1.1141em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">−</span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">16</span></span></span></span></span></span></span></span></span><span class="mclose">))</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1.0585em;vertical-align:-0.1944em;"></span><span class="mord">1</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">16</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1.1141em;vertical-align:-0.25em;"></span><span class="mopen">((</span><span class="mord">−</span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">16</span></span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">0.</span></span></span></span></span>
+</div>
+<ul>
+<li>2×1a、多累加器和向量横向规约都可能改变加法/乘法顺序；误差、溢出/下溢、NaN与异常等行为可能不同。应用允许一定误差时也应说明精度要求，而不是宣称数学等价就逐位相同。</li>
+<li><strong>整数前提</strong>：无符号模运算的加/乘可按相应代数重结合；signed 不能忽略所有中间结果是否可表示。有些新顺序会制造原顺序没有的溢出，因此需要值域或接口保证。</li>
+<li><strong>编译选项</strong>：fast-math 等选项可能放宽浮点规则，允许更多变换，但它们改变优化前提，不是无条件获得同语义的免费加速。<a href="https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html">GCC 官方选项说明</a></li>
+</ul>
+<h2 id="section-17">SIMD：一条指令并行处理多条数据通道<a class="anchor" href="#section-17" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>SIMD</strong> 是 single instruction, multiple data。同一运算作用于向量寄存器多个 lane；与“多条标量指令由不同单元重叠执行”的 ILP 不同，两者可以组合使用。</li>
+<li>课件 x86-64 AVX/AVX2 示例有16个256-bit YMM寄存器。256 bit可分为8个32-bit float，或4个64-bit double，也可由相应整数指令按其他宽度解释；寄存器里的位没有脱离指令的唯一类型。</li>
+<li><strong>第59页勘误</strong>：8路单精度加法应为 <code>vaddps</code>；标量双精度 <code>vaddsd</code> 使用 XMM 标量操作，不能写为图中的 YMM 八路加法。4路双精度加法是 <code>vaddpd</code>。</li>
+</ul>
+<pre><code class="language-asm"><span class="tok-c1"># AT&amp;T operand order: destination is the final operand.</span>
+<span class="tok-nf">vaddps</span><span class="tok-w"> </span><span class="tok-nv">%ymm0</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%ymm1</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%ymm1</span>
+<span class="tok-nf">vaddpd</span><span class="tok-w"> </span><span class="tok-nv">%ymm0</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%ymm1</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nv">%ymm1</span>
+</code></pre>
+<ul>
+<li>向量累加也有向量寄存器之间的依赖；可以用多个向量累加器隐藏延迟，最后做横向合并并处理不足一个向量的尾部。</li>
+<li><strong>资源与合法性</strong>：目标CPU/操作系统须支持所用ISA；处理对齐、未对齐访问、边界与尾部，不能为了满向量读取越过有效数组。AVX提供浮点向量，AVX2扩展整数向量能力；不要把所有256-bit浮点指令都归为只能AVX2使用。</li>
+<li><strong>向量吞吐下界</strong>：若每指令处理W元素，支持R条相应指令/周期，理想运算侧下界为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi mathvariant="normal">/</mi><mo stretchy="false">(</mo><mi>W</mi><mi>R</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">1/(WR)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.1389em;">W</span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="mclose">)</span></span></span></span></span> CPE；但加载带宽和横向规约可能更先成为瓶颈。第60页是课件机器的实测，不能把“8个lane”直接等同于整段程序必快8倍。</li>
+</ul>
+<h2 id="section-18">分支预测、推测与恢复：不能照搬 PIPE 的罚时<a class="anchor" href="#section-18" aria-label="链接到本节">#</a></h2>
+<ul>
+<li>前端为喂饱多个执行单元，需要提前取指；遇到条件分支，先预测走向，沿预测路径译码/执行，条件确定后再确认或取消年轻操作。</li>
+<li><strong>预测错误</strong>要使错误路径未提交的结果失效、恢复正确取指；已退休的较老结果保留。课件循环越界路径可能被推测访问，但未提交异常不能被当作程序实际发生的合法访问；推测的微架构影响与架构结果又是不同层次。</li>
+<li><strong>课件循环例</strong>：长循环通常反复回跳，只在退出时方向改变；容易预测的循环与数据依赖、近似随机的分支表现不同。</li>
+<li><strong>与第11章区别</strong>：基础Y86 PIPE“预测成立、错罚两周期”的固定线路不能直接套到真实超标量x86。第68页“平均高于95%”和默认前后向规则是教学背景，不是所有工作负载的保证。</li>
+<li><strong>优化原则</strong>：减少不可预测分支，或在合法且有利时用条件传送、掩码、数据分区等方式。无分支不一定更快：可能强制计算两个分支、增加依赖或额外访存；还不能把原来受保护的不合法内存访问变成无条件读取。</li>
+</ul>
+<h2 id="section-19">内积作业5.13～5.16与可复核的示例<a class="anchor" href="#section-19" aria-label="链接到本节">#</a></h2>
+<ul>
+<li>数学目标是 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>0</mn></mrow><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msubsup><msub><mi>u</mi><mi>i</mi></msub><msub><mi>v</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">\sum_{i=0}^{n-1}u_i v_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1.2537em;vertical-align:-0.2997em;"></span><span class="mop"><span class="mop op-symbol small-op" style="position:relative;top:0em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.954em;"><span style="top:-2.4003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">i</span><span class="mrel mtight">=</span><span class="mord mtight">0</span></span></span></span><span style="top:-3.2029em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2997em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">u</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">v</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>。一次元素贡献需要读取两个输入、乘法、加法；先判断哪部分在关键链或资源瓶颈上。</li>
+<li><strong>逐题方法</strong>：按本地 p.393 每题要求画依赖图，标乘与加延迟，数独立累计链；区分只展开、重结合与增加累加器的作用；最后检查奇数尾部和空向量。</li>
+<li><a href="optimization-examples.c">完整可编译示例</a>提供无符号64-bit <code>sum_serial/sum_two/dot_two</code>，使模运算下的重排语义明确。<code>dot_two</code> 使用两路独立累加并保留尾元素；它不是对本地各题未列出的所有性能前提给一个统一数值答案。</li>
+<li>结合前章，输入不在缓存时，计算端的理想CPE可能被内存带宽覆盖；评估应区分热缓存计算基准与真实大数据处理。</li>
+</ul>
+<h2 id="section-20">指定内积题的关键结论：5.13～5.16<a class="anchor" href="#section-20" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>5.13(A～D)</strong>：在课件/教材给定的功能部件模型中，<code>sum += u[i]*v[i]</code> 的跨迭代关键链是 sum 的加法，而不是各元素独立的乘法。double 加法延迟3周期，故链下界3 CPE；整数加法链下界1 CPE。乘法虽可需5周期，但独立乘法能提前流水执行，不必把5与3逐元素串加为8。</li>
+<li><strong>5.14，6×1</strong>：六次乘加仍串接同一个sum，循环控制减少，浮点累计链仍约3 CPE。每元素至少读取u和v两数，在题设每周期两次标量load的资源限制下，任何该标量内积至少约1 CPE。</li>
+<li><strong>5.15，6×6</strong>：六条独立累计链能把加法延迟限制降到约3/6=0.5，但每元素两个load使资源下界仍约1 CPE；因此课本约1.01的结果不是“展开没有成功”，而是瓶颈转移了。</li>
+<li><strong>5.16，6×1a</strong>：先独立计算一组六个乘积并在组内求和，再接到sum，使主链每组只追加一次；对浮点这会重排求和，必须得到应用对数值语义的许可。尾部不足六元素应继续正确处理。</li>
+<li>这些下界以题文指定的机器资源与标量实现为前提；SIMD可一次load多个元素，不能用标量“两load/元素”的同一计数直接限制它。</li>
+</ul>
+<h2 id="section-21">从正确到更快的操作顺序<a class="anchor" href="#section-21" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>先定义契约</strong>：输入大小、地址合法性、别名限制、整数溢出模型、浮点误差要求。</li>
+<li><strong>再定位瓶颈</strong>：算法是否做了重复扫描；内存访问是否有局部性；执行是否受单链延迟或资源吞吐限制；分支是否可预测。</li>
+<li><strong>逐步改变</strong>：循环不变量外提 → 公共表达式/归纳变量 → 合法的局部累计 → 展开 → 重结合/多累加器 → 向量化；每步看汇编和测量，不能仅看源代码更短。</li>
+<li><strong>保留模块性</strong>：优化集中于已确认的热点，写清前提，保留简单正确基准；未证实收益的复杂化不算优化完成。</li>
+</ul>
+<p>来源：第14讲课件 pp.1–69、第14讲研讨单、教材第5章 combine1～4 与指定内积题；实际汇编由随页提供的源码在本机生成，硬件性能表以课件历史机器为背景。</p>
+<div class="pager"><a href="13-cache-memories.html">上一章<br>13 · Cache 组织、访问与局部性优化</a><a href="11-quiz01.html">下一章<br>附录 A · 第一次测验答案回查</a></div><footer>理解表示，追踪执行。<span><a href="14-coverage.html">资料来源与覆盖范围</a></span></footer></main><aside aria-label="本页目录"><div class="nav-label">本页内容</div><a href="#section-1">先问优化什么：算法、常数与机器瓶颈</a><a href="#section-2">Code motion：循环不变量提到外面</a><a href="#section-3">Strength reduction：减轻昂贵运算与归纳变量更新</a><a href="#section-4">Common subexpressions：复用真正未改变的表达式</a><a href="#section-5">冒泡排序：从伪代码消除重复工作</a><a href="#section-6">优化障碍一：函数调用与隐藏的重复扫描</a><a href="#section-7">优化障碍二：内存别名与写入次数</a><a href="#section-8">combine1～4：一步一步删掉循环内开销</a><a href="#section-9">CPE：每元素周期数与测量方法</a><a href="#section-10">从 PIPE 到现代超标量处理器</a><a href="#section-11">功能部件的延迟与吞吐：两个下界</a><a href="#section-12">先画依赖链：指令少了，为什么仍不快</a><a href="#section-13">循环展开 2×1：减少控制，但保留串行链</a><a href="#section-14">重结合 2×1a：每两个元素只向主链加入一次</a><a href="#section-15">双累加器 2×2：制造两条独立链</a><a href="#section-16">重结合何时会改变结果</a><a href="#section-17">SIMD：一条指令并行处理多条数据通道</a><a href="#section-18">分支预测、推测与恢复：不能照搬 PIPE 的罚时</a><a href="#section-19">内积作业5.13～5.16与可复核的示例</a><a href="#section-20">指定内积题的关键结论：5.13～5.16</a><a href="#section-21">从正确到更快的操作顺序</a><a href="#main">回到顶部 ↑</a></aside></div><script src="app.js"></script></body></html>

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="850" viewBox="0 0 1000 850" role="img" aria-labelledby="title desc"><title id="title">规约依赖图 / 展开与增加独立链是两件事</title><desc id="desc">连线式 SEQ 电路图。实线为数据，虚线为控制，圆点表示分支连接，无圆点交叉不连接。</desc>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#243c54"/></marker><marker id="c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#b45309"/></marker></defs><style>text{font-family:"Noto Sans CJK SC","Microsoft YaHei",sans-serif;fill:#172c45;font-size:18px}.label{paint-order:stroke;stroke:white;stroke-width:4px;stroke-linejoin:round}</style>
+<rect width="1000" height="850" fill="white"/>
+<text class="label" x="30" y="38" text-anchor="start" style="font-size:25px;">规约依赖图 / 展开与增加独立链是两件事</text>
+<text class="label" x="30" y="72" text-anchor="start" style="font-size:16px;">实线：数据 / 字段　　虚线：控制　　●：连接点　　交叉无点：不连接</text>
+<text class="label" x="160" y="135" text-anchor="middle" style="font-size:21px;">单链 / 2×1</text>
+<text class="label" x="500" y="135" text-anchor="middle" style="font-size:21px;">2×1a 重结合</text>
+<text class="label" x="820" y="135" text-anchor="middle" style="font-size:21px;">2×2 双链</text>
+<rect x="70" y="240" width="180" height="55" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="160.0" y="273.5" text-anchor="middle" style="font-size:18px;">x OP d0</text>
+<rect x="70" y="370" width="180" height="55" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="160.0" y="403.5" text-anchor="middle" style="font-size:18px;">x OP d1</text>
+<path d="M160,295 L160,370" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<rect x="70" y="500" width="180" height="55" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="160.0" y="533.5" text-anchor="middle" style="font-size:18px;">x OP d2</text>
+<path d="M160,425 L160,500" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<rect x="70" y="630" width="180" height="55" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="160.0" y="663.5" text-anchor="middle" style="font-size:18px;">x OP d3</text>
+<path d="M160,555 L160,630" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="160" y="720" text-anchor="middle" style="font-size:16px;">每元素都增加主链长度</text>
+<rect x="405" y="240" width="190" height="55" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="500.0" y="273.5" text-anchor="middle" style="font-size:18px;">d0 OP d1</text>
+<rect x="405" y="500" width="190" height="55" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="500.0" y="533.5" text-anchor="middle" style="font-size:18px;">d2 OP d3</text>
+<rect x="405" y="370" width="190" height="55" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="500.0" y="403.5" text-anchor="middle" style="font-size:18px;">x OP pair0</text>
+<rect x="405" y="630" width="190" height="55" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="500.0" y="663.5" text-anchor="middle" style="font-size:18px;">x OP pair1</text>
+<path d="M500,295 L500,370" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<path d="M500,425 L375,425 L375,660 L405,660" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<path d="M500,555 L500,630" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="500" y="720" text-anchor="middle" style="font-size:16px;">每一对只接一次主链</text>
+<rect x="695" y="240" width="130" height="65" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="760.0" y="278.5" text-anchor="middle" style="font-size:18px;">x0 OP d0</text>
+<rect x="695" y="440" width="130" height="65" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="760.0" y="478.5" text-anchor="middle" style="font-size:18px;">x0 OP d2</text>
+<path d="M760,305 L760,440" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<rect x="855" y="240" width="130" height="65" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="920.0" y="278.5" text-anchor="middle" style="font-size:18px;">x1 OP d1</text>
+<rect x="855" y="440" width="130" height="65" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="920.0" y="478.5" text-anchor="middle" style="font-size:18px;">x1 OP d3</text>
+<path d="M920,305 L920,440" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<rect x="735" y="630" width="200" height="55" rx="2" fill="#e6f1fc" stroke="#243c54" stroke-width="2.5"/>
+<text class="label" x="835.0" y="663.5" text-anchor="middle" style="font-size:18px;">x0 OP x1</text>
+<path d="M760,505 L760,630" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<path d="M920,505 L920,630" fill="none" stroke="#243c54" stroke-width="2.3" marker-end="url(#a)"/>
+<text class="label" x="835" y="720" text-anchor="middle" style="font-size:16px;">两条独立链，最后合并</text>
+<text class="label" x="30" y="798" text-anchor="start" style="font-size:17px;">OP 的延迟为 D 时：单链约 D CPE；两条链 / 每对一次主链在资源足够时约 D/2。</text>
+<text class="label" x="30" y="825" text-anchor="start" style="font-size:17px;">图显示依赖，不是全部指令的执行时间表；浮点重结合可能改变结果。</text>
+</svg>
