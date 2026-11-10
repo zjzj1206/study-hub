@@ -39,3 +39,21 @@ main {width:100%;min-width:0;}
 main img {display:block;max-width:100%;max-inline-size:100%;height:auto;object-fit:contain;}
 main .figure-link {display:block;width:100%;max-width:100%;min-width:0;margin:1.4rem 0;}
 main .figure-link > img {width:100%;max-width:100%;height:auto;margin:0;}
+
+/* Quiz: independent native disclosures and chapter selection. */
+.quiz-answer{margin:22px 0 36px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#f8fbfc}
+.quiz-answer summary{cursor:pointer;padding:12px 18px;color:var(--accent);font-size:14px;font-weight:700;list-style:none}
+.quiz-answer summary::-webkit-details-marker{display:none}
+.quiz-answer summary::before{content:'＋';margin-right:8px}
+.quiz-answer[open] summary::before{content:'−'}
+.quiz-answer[open] summary{border-bottom:1px solid var(--line);background:#eef7f8}
+.answer-hide,.quiz-answer[open] .answer-show{display:none}
+.quiz-answer[open] .answer-hide{display:inline}
+.answer-body{padding:0 18px 8px;min-width:0}
+.quiz-page aside .quiz-chapter-link{padding:11px 12px;border:1px solid transparent;border-radius:8px;margin:0 0 8px}
+.quiz-page aside .quiz-chapter-link:hover{background:#f0f6f8}
+.quiz-page aside .quiz-chapter-link[aria-current]{background:#e4f3f3;color:#006673;border-color:#c3e1e3;font-weight:700}
+.quiz-chapter[hidden]{display:none}
+@media(max-width:1150px){.quiz-page .layout{grid-template-columns:245px minmax(0,1fr)}.quiz-page aside{display:block;grid-column:2;grid-row:1;position:static;height:auto;padding:20px 35px 0}.quiz-page aside .nav-label{margin:0 0 12px}.quiz-page aside .quiz-chapter-link{display:inline-block;font-size:13px;padding:8px;margin:0 4px 6px 0}.quiz-page aside>a:last-child{display:none}.quiz-page main{grid-column:2;grid-row:2}.quiz-page nav{grid-column:1;grid-row:1 / span 2}}
+@media(max-width:760px){.quiz-page .layout{display:flex;flex-direction:column}.quiz-page aside{order:-1;padding:20px 21px 0}.quiz-page main{padding-top:24px}.answer-body{padding:0 12px 6px}}
+@media print{.quiz-answer{border:0}.quiz-answer summary{display:none}.quiz-answer::details-content{content-visibility:visible}.quiz-answer .answer-body{display:block}.quiz-chapter[hidden]{display:block}}

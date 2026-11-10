@@ -1,0 +1,629 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>附录 E · 第二次测验分章习题 · ZJZJ / ICS</title><meta name="description" content="北京大学 ICS 复习手册：课程知识、公式推导、边界情况、小班拓展与往年题导航。"><link rel="stylesheet" href="katex/katex.min.css"><link rel="stylesheet" href="style.css?v=529276fe0694"><link rel="icon" href="favicon.svg" type="image/svg+xml"></head><body class="quiz-page"><a class="skip" href="#main">跳到正文</a><header><a class="brand" href="index.html">ZJZJ<span> / ICS NOTES</span></a><div class="header-right"><a href="https://blog.zjzj.work/">学习空间</a><a href="all.html">整本阅读</a><button type="button" onclick="window.print()">打印</button><button id="menu" aria-expanded="false" aria-controls="chapters">目录</button></div></header><div class="layout"><nav id="chapters" aria-label="章节目录"><div class="nav-label">2026 · 复习手册</div><a  href="00-guide.html">复习范围与使用说明</a><a  href="01-overview.html">01 · 系统概述与基本模型</a><a  href="02-integers.html">02 · 位、字节与整数</a><a  href="03-floating-point.html">03 · 浮点表示、舍入与运算</a><a  href="04-assembly-basics.html">04 · 机器级编程基础</a><a  href="05-control.html">05 · 条件码、分支、循环与 switch</a><a  href="06-procedures.html">06 · 过程调用、栈与 ABI</a><a  href="07-data.html">07 · 数组、结构体、指针与浮点汇编</a><a  href="08-advanced.html">08 · 机器级进阶与内存安全</a><a  href="09-isa-logic.html">09 · Y86-64 指令集与逻辑设计</a><a  href="10-sequential.html">10 · SEQ 顺序处理器与 HCL 控制</a><a  href="11-pipeline.html">11 · PIPE 流水线与冒险控制</a><a  href="12-memory-hierarchy.html">12 · 存储技术、局部性与存储层次</a><a  href="13-cache-memories.html">13 · Cache 组织、访问与局部性优化</a><a  href="14-optimization.html">14 · 程序优化、依赖链与指令级并行</a><a  href="15-linking.html">15 · 链接、目标文件与库</a><a  href="16-ecf-processes.html">16 · 异常控制流与进程</a><a  href="11-quiz01.html">附录 A · 第一次测验答案回查</a><a  href="12-past-papers.html">附录 B · 往年题与勘误</a><a  href="13-seminars.html">附录 C · 小班研讨与作业</a><a  href="14-coverage.html">附录 D · 课件覆盖索引与来源</a><a aria-current=page href="15-quiz02.html">附录 E · 第二次测验分章习题</a><div class="nav-foot">依据本地课件与公开题库<br>更新于 2026.11.10</div></nav><main id="main"><div class="eyebrow">COMPUTER SYSTEMS · PEKING UNIVERSITY</div><h1>附录 E · 第二次测验分章习题</h1>
+<p>当前已整理第 9～16 讲；第二次测验还包含后续课程，待资料上传后继续补充，因此本页不是完整考试范围声明。按章节、题号从上到下阅读，每题答案默认收起，点击“显示答案”查看，再次点击即可隐藏；右侧可选择章节或查看全部题目。</p>
+<p><strong>题型与来源</strong>：参考 <a href="https://github.com/zhuozhiyongde/Introduction-to-Computer-System-2023Fall-PKU">zhuozhiyongde 的 ICS 仓库</a>、其中<a href="https://github.com/zhuozhiyongde/Introduction-to-Computer-System-2023Fall-PKU/tree/main/%E5%BE%80%E5%B9%B4%E9%A2%98">历年试卷</a>及本学期第一次测验答案版。标注“2025 改编”的题目对应 2025 年第二次阶段测验题号；题干经重新表述，部分参数和选项已改变，答案以本页题干为准。“补充”题依据本学期课件与研讨内容编写。第一次测验资料仅有答案，借鉴其分讲与填空形式，不据此杜撰原题。</p>
+<p><strong>填写方式</strong>：每题按圈号顺序填写空格；代码题的 A～D 对应题下的空位；选项题将全部正确字母填入同一个空。答案默认收起，展开后按题干顺序核对。</p>
+<p><strong>统一约定</strong>：使用教材基础 Y86-64、SEQ 与带前递的五级 PIPE；除非另有说明，访存成功，寄存器和字均为 64 位，<code>M8[a]</code> 表示地址 <code>a</code> 开始的 8 字节。Cache 容量仅计数据区，KiB 表示 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mn>10</mn></msup></mrow><annotation encoding="application/x-tex">2^{10}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span></span></span></span></span></span></span></span></span> 字节。题目涉及周期时会给出计数边界。</p>
+<section class="quiz-chapter" data-chapter="section-1"><h2 id="section-1">第 9 讲 · ISA 与逻辑设计<a class="anchor" href="#section-1" aria-label="链接到本节">#</a></h2>
+<p>回查：<a href="09-isa-logic.html">Y86-64 指令集与逻辑设计</a>。</p>
+<h3 id="section-2">9.1 ISA、实现与调用约定（填空；2025 第 1 题改编）<a class="anchor" href="#section-2" aria-label="链接到本节">#</a></h3>
+<p>下列哪些属于 ISA 层面的规定？</p>
+<ul>
+<li>A. 通用寄存器的数量与宽度。</li>
+<li>B. 使用五级流水线执行指令。</li>
+<li>C. <code>call</code> 将顺序后继地址压栈，并转移控制。</li>
+<li>D. C 函数的前两个整数参数使用 <code>%rdi</code>、<code>%rsi</code> 传递。</li>
+<li>E. 字节编址方式与多字节数据的字节序。</li>
+<li>F. L1 数据 Cache 的组数。</li>
+<li>G. 指令可使用的寻址方式。</li>
+</ul>
+<p>属于 ISA 规定的选项字母为（①＿＿＿＿）；B、F 属于（②＿＿＿＿）层面，D 属于（③＿＿＿＿）。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① A、C、E、G；② 微体系结构（实现）；③ 调用约定。</p>
+</div></details>
+<h3 id="section-3">9.2 指令编码与长度（填空；补充）<a class="anchor" href="#section-3" aria-label="链接到本节">#</a></h3>
+<p>Y86-64 的 <code>%rax</code> 编号为 0，<code>%rbx</code> 为 3，<code>RNONE</code> 为 F。<code>irmovq</code> 的首字节为 <code>30</code>。从地址 <code>0x100</code> 放置 <code>irmovq $0x1234,%rbx</code>，写出全部编码字节、长度和顺序后继地址。</p>
+<p>全部编码字节：①＿＿＿＿；指令长度：②＿＿＿＿ 字节；顺序后继地址：③＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <code>30 f3 34 12 00 00 00 00 00 00</code>；② 10；③ <code>0x10A</code>。</p>
+<p>核对说明：<code>30 f3 34 12 00 00 00 00 00 00</code>；10 字节；<code>0x10A</code>。</p>
+</div></details>
+<h3 id="section-4">9.3 基址寄存器字段（填空；2025 第 2 题改编）<a class="anchor" href="#section-4" aria-label="链接到本节">#</a></h3>
+<p>考虑 <code>rmmovq rA,D(rB)</code> 与 <code>mrmovq D(rB),rA</code> 的地址生成与寄存器编码。</p>
+<p>两类指令都从字段 ①＿＿＿＿ 指定的寄存器读取基址，与 ②＿＿＿＿ 相加，从而共用地址生成通路；load 的目的寄存器由字段 ③＿＿＿＿ 指定。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <code>rB</code>；② <code>valC</code>；③ <code>rA</code>。共用基址读取和地址计算通路可减少控制与数据选择逻辑。</p>
+</div></details>
+<h3 id="section-5">9.4 条件码与跳转（填空；补充）<a class="anchor" href="#section-5" aria-label="链接到本节">#</a></h3>
+<p>执行 <code>subq %rax,%rbx</code> 前，<code>R[%rax]=1</code>，<code>R[%rbx]=0x8000000000000000</code>。写出结果、<code>ZF/SF/OF</code>，以及随后 <code>jl</code> 和 <code>jge</code> 是否跳转。</p>
+<p>运算结果：①＿＿＿＿；ZF=②＿＿＿＿，SF=③＿＿＿＿，OF=④＿＿＿＿；<code>jl</code>：⑤＿＿＿＿，<code>jge</code>：⑥＿＿＿＿（后两空填“跳转”或“不跳转”）。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <code>0x7FFFFFFFFFFFFFFF</code>；② 0；③ 0；④ 1；⑤ 跳转；⑥ 不跳转。</p>
+<p>核对说明：结果 <code>0x7FFFFFFFFFFFFFFF</code>；<code>ZF=0</code>、<code>SF=0</code>、<code>OF=1</code>；<code>jl</code> 跳转，<code>jge</code> 不跳转。判断有符号小于使用 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>F</mi><mo>⊕</mo><mi>O</mi><mi>F</mi></mrow><annotation encoding="application/x-tex">SF\oplus OF</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mord mathnormal" style="margin-right:0.1389em;">F</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⊕</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0278em;">O</span><span class="mord mathnormal" style="margin-right:0.1389em;">F</span></span></span></span></span>。</p>
+</div></details>
+<h3 id="section-6">9.5 组合逻辑真值表（填空；2025 第 3 题改编）<a class="anchor" href="#section-6" aria-label="链接到本节">#</a></h3>
+<p>对布尔输入，计算以下表达式。第一式按 <code>(a,b)=(0,0),(0,1),(1,0),(1,1)</code> 的顺序填结果；第二式分别写 <code>s=0</code> 与 <code>s=1</code> 的输出来源。</p>
+<pre><code class="language-hcl"><span class="tok-kt">bool</span> <span class="tok-n">eq</span> <span class="tok-o">=</span> <span class="tok-p">(</span><span class="tok-n">a</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">b</span><span class="tok-p">)</span> <span class="tok-o">||</span> <span class="tok-p">(</span><span class="tok-o">!</span><span class="tok-n">a</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-o">!</span><span class="tok-n">b</span><span class="tok-p">);</span>
+<span class="tok-kt">bool</span> <span class="tok-n">out</span> <span class="tok-o">=</span> <span class="tok-p">(</span><span class="tok-n">s</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">a</span><span class="tok-p">)</span> <span class="tok-o">||</span> <span class="tok-p">(</span><span class="tok-o">!</span><span class="tok-n">s</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-n">b</span><span class="tok-p">);</span>
+</code></pre>
+<p>按题给四组 <code>(a,b)</code> 的顺序，<code>eq</code> 依次为 ①＿＿＿＿、②＿＿＿＿、③＿＿＿＿、④＿＿＿＿；<code>s=0</code> 时 <code>out</code> 选 ⑤＿＿＿＿，<code>s=1</code> 时选 ⑥＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 1；② 0；③ 0；④ 1；⑤ <code>b</code>；⑥ <code>a</code>。</p>
+<p>核对说明：<code>eq</code> 为 <code>1,0,0,1</code>；<code>s=0</code> 选 <code>b</code>，<code>s=1</code> 选 <code>a</code>。</p>
+</div></details>
+<h3 id="section-7">9.6 HCL 优先选择（填空；补充）<a class="anchor" href="#section-7" aria-label="链接到本节">#</a></h3>
+<pre><code class="language-hcl"><span class="tok-kt">word</span> <span class="tok-n">out</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">a</span> <span class="tok-o">==</span> <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-m">10</span><span class="tok-p">;</span>
+    <span class="tok-n">b</span> <span class="tok-o">==</span> <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-m">20</span><span class="tok-p">;</span>
+    <span class="tok-m">1</span> <span class="tok-p">:</span> <span class="tok-m">30</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+</code></pre>
+<p>分别计算 <code>(a,b)=(1,1),(0,1),(0,0)</code> 时的 <code>out</code>。多个条件同时成立时如何选择？</p>
+<p>按题给三组 <code>(a,b)</code> 的顺序，<code>out</code> 依次为 ①＿＿＿＿、②＿＿＿＿、③＿＿＿＿；多个条件同时成立时，选择从上到下第 ④＿＿＿＿ 个成立的分支。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 10；② 20；③ 30；④ 一。</p>
+</div></details>
+<h3 id="section-8">9.7 时钟边沿与寄存器（填空；补充）<a class="anchor" href="#section-8" aria-label="链接到本节">#</a></h3>
+<p>两个边沿触发寄存器 A、B 初始为 1、4。在每个上升沿同时执行 <code>A ← B</code>、<code>B ← A+B</code>，右侧均取该边沿之前的值。填写前三次上升沿后的 <code>(A,B)</code>。</p>
+<p>第一次边沿后 <code>(A,B)</code>=①＿＿＿＿；第二次：②＿＿＿＿；第三次：③＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <code>(4,5)</code>；② <code>(5,9)</code>；③ <code>(9,14)</code>。</p>
+<p>核对说明：<code>(4,5)</code>、<code>(5,9)</code>、<code>(9,14)</code>。同一边沿的 B 不使用刚更新的 A。</p>
+</div></details>
+<h3 id="section-9">9.8 Y86 指令能力（填空；补充）<a class="anchor" href="#section-9" aria-label="链接到本节">#</a></h3>
+<p>基础 Y86-64 能直接编码哪些指令？</p>
+<ul>
+<li>A. <code>addq %rax,%rbx</code></li>
+<li>B. <code>addq $8,%rsp</code></li>
+<li>C. <code>mrmovq 16(%rbx),%rax</code></li>
+<li>D. <code>mrmovq (%rbx,%rcx,8),%rax</code></li>
+<li>E. <code>cmovle %rax,%rbx</code></li>
+<li>F. <code>cmpq %rax,%rbx</code></li>
+</ul>
+<p>可直接编码的选项字母为：①＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① A、C、E。</p>
+<p>核对说明：A、C、E。立即数算术、比例索引寻址和 <code>cmpq</code> 均不是基础 Y86-64 指令。</p>
+</div></details>
+</section><section class="quiz-chapter" data-chapter="section-10"><h2 id="section-10">第 10 讲 · SEQ 顺序处理器<a class="anchor" href="#section-10" aria-label="链接到本节">#</a></h2>
+<p>回查：<a href="10-sequential.html#seq-hardware">SEQ 与硬件总图</a>。</p>
+<h3 id="section-11">10.1 popq 六阶段（填空；2025 第 5 题改编）<a class="anchor" href="#section-11" aria-label="链接到本节">#</a></h3>
+<p>执行 <code>popq %rax</code>，当前 <code>PC=0x100</code>、<code>R[%rsp]=0x200</code>、<code>M8[0x200]=0x345</code>。填写 <code>valP</code>、<code>valA</code>、<code>valB</code>、<code>valE</code>、<code>valM</code>、两处寄存器写回及下一 PC。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>待填内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fetch</td>
+<td><code>valP</code>=①＿＿＿＿；寄存器字节取自地址 ②＿＿＿＿（用 PC 表示）</td>
+</tr>
+<tr>
+<td>Decode</td>
+<td><code>valA</code>=③＿＿＿＿；<code>valB</code>=④＿＿＿＿</td>
+</tr>
+<tr>
+<td>Execute</td>
+<td><code>valE</code>=⑤＿＿＿＿</td>
+</tr>
+<tr>
+<td>Memory</td>
+<td><code>valM</code>=⑥＿＿＿＿</td>
+</tr>
+<tr>
+<td>Write back</td>
+<td><code>R[%rsp]</code>←⑦＿＿＿＿；<code>R[%rax]</code>←⑧＿＿＿＿</td>
+</tr>
+<tr>
+<td>PC update</td>
+<td><code>PC</code>←⑨＿＿＿＿</td>
+</tr>
+</tbody>
+</table></div>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <code>0x102</code>；② <code>PC+1</code>；③ <code>0x200</code>；④ <code>0x200</code>；⑤ <code>0x208</code>；⑥ <code>0x345</code>；⑦ <code>0x208</code>；⑧ <code>0x345</code>；⑨ <code>0x102</code>。<code>valE=valB+8</code>，<code>valM=M8[valA]</code>。</p>
+</div></details>
+<h3 id="section-12">10.2 call 与 ret 的下一 PC（填空；补充）<a class="anchor" href="#section-12" aria-label="链接到本节">#</a></h3>
+<p>在 <code>PC=0x100</code> 执行 <code>call 0x400</code>，原 <code>R[%rsp]=0x800</code>。随后被调用过程不再改变栈，直接执行 <code>ret</code>。填写 call 的 <code>valP</code>、新栈指针、写入内存的地址与值、下一 PC，以及 ret 后的 PC 和栈指针。</p>
+<p>call 的 <code>valP</code>=①＿＿＿＿；新 <code>R[%rsp]</code>=②＿＿＿＿；写内存地址为 ③＿＿＿＿，写入值为 ④＿＿＿＿；下一 PC=⑤＿＿＿＿。ret 后 PC=⑥＿＿＿＿，<code>R[%rsp]</code>=⑦＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <code>0x109</code>；② <code>0x7F8</code>；③ <code>0x7F8</code>；④ <code>0x109</code>；⑤ <code>0x400</code>；⑥ <code>0x109</code>；⑦ <code>0x800</code>。</p>
+<p>核对说明：call 的 <code>valP=0x109</code>；<code>R[%rsp]=0x7F8</code>；<code>M8[0x7F8]←0x109</code>；下一 PC 为 <code>0x400</code>。ret 后 <code>PC=0x109</code>、<code>R[%rsp]=0x800</code>。call 跳到 <code>valC</code>，ret 跳到 <code>valM</code>，均不能把各自 <code>valP</code> 当成跳转目标。</p>
+</div></details>
+<h3 id="section-13">10.3 ALU 的 A 输入（填空；2025 第 6 题改编）<a class="anchor" href="#section-13" aria-label="链接到本节">#</a></h3>
+<p>补全 A～D，常量按十进制写；此处只列需要运算的指令。</p>
+<pre><code class="language-hcl"><span class="tok-kt">word</span> <span class="tok-n">aluA</span> <span class="tok-o">=</span> <span class="tok-p">[</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IOPQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-no">A</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IIRMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IRMMOVQ</span><span class="tok-p">,</span> <span class="tok-no">IMRMOVQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-no">B</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">ICALL</span><span class="tok-p">,</span> <span class="tok-no">IPUSHQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-no">C</span><span class="tok-p">;</span>
+    <span class="tok-n">icode</span> <span class="tok-k">in</span> <span class="tok-p">{</span> <span class="tok-no">IRET</span><span class="tok-p">,</span> <span class="tok-no">IPOPQ</span> <span class="tok-p">}</span> <span class="tok-p">:</span> <span class="tok-no">D</span><span class="tok-p">;</span>
+<span class="tok-p">];</span>
+</code></pre>
+<p>代码中 A=①＿＿＿＿；B=②＿＿＿＿；C=③＿＿＿＿；D=④＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <code>valA</code>；② <code>valC</code>；③ <code>-8</code>；④ <code>8</code>。</p>
+<p>核对说明：A=<code>valA</code>；B=<code>valC</code>；C=<code>-8</code>；D=<code>8</code>。</p>
+</div></details>
+<h3 id="section-14">10.4 load 的控制与数据流（填空；补充）<a class="anchor" href="#section-14" aria-label="链接到本节">#</a></h3>
+<p>执行 <code>mrmovq 24(%rbx),%rax</code>，原 <code>R[%rbx]=0x1000</code>，<code>M8[0x1018]=0x55</code>。填写 <code>srcB</code>、<code>dstE</code>、<code>dstM</code>、<code>aluA</code>、<code>aluB</code>、访存地址、读写使能、最终 <code>%rax</code>。</p>
+<p><code>srcB</code>=①＿＿＿＿；<code>dstE</code>=②＿＿＿＿；<code>dstM</code>=③＿＿＿＿；<code>aluA</code>=④＿＿＿＿；<code>aluB</code>=⑤＿＿＿＿；访存地址=⑥＿＿＿＿；<code>mem_read</code>=⑦＿＿＿＿；<code>mem_write</code>=⑧＿＿＿＿；最终 <code>R[%rax]</code>=⑨＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <code>%rbx</code>；② <code>RNONE</code>；③ <code>%rax</code>；④ 24；⑤ <code>0x1000</code>；⑥ <code>0x1018</code>；⑦ 1；⑧ 0；⑨ <code>0x55</code>。</p>
+<p>核对说明：<code>srcB=%rbx</code>；<code>dstE=RNONE</code>；<code>dstM=%rax</code>；<code>aluA=24</code>；<code>aluB=0x1000</code>；地址 <code>valE=0x1018</code>；<code>mem_read=1</code>、<code>mem_write=0</code>；<code>R[%rax]=0x55</code>。</p>
+</div></details>
+<h3 id="section-15">10.5 条件传送失败（填空；补充）<a class="anchor" href="#section-15" aria-label="链接到本节">#</a></h3>
+<p><code>cmovg %rax,%rbx</code> 执行前 <code>ZF=1</code>、<code>SF=0</code>、<code>OF=0</code>，<code>R[%rax]=7</code>、<code>R[%rbx]=9</code>。填写 <code>Cnd</code>、<code>valE</code>、<code>dstE</code>、最终 <code>%rbx</code>，并判断 CC 是否变化。</p>
+<p><code>Cnd</code>=①＿＿＿＿；<code>valE</code>=②＿＿＿＿；<code>dstE</code>=③＿＿＿＿；最终 <code>R[%rbx]</code>=④＿＿＿＿；CC ⑤＿＿＿＿（填“改变”或“不变”）。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 0；② 7；③ <code>RNONE</code>；④ 9；⑤ 不变。</p>
+<p>核对说明：<code>Cnd=0</code>；<code>valE=7</code>；<code>dstE=RNONE</code>；<code>R[%rbx]=9</code>；CC 不变。</p>
+</div></details>
+<h3 id="section-16">10.6 popq 的双写口冲突（填空；补充）<a class="anchor" href="#section-16" aria-label="链接到本节">#</a></h3>
+<p>执行 <code>popq %rsp</code>，旧 <code>R[%rsp]=0x800</code>、<code>M8[0x800]=0x900</code>。写出 <code>valE</code>、<code>valM</code> 和最终 <code>%rsp</code>。采用教材中 M 写口优先的寄存器文件。</p>
+<p><code>valE</code>=①＿＿＿＿；<code>valM</code>=②＿＿＿＿；最终 <code>R[%rsp]</code>=③＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <code>0x808</code>；② <code>0x900</code>；③ <code>0x900</code>。</p>
+<p>核对说明：<code>valE=0x808</code>；<code>valM=0x900</code>；最终 <code>R[%rsp]=0x900</code>。</p>
+</div></details>
+<h3 id="section-17">10.7 哪些指令修改 CC（填空；补充）<a class="anchor" href="#section-17" aria-label="链接到本节">#</a></h3>
+<p>正常执行时，哪些基础 Y86 指令修改条件码？</p>
+<ul>
+<li>A. <code>addq %rax,%rbx</code></li>
+<li>B. <code>pushq %rax</code></li>
+<li>C. <code>mrmovq 8(%rbx),%rax</code></li>
+<li>D. <code>andq %rax,%rax</code></li>
+<li>E. <code>jle 0x100</code></li>
+<li>F. <code>irmovq $0,%rax</code></li>
+</ul>
+<p>修改 CC 的选项字母为：①＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① A、D。</p>
+<p>核对说明：A、D。ALU 参与地址或栈指针计算并不意味着写 CC。</p>
+</div></details>
+<h3 id="section-18">10.8 SEQ 周期（填空；补充）<a class="anchor" href="#section-18" aria-label="链接到本节">#</a></h3>
+<p>某 SEQ 最长组合路径依次经过取指 180 ps、译码 90 ps、执行 110 ps、访存 160 ps、写回及 PC 选择 60 ps；时序开销另为 20 ps。忽略其他路径，求最小时钟周期及 100 条指令所需时间。</p>
+<p>最小时钟周期为 ①＿＿＿＿ ps；100 条指令所需时间为 ②＿＿＿＿ ns。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 620；② 62。</p>
+<p>核对说明：周期 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>180</mn><mo>+</mo><mn>90</mn><mo>+</mo><mn>110</mn><mo>+</mo><mn>160</mn><mo>+</mo><mn>60</mn><mo>+</mo><mn>20</mn><mo>=</mo><mn>620</mn><mtext> </mtext><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">s</mi></mrow></mrow><annotation encoding="application/x-tex">180+90+110+160+60+20=620\ \mathrm{ps}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">180</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">90</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">110</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">160</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">60</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">20</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">620</span><span class="mspace"> </span><span class="mord"><span class="mord mathrm">ps</span></span></span></span></span></span>；100 条为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>62000</mn><mtext> </mtext><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">s</mi></mrow><mo>=</mo><mn>62</mn><mtext> </mtext><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">s</mi></mrow></mrow><annotation encoding="application/x-tex">62000\ \mathrm{ps}=62\ \mathrm{ns}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">62000</span><span class="mspace"> </span><span class="mord"><span class="mord mathrm">ps</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">62</span><span class="mspace"> </span><span class="mord"><span class="mord mathrm">ns</span></span></span></span></span></span>。</p>
+</div></details>
+</section><section class="quiz-chapter" data-chapter="section-19"><h2 id="section-19">第 11 讲 · PIPE 流水线<a class="anchor" href="#section-19" aria-label="链接到本节">#</a></h2>
+<p>回查：<a href="11-pipeline.html#pipe-hardware">PIPE 与硬件总图</a>。</p>
+<h3 id="section-20">11.1 时钟、延迟与吞吐（填空；2025 第 7 题同型改编）<a class="anchor" href="#section-20" aria-label="链接到本节">#</a></h3>
+<p>三级流水线各级组合延迟为 80、140、100 ps，每级寄存器开销为 20 ps，使用统一时钟。求时钟周期、从第一条进入第一级到第三个边沿完成的延迟，以及空管开始处理 10 条无冒险指令的时间。</p>
+<p>时钟周期为 ①＿＿＿＿ ps；单条指令跨三级延迟为 ②＿＿＿＿ ps；10 条指令共需 ③＿＿＿＿ 周期，即 ④＿＿＿＿ ps。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 160；② 480；③ 12；④ 1920。</p>
+<p>核对说明：周期 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>max</mi><mo>⁡</mo><mo stretchy="false">(</mo><mn>80</mn><mo separator="true">,</mo><mn>140</mn><mo separator="true">,</mo><mn>100</mn><mo stretchy="false">)</mo><mo>+</mo><mn>20</mn><mo>=</mo><mn>160</mn><mtext> </mtext><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">s</mi></mrow></mrow><annotation encoding="application/x-tex">\max(80,140,100)+20=160\ \mathrm{ps}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mop">max</span><span class="mopen">(</span><span class="mord">80</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">140</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">100</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">20</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">160</span><span class="mspace"> </span><span class="mord"><span class="mord mathrm">ps</span></span></span></span></span></span>；单条跨三级延迟 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><mn>160</mn><mo>=</mo><mn>480</mn><mtext> </mtext><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">s</mi></mrow></mrow><annotation encoding="application/x-tex">3\times160=480\ \mathrm{ps}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">3</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">160</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">480</span><span class="mspace"> </span><span class="mord"><span class="mord mathrm">ps</span></span></span></span></span></span>；10 条共 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mo>+</mo><mn>3</mn><mo>−</mo><mn>1</mn><mo>=</mo><mn>12</mn></mrow><annotation encoding="application/x-tex">10+3-1=12</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">10</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">3</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">12</span></span></span></span></span> 周期，即 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1920</mn><mtext> </mtext><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">s</mi></mrow></mrow><annotation encoding="application/x-tex">1920\ \mathrm{ps}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">1920</span><span class="mspace"> </span><span class="mord"><span class="mord mathrm">ps</span></span></span></span></span></span>。</p>
+</div></details>
+<h3 id="section-21">11.2 前递来源与优先级（填空；2025 第 8 题改编）<a class="anchor" href="#section-21" aria-label="链接到本节">#</a></h3>
+<pre><code class="language-asm"><span class="tok-nf">irmovq</span><span class="tok-w"> </span><span class="tok-no">$5</span><span class="tok-p">,</span><span class="tok-nv">%rax</span>
+<span class="tok-nf">irmovq</span><span class="tok-w"> </span><span class="tok-no">$9</span><span class="tok-p">,</span><span class="tok-nv">%rax</span>
+<span class="tok-nf">irmovq</span><span class="tok-w"> </span><span class="tok-no">$3</span><span class="tok-p">,</span><span class="tok-nv">%rdx</span>
+<span class="tok-nf">addq</span><span class="tok-w"> </span><span class="tok-nv">%rax</span><span class="tok-p">,</span><span class="tok-nv">%rdx</span>
+</code></pre>
+<p>无停顿执行。当 <code>addq</code> 处于 D 时，前三条分别在哪一级？<code>%rax</code> 应取哪个值、来自哪条指令的哪个信号？最终 <code>%rdx</code> 是多少？</p>
+<p>前三条指令依次处于 ①＿＿＿＿、②＿＿＿＿、③＿＿＿＿ 级；<code>%rax</code> 操作数取值为 ④＿＿＿＿，来自第 ⑤＿＿＿＿ 条指令的信号 ⑥＿＿＿＿；最终 <code>R[%rdx]</code>=⑦＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① W；② M；③ E；④ 9；⑤ 二；⑥ <code>M_valE</code>；⑦ 12。M 中的较新结果优先于 W 中的旧结果。</p>
+</div></details>
+<h3 id="section-22">11.3 紧邻 load-use（填空；2025 第 9 题改编）<a class="anchor" href="#section-22" aria-label="链接到本节">#</a></h3>
+<pre><code class="language-asm"><span class="tok-nf">mrmovq</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">(</span><span class="tok-nv">%rbx</span><span class="tok-p">),</span><span class="tok-nv">%rax</span>
+<span class="tok-nf">addq</span><span class="tok-w"> </span><span class="tok-nv">%rax</span><span class="tok-p">,</span><span class="tok-nv">%rcx</span>
+</code></pre>
+<p>当第一条处于 E、第二条处于 D 时，F、D、E 应分别如何控制？标准 PIPE 需要插入几个气泡，下一周期数据从哪里前递？</p>
+<p>F 执行 ①＿＿＿＿；D 执行 ②＿＿＿＿；E 执行 ③＿＿＿＿（前三空填 stall/bubble/normal）；插入 ④＿＿＿＿ 个气泡；下一周期通过信号 ⑤＿＿＿＿ 向 D 前递装载数据。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① stall；② stall；③ bubble；④ 1；⑤ <code>m_valM</code>。</p>
+<p>核对说明：F stall、D stall、E bubble；插入 1 个气泡；下一周期 load 到 M，数据经 <code>m_valM</code> 前递给仍在 D 的 <code>addq</code>。单靠前递无法消除这一个周期的等待。</p>
+</div></details>
+<h3 id="section-23">11.4 load-use 与 ret 叠加（填空；2025 第 10 题改编）<a class="anchor" href="#section-23" aria-label="链接到本节">#</a></h3>
+<pre><code class="language-asm"><span class="tok-nf">mrmovq</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">(</span><span class="tok-nv">%rbx</span><span class="tok-p">),</span><span class="tok-nv">%rsp</span>
+<span class="tok-nf">ret</span>
+</code></pre>
+<p>load 在 E、ret 在 D 时，填写 <code>F_stall</code>、<code>D_stall</code>、<code>D_bubble</code>、<code>E_bubble</code>。</p>
+<p><code>F_stall</code>=①＿＿＿＿；<code>D_stall</code>=②＿＿＿＿；<code>D_bubble</code>=③＿＿＿＿；<code>E_bubble</code>=④＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 1；② 1；③ 0；④ 1。</p>
+<p>核对说明：依次为 1、1、0、1。必须保留 D 中的 ret 等待正确栈指针，不能同时给 D stall 与 bubble。</p>
+</div></details>
+<h3 id="section-24">11.5 分支误预测恢复（填空；补充）<a class="anchor" href="#section-24" aria-label="链接到本节">#</a></h3>
+<p>标准 PIPE 对 <code>jXX</code> 预测跳转。一条条件跳转在 E 判定 <code>Cnd=0</code>，D 和 F 中均为预测目标路径上的指令。应取消哪些指令？下一周期从哪个信号恢复取指？通常产生多少个气泡？</p>
+<p>取消当前处于 ①＿＿＿＿ 和 ②＿＿＿＿ 级的年轻指令；向 ③＿＿＿＿ 和 ④＿＿＿＿ 流水线寄存器注入气泡；下一周期取指地址来自信号 ⑤＿＿＿＿；误预测代价通常为 ⑥＿＿＿＿ 个气泡。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① D；② F；③ D；④ E；⑤ <code>M_valA</code>；⑥ 2。<code>M_valA</code> 携带分支的顺序后继地址。</p>
+</div></details>
+<h3 id="section-25">11.6 ret 等待（填空；补充）<a class="anchor" href="#section-25" aria-label="链接到本节">#</a></h3>
+<p>无其他冒险时，标准 PIPE 的 ret 依次处于 D、E、M。各周期是否暂停 F？何时能用返回地址取指？</p>
+<p>ret 在 D、E、M 时，F 分别为 ①＿＿＿＿、②＿＿＿＿、③＿＿＿＿（填“暂停”或“不暂停”）；ret 到 ④＿＿＿＿ 级时，通过 ⑤＿＿＿＿ 信号恢复取指；返回等待代价为 ⑥＿＿＿＿ 周期。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 暂停；② 暂停；③ 暂停；④ W；⑤ <code>W_valM</code>；⑥ 3。</p>
+</div></details>
+<h3 id="section-26">11.7 条件传送的前递陷阱（填空；补充）<a class="anchor" href="#section-26" aria-label="链接到本节">#</a></h3>
+<p>E 中为不成立的 <code>cmovle %rax,%rbx</code>，D 中下一条读取 <code>%rbx</code>。补全该情况下的前递控制规则。</p>
+<p>条件传送失败时，应把实际目的 <code>e_dstE</code> 改为 ①＿＿＿＿；此时 <code>e_valE</code> ②＿＿＿＿（填“能”或“不能”）作为本条指令对 <code>%rbx</code> 的前递结果；D 应取得 <code>%rbx</code> 的 ③＿＿＿＿（填“原有值”或“待传送值”）。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <code>RNONE</code>；② 不能；③ 原有值。原有值可来自其他有效前递源或寄存器文件。</p>
+</div></details>
+<h3 id="section-27">11.8 总周期与 CPI（填空；补充）<a class="anchor" href="#section-27" aria-label="链接到本节">#</a></h3>
+<p>20 条正确路径指令，不含 <code>halt</code>；从第一条 F 到最后一条 W 计时。五级流水线中出现 3 次独立 load-use、2 次独立分支误预测，无 ret、无其他冒险，且各处罚不重叠。求总周期和本段实际 CPI。</p>
+<p>总周期=①＿＿＿＿；本段实际 CPI=②＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 31；② 1.55。</p>
+<p>核对说明：<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>20</mn><mo>+</mo><mn>4</mn><mo>+</mo><mn>3</mn><mo>×</mo><mn>1</mn><mo>+</mo><mn>2</mn><mo>×</mo><mn>2</mn><mo>=</mo><mn>31</mn></mrow><annotation encoding="application/x-tex">20+4+3\times1+2\times2=31</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">20</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">4</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">3</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">2</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">2</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">31</span></span></span></span></span> 周期；<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">C</mi><mi mathvariant="normal">P</mi><mi mathvariant="normal">I</mi></mrow><mo>=</mo><mn>31</mn><mi mathvariant="normal">/</mi><mn>20</mn><mo>=</mo><mn>1.55</mn></mrow><annotation encoding="application/x-tex">\mathrm{CPI}=31/20=1.55</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord"><span class="mord mathrm">CPI</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">31/20</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">1.55</span></span></span></span></span>。</p>
+</div></details>
+</section><section class="quiz-chapter" data-chapter="section-28"><h2 id="section-28">第 12 讲 · 存储器层次结构<a class="anchor" href="#section-28" aria-label="链接到本节">#</a></h2>
+<p>回查：<a href="12-memory-hierarchy.html">存储器层次结构</a>。</p>
+<h3 id="section-29">12.1 SRAM、DRAM、Flash（填空；2025 第 11～12 题同型改编）<a class="anchor" href="#section-29" aria-label="链接到本节">#</a></h3>
+<p>在 SRAM、DRAM、Flash 中，填写：通常用作 CPU Cache 的存储器；需要周期性刷新的存储器；可掉电保存数据的存储器。再判断“所有 ROM 家族器件制造完成后都绝不可能改写”。</p>
+<p>CPU Cache 通常使用 ①＿＿＿＿；需要刷新的为 ②＿＿＿＿；掉电保持数据的为 ③＿＿＿＿；“所有 ROM 家族器件都不能改写”的判断为 ④＿＿＿＿（填“对”或“错”）。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① SRAM；② DRAM；③ Flash；④ 错。</p>
+<p>核对说明：SRAM；DRAM；Flash；判断为错，EEPROM、Flash 等允许在规定条件下改写。</p>
+</div></details>
+<h3 id="section-30">12.2 DRAM 行列寻址（填空；补充）<a class="anchor" href="#section-30" aria-label="链接到本节">#</a></h3>
+<p>一颗 DRAM 组织为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4096</mn><mo>×</mo><mn>4096</mn></mrow><annotation encoding="application/x-tex">4096\times4096</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">4096</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">4096</span></span></span></span></span> 个位置，每个位置 8 bit。行地址、列地址复用同一组引脚。求数据容量、行地址位数、列地址位数和复用地址引脚数（不计控制引脚）。</p>
+<p>数据容量=①＿＿＿＿ MiB；行地址=②＿＿＿＿ 位；列地址=③＿＿＿＿ 位；复用地址引脚共 ④＿＿＿＿ 根。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 16；② 12；③ 12；④ 12。</p>
+<p>核对说明：<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>4096</mn><mn>2</mn></msup><mo>×</mo><mn>8</mn><mtext> </mtext><mrow><mi mathvariant="normal">b</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">t</mi></mrow><mo>=</mo><mn>16</mn><mtext> </mtext><mrow><mi mathvariant="normal">M</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">B</mi></mrow></mrow><annotation encoding="application/x-tex">4096^2\times8\ \mathrm{bit}=16\ \mathrm{MiB}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord">409</span><span class="mord"><span class="mord">6</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6944em;"></span><span class="mord">8</span><span class="mspace"> </span><span class="mord"><span class="mord mathrm">bit</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord">16</span><span class="mspace"> </span><span class="mord"><span class="mord mathrm">MiB</span></span></span></span></span></span>；行 12 位，列 12 位；复用地址引脚 12 根。</p>
+</div></details>
+<h3 id="section-31">12.3 多芯片并行（填空；2025 第 13 题改编）<a class="anchor" href="#section-31" aria-label="链接到本节">#</a></h3>
+<p>一个 rank 由 8 颗 <code>×8</code> DRAM 芯片组成，对外数据宽度为 64 bit。对齐的一个 64 位数据传输，数据来自一颗芯片还是分散到多颗？每颗提供多少位？</p>
+<p>一个 64 位数据分散在 ①＿＿＿＿ 颗芯片，每颗提供 ②＿＿＿＿ bit；各芯片通过 ③＿＿＿＿（填“相同”或“不同”）的寻址并行提供不同的数据位。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 8；② 8；③ 相同。</p>
+</div></details>
+<h3 id="section-32">12.4 磁盘访问时间（填空；补充）<a class="anchor" href="#section-32" aria-label="链接到本节">#</a></h3>
+<p>机械硬盘转速 7200 rpm，平均寻道 4 ms，数据传输耗时 0.5 ms。假定平均旋转等待为半周，忽略控制器与排队，求平均访问时间。</p>
+<p>旋转一周为 ①＿＿＿＿ ms；平均旋转等待为 ②＿＿＿＿ ms；平均访问时间为 ③＿＿＿＿ ms（保留三位小数）。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 8.333；② 4.167；③ 8.667。平均访问时间为寻道、半周旋转等待与传输时间之和。</p>
+</div></details>
+<h3 id="section-33">12.5 SSD 的擦写单位（填空；补充）<a class="anchor" href="#section-33" aria-label="链接到本节">#</a></h3>
+<p>按课程介绍的 NAND Flash 和 SSD 工作机制填空。</p>
+<p>NAND Flash 的常见读写单位为 ①＿＿＿＿，擦除单位为更大的 ②＿＿＿＿；SSD ③＿＿＿＿（填“有”或“无”）机械寻道；磨损均衡 ④＿＿＿＿（填“能”或“不能”）消除物理擦写次数上限。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 页；② 块；③ 无；④ 不能。</p>
+</div></details>
+<h3 id="section-34">12.6 四种局部性（填空；2025 第 15 题改编）<a class="anchor" href="#section-34" aria-label="链接到本节">#</a></h3>
+<pre><code class="language-c"><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-n">sum</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span>
+<span class="tok-k">for</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-w"> </span><span class="tok-o">&lt;</span><span class="tok-w"> </span><span class="tok-mi">64</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-o">++</span><span class="tok-n">i</span><span class="tok-p">)</span>
+<span class="tok-w">    </span><span class="tok-k">for</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">j</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-n">j</span><span class="tok-w"> </span><span class="tok-o">&lt;</span><span class="tok-w"> </span><span class="tok-mi">64</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-o">++</span><span class="tok-n">j</span><span class="tok-p">)</span>
+<span class="tok-w">        </span><span class="tok-n">sum</span><span class="tok-w"> </span><span class="tok-o">+=</span><span class="tok-w"> </span><span class="tok-n">a</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">][</span><span class="tok-n">j</span><span class="tok-p">];</span>
+</code></pre>
+<p><code>a</code> 是按行存储的二维数组。按源程序访问模式填写局部性类别。</p>
+<p>按源程序访问模式，<code>sum</code> 反复使用体现数据的 ①＿＿＿＿ 局部性；依次读取相邻数组元素体现数据的 ②＿＿＿＿ 局部性；循环体指令反复执行体现指令的 ③＿＿＿＿ 局部性；相邻指令接连执行体现指令的 ④＿＿＿＿ 局部性。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 时间；② 空间；③ 时间；④ 空间。</p>
+</div></details>
+<h3 id="section-35">12.7 行列访问步长（填空；补充）<a class="anchor" href="#section-35" aria-label="链接到本节">#</a></h3>
+<p><code>int a[64][64]</code> 按行存储，<code>int</code> 为 4 字节。固定 i 改变 j 的相邻访问步长是多少？固定 j 改变 i 呢？若块大小 64 字节，一块能容纳几个 int？</p>
+<p>固定 i、改变 j 时步长为 ①＿＿＿＿ 字节；固定 j、改变 i 时步长为 ②＿＿＿＿ 字节；一块可容纳 ③＿＿＿＿ 个 int。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 4；② 256；③ 16。</p>
+<p>核对说明：4 字节；<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>64</mn><mo>×</mo><mn>4</mn><mo>=</mo><mn>256</mn></mrow><annotation encoding="application/x-tex">64\times4=256</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">64</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">4</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">256</span></span></span></span></span> 字节；16 个 int。</p>
+</div></details>
+<h3 id="section-36">12.8 平均访问时间（填空；补充）<a class="anchor" href="#section-36" aria-label="链接到本节">#</a></h3>
+<p>一次访问总先花 1 ns 查询一级存储器，命中率 95%；未命中额外等待 80 ns 才完成。求平均访问时间。若命中率提高到 98%，新平均值是多少？</p>
+<p>命中率 95% 时平均访问时间=①＿＿＿＿ ns；命中率 98% 时为 ②＿＿＿＿ ns。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 5；② 2.6。</p>
+<p>核对说明：<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>+</mo><mn>0.05</mn><mo>×</mo><mn>80</mn><mo>=</mo><mn>5</mn><mtext> </mtext><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">s</mi></mrow></mrow><annotation encoding="application/x-tex">1+0.05\times80=5\ \mathrm{ns}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">0.05</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">80</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">5</span><span class="mspace"> </span><span class="mord"><span class="mord mathrm">ns</span></span></span></span></span></span>；<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>+</mo><mn>0.02</mn><mo>×</mo><mn>80</mn><mo>=</mo><mn>2.6</mn><mtext> </mtext><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">s</mi></mrow></mrow><annotation encoding="application/x-tex">1+0.02\times80=2.6\ \mathrm{ns}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">0.02</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">80</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">2.6</span><span class="mspace"> </span><span class="mord"><span class="mord mathrm">ns</span></span></span></span></span></span>。80 ns 是额外处罚，不是包含查询时间的总耗时。</p>
+</div></details>
+</section><section class="quiz-chapter" data-chapter="section-37"><h2 id="section-37">第 13 讲 · Cache<a class="anchor" href="#section-37" aria-label="链接到本节">#</a></h2>
+<p>回查：<a href="13-cache-memories.html">高速缓存</a>。</p>
+<h3 id="section-38">13.1 地址划分与容量（填空；补充）<a class="anchor" href="#section-38" aria-label="链接到本节">#</a></h3>
+<p>32 位地址，Cache 数据容量 8 KiB，4 路组相联，块大小 32 字节。求组数 S、偏移位 b、组索引位 s、标记位 t；把地址 <code>0x12345678</code> 分解为 tag、set、offset。</p>
+<p>S=①＿＿＿＿；b=②＿＿＿＿；s=③＿＿＿＿；t=④＿＿＿＿；地址的 tag=⑤＿＿＿＿、set=⑥＿＿＿＿、offset=⑦＿＿＿＿（后三空用十六进制）。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 64；② 5；③ 6；④ 21；⑤ <code>0x2468A</code>；⑥ <code>0x33</code>；⑦ <code>0x18</code>。</p>
+<p>核对说明：<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mn>8192</mn><mi mathvariant="normal">/</mi><mo stretchy="false">(</mo><mn>4</mn><mo>×</mo><mn>32</mn><mo stretchy="false">)</mo><mo>=</mo><mn>64</mn></mrow><annotation encoding="application/x-tex">S=8192/(4\times32)=64</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">8192/</span><span class="mopen">(</span><span class="mord">4</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">32</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">64</span></span></span></span></span>；<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>b</mi><mo>=</mo><mn>5</mn><mo separator="true">,</mo><mi>s</mi><mo>=</mo><mn>6</mn><mo separator="true">,</mo><mi>t</mi><mo>=</mo><mn>21</mn></mrow><annotation encoding="application/x-tex">b=5,s=6,t=21</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6944em;"></span><span class="mord mathnormal">b</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">5</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">s</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">6</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">21</span></span></span></span></span>；tag=<code>0x2468A</code>、set=<code>0x33</code>（51）、offset=<code>0x18</code>（24）。</p>
+</div></details>
+<h3 id="section-39">13.2 直接映射访问序列（填空；2025 第 17 题同型改编）<a class="anchor" href="#section-39" aria-label="链接到本节">#</a></h3>
+<p>6 位地址、16 字节直接映射 Cache、每块 4 字节。初始仅 set 0 缓存块 <code>[0,3]</code>，set 2 缓存块 <code>[24,27]</code>，两者有效，其余无效。按顺序读取十进制地址 <code>16,24,18,0,27,16</code>，每次 1 字节。逐次写 H/M，并写最终各组的 tag 与块范围。</p>
+<p>六次访问的 H/M 序列为 ①＿＿＿＿；hit 共 ②＿＿＿＿ 次，miss 共 ③＿＿＿＿ 次。填写最终状态：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>组</th>
+<th>valid</th>
+<th>tag（二进制）</th>
+<th>块地址范围（十进制）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>set 0</td>
+<td>④＿＿＿＿</td>
+<td>⑤＿＿＿＿</td>
+<td>⑥＿＿＿＿</td>
+</tr>
+<tr>
+<td>set 1</td>
+<td>⑦＿＿＿＿</td>
+<td>无效时不填</td>
+<td>无效时不填</td>
+</tr>
+<tr>
+<td>set 2</td>
+<td>⑧＿＿＿＿</td>
+<td>⑨＿＿＿＿</td>
+<td>⑩＿＿＿＿</td>
+</tr>
+<tr>
+<td>set 3</td>
+<td>⑪＿＿＿＿</td>
+<td>无效时不填</td>
+<td>无效时不填</td>
+</tr>
+</tbody>
+</table></div>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <code>M,H,H,M,H,M</code>；② 3；③ 3；④ 1；⑤ <code>01</code>；⑥ <code>[16,19]</code>；⑦ 0；⑧ 1；⑨ <code>01</code>；⑩ <code>[24,27]</code>；⑪ 0。</p>
+</div></details>
+<h3 id="section-40">13.3 两路 LRU（填空；补充）<a class="anchor" href="#section-40" aria-label="链接到本节">#</a></h3>
+<p>两个组、每组两路、每块 4 字节，初始为空，LRU 替换。读取字节地址 <code>0,8,0,16,8</code>。逐次判定命中，写每次发生替换时淘汰的块及最终 set 0 的 MRU→LRU 顺序。</p>
+<p>五次访问的 H/M 序列为 ①＿＿＿＿；访问 16 时淘汰块 ②＿＿＿＿；最后访问 8 时淘汰块 ③＿＿＿＿；最终 set 0 按 MRU→LRU 排列为 ④＿＿＿＿、⑤＿＿＿＿（块用十进制地址范围表示）。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <code>M,M,H,M,M</code>；② <code>[8,11]</code>；③ <code>[0,3]</code>；④ <code>[8,11]</code>；⑤ <code>[16,19]</code>。</p>
+<p>核对说明：<code>M,M,H,M,M</code>；访问 16 淘汰 <code>[8,11]</code>，最后访问 8 淘汰 <code>[0,3]</code>；最终 MRU→LRU 为 <code>[8,11]</code>、<code>[16,19]</code>。</p>
+</div></details>
+<h3 id="section-41">13.4 三类未命中（填空；2025 第 16 题改编）<a class="anchor" href="#section-41" aria-label="链接到本节">#</a></h3>
+<p>按经典 3C 分类填空。分类参照初始为空、相同块大小和总容量、LRU 的全相联 Cache。</p>
+<p>实际 Cache 已发生 miss 时：首次访问某块属于 ①＿＿＿＿ miss；非首次访问且同容量全相联 LRU 参照也 miss，属于 ②＿＿＿＿ miss；参照命中而实际 Cache miss，属于 ③＿＿＿＿ miss（填英文类别）。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① compulsory；② capacity；③ conflict。分别为强制（冷启动）、容量、冲突未命中。</p>
+</div></details>
+<h3 id="section-42">13.5 写回与写分配（填空；补充）<a class="anchor" href="#section-42" aria-label="链接到本节">#</a></h3>
+<p>一组一路、块大小 8 字节，初始为空，采用 write-back、write-allocate。依次执行 <code>W[0]=1</code>、<code>W[1]=2</code>、<code>R[8]</code>，每次 1 字节访问。写出各次 H/M、块装入次数、脏块写回次数、总块传输字节数。忽略控制信息，读入/写回均传整块。</p>
+<p>三次访问 H/M 序列为 ①＿＿＿＿；块装入 ②＿＿＿＿ 次；脏块写回 ③＿＿＿＿ 次；总块传输量为 ④＿＿＿＿ 字节。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <code>M,H,M</code>；② 2；③ 1；④ 24。</p>
+<p>核对说明：<code>M,H,M</code>；装入 2 次；写回 1 次（读取 8 时淘汰已修改的 <code>[0,7]</code>）；总传输 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>×</mo><mn>8</mn><mo>+</mo><mn>8</mn><mo>=</mo><mn>24</mn></mrow><annotation encoding="application/x-tex">2\times8+8=24</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">2</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">8</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">8</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">24</span></span></span></span></span> 字节。</p>
+</div></details>
+<h3 id="section-43">13.6 不写分配（填空；补充）<a class="anchor" href="#section-43" aria-label="链接到本节">#</a></h3>
+<p>相同的一组一路、8 字节块，初始为空，改为 write-through、no-write-allocate，依次 <code>W[0]=1</code>、<code>R[0]</code>、<code>W[1]=2</code>。写缺失直接向下级写 1 字节，读缺失装入整块。求 H/M 和向下级的总数据传输字节数。</p>
+<p>三次访问 H/M 序列为 ①＿＿＿＿；与下级之间读入和写出的总传输量为 ②＿＿＿＿ 字节。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <code>M,M,H</code>；② 10。</p>
+<p>核对说明：<code>M,M,H</code>；两次各写 1 字节，一次读入 8 字节，共 10 字节；最终缓存 <code>[0,7]</code>，其中偏移 0、1 的值为 1、2。</p>
+</div></details>
+<h3 id="section-44">13.7 元数据开销（填空；补充）<a class="anchor" href="#section-44" aria-label="链接到本节">#</a></h3>
+<p>沿用 13.1 的 Cache；每行另有 1 位 valid、1 位 dirty、21 位 tag，忽略 LRU 与其他位。求行数、元数据总位数、数据加元数据的总字节数。</p>
+<p>Cache 共 ①＿＿＿＿ 行；元数据共 ②＿＿＿＿ bit，即 ③＿＿＿＿ 字节；数据加元数据共 ④＿＿＿＿ 字节。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 256；② 5888；③ 736；④ 8928。</p>
+<p>核对说明：<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>64</mn><mo>×</mo><mn>4</mn><mo>=</mo><mn>256</mn></mrow><annotation encoding="application/x-tex">64\times4=256</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">64</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">4</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">256</span></span></span></span></span> 行；<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>256</mn><mo>×</mo><mn>23</mn><mo>=</mo><mn>5888</mn></mrow><annotation encoding="application/x-tex">256\times23=5888</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">256</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">23</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">5888</span></span></span></span></span> bit，即 736 字节；总共 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>8192</mn><mo>+</mo><mn>736</mn><mo>=</mo><mn>8928</mn></mrow><annotation encoding="application/x-tex">8192+736=8928</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">8192</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">736</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">8928</span></span></span></span></span> 字节。</p>
+</div></details>
+<h3 id="section-45">13.8 多级 AMAT（填空；补充）<a class="anchor" href="#section-45" aria-label="链接到本节">#</a></h3>
+<p>L1 查询 1 ns，局部 miss rate 为 5%；仅 L1 miss 才额外查询 L2，耗时 6 ns；L2 局部 miss rate 为 20%，L2 miss 额外访问主存 80 ns。求到达主存的全局比例与 AMAT。</p>
+<p>到达主存的全局访问比例为 ①＿＿＿＿%；AMAT=②＿＿＿＿ ns。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 1；② 2.1。</p>
+<p>核对说明：全局主存访问比例 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.05</mn><mo>×</mo><mn>0.20</mn><mo>=</mo><mn>1</mn><mi mathvariant="normal">%</mi></mrow><annotation encoding="application/x-tex">0.05\times0.20=1\%</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">0.05</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">0.20</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8056em;vertical-align:-0.0556em;"></span><span class="mord">1%</span></span></span></span></span>；<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">A</mi><mi mathvariant="normal">M</mi><mi mathvariant="normal">A</mi><mi mathvariant="normal">T</mi></mrow><mo>=</mo><mn>1</mn><mo>+</mo><mn>0.05</mn><mo stretchy="false">(</mo><mn>6</mn><mo>+</mo><mn>0.20</mn><mo>×</mo><mn>80</mn><mo stretchy="false">)</mo><mo>=</mo><mn>2.1</mn><mtext> </mtext><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">s</mi></mrow></mrow><annotation encoding="application/x-tex">\mathrm{AMAT}=1+0.05(6+0.20\times80)=2.1\ \mathrm{ns}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord"><span class="mord mathrm">AMAT</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.05</span><span class="mopen">(</span><span class="mord">6</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">0.20</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">80</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">2.1</span><span class="mspace"> </span><span class="mord"><span class="mord mathrm">ns</span></span></span></span></span></span>。</p>
+</div></details>
+<h3 id="section-46">13.9 行遍历与列遍历（填空；补充）<a class="anchor" href="#section-46" aria-label="链接到本节">#</a></h3>
+<p><code>int a[8][8]</code> 起始地址为 0，int 为 4 字节。Cache 为 64 字节直接映射，块大小 16 字节；初始为空，仅考虑数组读。分别计算按行遍历和按列遍历全部 64 个元素的 miss 数和 miss rate；两种遍历分别从空 Cache 开始。</p>
+<p>按行遍历 miss 数为 ①＿＿＿＿，miss rate 为 ②＿＿＿＿%；按列遍历 miss 数为 ③＿＿＿＿，miss rate 为 ④＿＿＿＿%。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 16；② 25；③ 64；④ 100。</p>
+<p>核对说明：按行 16 miss，<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>16</mn><mi mathvariant="normal">/</mi><mn>64</mn><mo>=</mo><mn>25</mn><mi mathvariant="normal">%</mi></mrow><annotation encoding="application/x-tex">16/64=25\%</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">16/64</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8056em;vertical-align:-0.0556em;"></span><span class="mord">25%</span></span></span></span></span>；按列 64 miss，100%。列访问步长为 32 字节，各列重复访问时先前行块已被冲突淘汰。</p>
+</div></details>
+<h3 id="section-47">13.10 分块工作集（填空；补充）<a class="anchor" href="#section-47" aria-label="链接到本节">#</a></h3>
+<p>矩阵乘法希望三个 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mo>×</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">B\times B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span></span></span></span></span> 的 double 子块同时放入 24 KiB Cache。每个 double 8 字节，忽略其他数据、替换冲突与元数据。求满足容量条件的最大整数 B；若只选 2 的幂，取多少？该条件是否保证真实机器零冲突？</p>
+<p>最大整数 B=①＿＿＿＿；限制 B 为 2 的幂时，最大 B=②＿＿＿＿；容量条件 ③＿＿＿＿（填“保证”或“不保证”）真实机器零冲突。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 32；② 32；③ 不保证。</p>
+<p>核对说明：<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><msup><mi>B</mi><mn>2</mn></msup><mo>×</mo><mn>8</mn><mo>≤</mo><mn>24576</mn></mrow><annotation encoding="application/x-tex">3B^2\times8\le24576</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord">3</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7804em;vertical-align:-0.136em;"></span><span class="mord">8</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">24576</span></span></span></span></span>，最大 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mo>=</mo><mn>32</mn></mrow><annotation encoding="application/x-tex">B=32</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">32</span></span></span></span></span>，2 的幂仍为 32；不保证，组映射与其他访问仍可能造成冲突。</p>
+</div></details>
+</section><section class="quiz-chapter" data-chapter="section-48"><h2 id="section-48">第 14 讲 · 程序优化<a class="anchor" href="#section-48" aria-label="链接到本节">#</a></h2>
+<p>回查：<a href="14-optimization.html">程序优化</a>。</p>
+<h3 id="section-49">14.1 编译优化障碍（填空；2025 第 19 题改编）<a class="anchor" href="#section-49" aria-label="链接到本节">#</a></h3>
+<p>补全编译器移动过程调用或合并内存写回时必须考虑的语义限制。</p>
+<p>过程调用可能产生 ①＿＿＿＿，且相同实参下返回值也可能随状态变化；不同指针可能指向 ②＿＿＿＿，这种情况称为存储器 ③＿＿＿＿；因此推迟写回可能改变后续 ④＿＿＿＿ 的结果。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 副作用；② 同一内存位置；③ 别名；④ 读取。编译器必须证明变换保持可观察行为。</p>
+</div></details>
+<h3 id="section-50">14.2 strlen 与代码移动（填空；补充）<a class="anchor" href="#section-50" aria-label="链接到本节">#</a></h3>
+<pre><code class="language-c"><span class="tok-k">for</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-w"> </span><span class="tok-o">&lt;</span><span class="tok-w"> </span><span class="tok-n">strlen</span><span class="tok-p">(</span><span class="tok-n">s</span><span class="tok-p">);</span><span class="tok-w"> </span><span class="tok-o">++</span><span class="tok-n">i</span><span class="tok-p">)</span>
+<span class="tok-w">    </span><span class="tok-n">s</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">]</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-n">s</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">]</span><span class="tok-w"> </span><span class="tok-o">&gt;=</span><span class="tok-w"> </span><span class="tok-sc">&#39;A&#39;</span><span class="tok-w"> </span><span class="tok-o">&amp;&amp;</span><span class="tok-w"> </span><span class="tok-n">s</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">]</span><span class="tok-w"> </span><span class="tok-o">&lt;=</span><span class="tok-w"> </span><span class="tok-sc">&#39;Z&#39;</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-o">?</span><span class="tok-w"> </span><span class="tok-n">s</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">]</span><span class="tok-w"> </span><span class="tok-o">+</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-sc">&#39;a&#39;</span><span class="tok-w"> </span><span class="tok-o">-</span><span class="tok-w"> </span><span class="tok-sc">&#39;A&#39;</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-o">:</span><span class="tok-w"> </span><span class="tok-n">s</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">];</span>
+</code></pre>
+<p><code>s</code> 是长度 n 的可写字符串，循环不改变终止零位置。假设 <code>strlen</code> 每次重新线性扫描且编译器没有消除重复调用，原时间复杂度是什么？手动把长度保存在循环外后呢？</p>
+<p>原时间复杂度为 ①＿＿＿＿；把长度保存到循环外后的时间复杂度为 ②＿＿＿＿（均用 Θ 表示）。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Θ</mi><mo stretchy="false">(</mo><msup><mi>n</mi><mn>2</mn></msup><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\Theta(n^2)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord">Θ</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">n</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span>；② <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Θ</mi><mo stretchy="false">(</mo><mi>n</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\Theta(n)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">Θ</span><span class="mopen">(</span><span class="mord mathnormal">n</span><span class="mclose">)</span></span></span></span></span>。</p>
+<p>核对说明：原为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Θ</mi><mo stretchy="false">(</mo><msup><mi>n</mi><mn>2</mn></msup><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\Theta(n^2)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord">Θ</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">n</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span>；提前执行一次 <code>size_t n = strlen(s);</code>，条件改为 <code>i &lt; n</code> 后为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Θ</mi><mo stretchy="false">(</mo><mi>n</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\Theta(n)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">Θ</span><span class="mopen">(</span><span class="mord mathnormal">n</span><span class="mclose">)</span></span></span></span></span>。</p>
+</div></details>
+<h3 id="section-51">14.3 别名导致不同结果（填空；补充）<a class="anchor" href="#section-51" aria-label="链接到本节">#</a></h3>
+<p>两段函数分别从 <code>long a[3]={1,2,3}</code> 开始调用，均传入 <code>d=&amp;a[0]</code>、<code>p=a</code>，分别写出返回后的数组。计算不会溢出。</p>
+<pre><code class="language-c"><span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">d</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">p</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-o">*</span><span class="tok-n">d</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-k">for</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-w"> </span><span class="tok-o">&lt;</span><span class="tok-w"> </span><span class="tok-mi">3</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-o">++</span><span class="tok-n">i</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">d</span><span class="tok-w"> </span><span class="tok-o">+=</span><span class="tok-w"> </span><span class="tok-n">p</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">];</span>
+<span class="tok-p">}</span>
+<span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-nf">g</span><span class="tok-p">(</span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">d</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">p</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-n">t</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-k">for</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-w"> </span><span class="tok-o">&lt;</span><span class="tok-w"> </span><span class="tok-mi">3</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-o">++</span><span class="tok-n">i</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-n">t</span><span class="tok-w"> </span><span class="tok-o">+=</span><span class="tok-w"> </span><span class="tok-n">p</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">];</span>
+<span class="tok-w">    </span><span class="tok-o">*</span><span class="tok-n">d</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-n">t</span><span class="tok-p">;</span>
+<span class="tok-p">}</span>
+</code></pre>
+<p><code>f</code> 返回后数组为 ①＿＿＿＿；<code>g</code> 返回后数组为 ②＿＿＿＿；允许别名时，两函数 ③＿＿＿＿（填“等价”或“不等价”）。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <code>{5,2,3}</code>；② <code>{6,2,3}</code>；③ 不等价。</p>
+<p>核对说明：<code>f</code> 后 <code>{5,2,3}</code>；<code>g</code> 后 <code>{6,2,3}</code>。两函数对允许别名的接口并不等价。</p>
+</div></details>
+<h3 id="section-52">14.4 CPE 与固定开销（填空；补充）<a class="anchor" href="#section-52" aria-label="链接到本节">#</a></h3>
+<p>周期模型为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo stretchy="false">(</mo><mi>n</mi><mo stretchy="false">)</mo><mo>=</mo><mn>24</mn><mo>+</mo><mn>2.5</mn><mi>n</mi></mrow><annotation encoding="application/x-tex">T(n)=24+2.5n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">T</span><span class="mopen">(</span><span class="mord mathnormal">n</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">24</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">2.5</span><span class="mord mathnormal">n</span></span></span></span></span>。求 n=8 的总周期、平均每元素周期，以及 n 很大时的 CPE。</p>
+<p>n=8 时总周期为 ①＿＿＿＿，平均每元素为 ②＿＿＿＿ 周期；n 很大时 CPE 趋于 ③＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 44；② 5.5；③ 2.5。</p>
+<p>核对说明：44 周期；<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>44</mn><mi mathvariant="normal">/</mi><mn>8</mn><mo>=</mo><mn>5.5</mn></mrow><annotation encoding="application/x-tex">44/8=5.5</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">44/8</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">5.5</span></span></span></span></span> 周期/元素；渐近 CPE 为 2.5。</p>
+</div></details>
+<h3 id="section-53">14.5 延迟与吞吐下界（填空；补充）<a class="anchor" href="#section-53" aria-label="链接到本节">#</a></h3>
+<p>每个元素恰需一次乘法；乘法延迟 4 周期，单元可每周期启动 1 次乘法。忽略装载和循环开销，分别求使用 1、2、4 条独立累乘链时，渐近 CPE 的理想下界。</p>
+<p>使用 1、2、4 条独立链时，理想 CPE 下界依次为 ①＿＿＿＿、②＿＿＿＿、③＿＿＿＿ 周期/元素。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 4；② 2；③ 1。理想下界为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>max</mi><mo>⁡</mo><mo stretchy="false">(</mo><mn>4</mn><mi mathvariant="normal">/</mi><mi>k</mi><mo separator="true">,</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\max(4/k,1)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mop">max</span><span class="mopen">(</span><span class="mord">4/</span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span></span>，其中 k 是独立链数。</p>
+</div></details>
+<h3 id="section-54">14.6 只展开与多累加器（填空；补充）<a class="anchor" href="#section-54" aria-label="链接到本节">#</a></h3>
+<p>每次循环处理两个元素。版本 A 执行 <code>acc=acc*x[i]; acc=acc*x[i+1];</code>；版本 B 执行 <code>a0=a0*x[i]; a1=a1*x[i+1];</code>，最后合并 <code>a0*a1</code>。哪个保留单条循环携带依赖链，哪个建立两条？若是严格浮点语义，能否无条件认为两者等价？</p>
+<p>版本 A 有 ①＿＿＿＿ 条循环携带累乘依赖链；版本 B 有 ②＿＿＿＿ 条独立累乘链；严格浮点语义下 ③＿＿＿＿（填“能”或“不能”）保证两版本结果完全相同，因为重分组可能改变 ④＿＿＿＿ 与异常行为。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 1；② 2；③ 不能；④ 舍入。</p>
+</div></details>
+<h3 id="section-55">14.7 无符号点积补全（填空；补充）<a class="anchor" href="#section-55" aria-label="链接到本节">#</a></h3>
+<p>输入有效、n 非负，使用 <code>unsigned long</code> 的模运算语义。补全两个累加器的点积代码，需处理奇数 n。</p>
+<pre><code class="language-c"><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-nf">dot</span><span class="tok-p">(</span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">a</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">b</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-n">s0</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-n">s1</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-kt">long</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-k">for</span><span class="tok-w"> </span><span class="tok-p">(;</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-w"> </span><span class="tok-o">&lt;</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-w"> </span><span class="tok-o">-</span><span class="tok-w"> </span><span class="tok-mi">1</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-w"> </span><span class="tok-o">+=</span><span class="tok-w"> </span><span class="tok-mi">2</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">        </span><span class="tok-n">s0</span><span class="tok-w"> </span><span class="tok-o">+=</span><span class="tok-w"> </span><span class="tok-n">A</span><span class="tok-p">;</span>
+<span class="tok-w">        </span><span class="tok-n">s1</span><span class="tok-w"> </span><span class="tok-o">+=</span><span class="tok-w"> </span><span class="tok-n">B</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-p">}</span>
+<span class="tok-w">    </span><span class="tok-k">for</span><span class="tok-w"> </span><span class="tok-p">(;</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-w"> </span><span class="tok-o">&lt;</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-o">++</span><span class="tok-n">i</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-n">s0</span><span class="tok-w"> </span><span class="tok-o">+=</span><span class="tok-w"> </span><span class="tok-n">C</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-k">return</span><span class="tok-w"> </span><span class="tok-n">D</span><span class="tok-p">;</span>
+<span class="tok-p">}</span>
+</code></pre>
+<p>代码中 A=①＿＿＿＿；B=②＿＿＿＿；C=③＿＿＿＿；D=④＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <code>a[i]*b[i]</code>；② <code>a[i+1]*b[i+1]</code>；③ <code>a[i]*b[i]</code>；④ <code>s0+s1</code>。</p>
+<p>核对说明：A=<code>a[i]*b[i]</code>；B=<code>a[i+1]*b[i+1]</code>；C=<code>a[i]*b[i]</code>；D=<code>s0+s1</code>。</p>
+</div></details>
+<h3 id="section-56">14.8 SIMD 通道数（填空；补充）<a class="anchor" href="#section-56" aria-label="链接到本节">#</a></h3>
+<p>一条 256 bit packed SIMD 指令可并行处理几个 32 bit float，或几个 64 bit double？<code>vaddps</code>、<code>vaddpd</code> 分别对应哪种？是否由此保证程序加速 8 倍或 4 倍？</p>
+<p>256 bit 中可容纳 ①＿＿＿＿ 个 float 或 ②＿＿＿＿ 个 double；<code>vaddps</code> 对应 packed ③＿＿＿＿，<code>vaddpd</code> 对应 packed ④＿＿＿＿（填 single/double）；这 ⑤＿＿＿＿（填“保证”或“不保证”）整个程序达到对应倍数的加速。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 8；② 4；③ single；④ double；⑤ 不保证。</p>
+<p>核对说明：8 个 float、4 个 double；分别是 packed single、packed double；不保证，仍受访存、依赖、循环与尾部处理等限制。</p>
+</div></details>
+<h3 id="section-57">14.9 条件传送的安全性（填空；补充）<a class="anchor" href="#section-57" aria-label="链接到本节">#</a></h3>
+<p>C 表达式 <code>p ? *p : 0</code> 允许 p 为空指针。能否总把它改成先无条件读取 <code>*p</code>，再用条件传送选 0 或读取结果？</p>
+<p>该变换 ①＿＿＿＿（填“总是安全”或“不总是安全”）；p 为空时，原表达式 ②＿＿＿＿（填“会”或“不会”）解引用 p；改写后的无条件读取可能触发 ③＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 不总是安全；② 不会；③ 无效内存访问。</p>
+</div></details>
+<h3 id="section-58">14.10 Amdahl 定律（填空；补充）<a class="anchor" href="#section-58" aria-label="链接到本节">#</a></h3>
+<p>原程序 60% 的时间用于可优化部分。仅将这部分提速 3 倍，其他部分耗时不变，求整体加速比；该部分无限快时的上限是多少？</p>
+<p>可优化部分提速 3 倍后，整体加速比为 ①＿＿＿＿；该部分无限快时，整体加速比上限为 ②＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mi mathvariant="normal">/</mi><mn>3</mn><mo>≈</mo><mn>1.667</mn></mrow><annotation encoding="application/x-tex">5/3\approx1.667</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">5/3</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">1.667</span></span></span></span></span>；② 2.5。</p>
+<p>核对说明：<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mn>1</mn><mi mathvariant="normal">/</mi><mo stretchy="false">(</mo><mn>0.4</mn><mo>+</mo><mn>0.6</mn><mi mathvariant="normal">/</mi><mn>3</mn><mo stretchy="false">)</mo><mo>=</mo><mn>5</mn><mi mathvariant="normal">/</mi><mn>3</mn><mo>≈</mo><mn>1.667</mn></mrow><annotation encoding="application/x-tex">S=1/(0.4+0.6/3)=5/3\approx1.667</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/</span><span class="mopen">(</span><span class="mord">0.4</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.6/3</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">5/3</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">1.667</span></span></span></span></span>；上限 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi mathvariant="normal">/</mi><mn>0.4</mn><mo>=</mo><mn>2.5</mn></mrow><annotation encoding="application/x-tex">1/0.4=2.5</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/0.4</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">2.5</span></span></span></span></span>。</p>
+</div></details>
+</section><section class="quiz-chapter" data-chapter="section-59"><h2 id="section-59">第 15 讲 · 链接与库<a class="anchor" href="#section-59" aria-label="链接到本节">#</a></h2>
+<p>回查：<a href="15-linking.html">链接、目标文件与库</a>。本讲均为依据新课件、研讨题和往年链接题型编写的补充题；符号题明确区分 <code>-fcommon</code> 教学模型与 <code>-fno-common</code>。</p>
+<h3 id="section-60">15.1 编译工具链（填空；补充）<a class="anchor" href="#section-60" aria-label="链接到本节">#</a></h3>
+<p>从 C 源文件出发，预处理后的常用后缀为 ①＿＿＿＿；编译为汇编后的后缀为 ②＿＿＿＿；汇编后的可重定位文件后缀为 ③＿＿＿＿；将多个目标文件组合成可执行文件的工具阶段称为 ④＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <code>.i</code>；② <code>.s</code>；③ <code>.o</code>；④ 链接。</p>
+</div></details>
+<h3 id="section-61">15.2 ELF 的节与段（填空；补充）<a class="anchor" href="#section-61" aria-label="链接到本节">#</a></h3>
+<p>链接视角主要按 ①＿＿＿＿（section/segment）组织；加载视角主要按 ②＿＿＿＿（section/segment）组织；<code>.bss</code> 的零初始化数据在运行时 ③＿＿＿＿（占／不占）内存，通常在文件中 ④＿＿＿＿（存储／不存储）对应整片零字节。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① section；② segment；③ 占；④ 不存储。</p>
+</div></details>
+<h3 id="section-62">15.3 符号分类（填空；补充）<a class="anchor" href="#section-62" aria-label="链接到本节">#</a></h3>
+<p>无优化地编译下列翻译单元。填写哪些名字对应：本模块的外部定义、未定义外部引用、内部静态对象、无需链接器跨模块解析的自动局部变量。</p>
+<pre><code class="language-c"><span class="tok-k">extern</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">remote</span><span class="tok-p">;</span>
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">global</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">3</span><span class="tok-p">;</span>
+<span class="tok-k">static</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">local</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">4</span><span class="tok-p">;</span>
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">calc</span><span class="tok-p">(</span><span class="tok-kt">void</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">temp</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-n">remote</span><span class="tok-w"> </span><span class="tok-o">+</span><span class="tok-w"> </span><span class="tok-n">local</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-k">return</span><span class="tok-w"> </span><span class="tok-n">temp</span><span class="tok-w"> </span><span class="tok-o">+</span><span class="tok-w"> </span><span class="tok-n">global</span><span class="tok-p">;</span>
+<span class="tok-p">}</span>
+</code></pre>
+<p>外部定义的名字为 ①＿＿＿＿；未定义引用为 ②＿＿＿＿；内部静态对象为 ③＿＿＿＿；自动局部变量为 ④＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <code>global, calc</code>；② <code>remote</code>；③ <code>local</code>；④ <code>temp</code>。</p>
+</div></details>
+<h3 id="section-63">15.4 声明与定义（填空；补充）<a class="anchor" href="#section-63" aria-label="链接到本节">#</a></h3>
+<p>在文件作用域，<code>extern int x;</code> 是 ①＿＿＿＿（仅声明／带初始化定义）；<code>extern int y=2;</code> 是 ②＿＿＿＿（仅声明／带初始化定义）。只声明但从未使用的外部函数 ③＿＿＿＿（必然／不一定）产生未定义符号引用。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 仅声明；② 带初始化定义；③ 不一定。</p>
+</div></details>
+<h3 id="section-64">15.5 重复暂定定义（填空；补充）<a class="anchor" href="#section-64" aria-label="链接到本节">#</a></h3>
+<p>a.c 与 b.c 都在文件作用域写 <code>int x;</code>，没有其他 x 定义。传统 GCC <code>-fcommon</code> 模型下，这些 COMMON 符号可以 ①＿＿＿＿；改用 <code>-fno-common</code>，链接通常报告 ②＿＿＿＿。若 b.c 改为 <code>extern int x;</code> 并使用 x，则 a.c 提供定义、b.c 提供 ③＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 合并；② 重复定义；③ 外部引用（声明本身不分配 x 的存储）。</p>
+</div></details>
+<h3 id="section-65">15.6 相对重定位计算（填空；补充）<a class="anchor" href="#section-65" aria-label="链接到本节">#</a></h3>
+<p><code>call rel32</code> 的 opcode 地址为 <code>0x401020</code>，4 字节位移字段位于 <code>0x401021</code>；目标函数地址 S=<code>0x401080</code>。采用 <code>R_X86_64_PC32</code>，addend A=−4。</p>
+<p>公式中 P=①＿＿＿＿；写入位移值=②＿＿＿＿（十六进制）；4 个小端字节为 ③＿＿＿＿；CPU 使用的下一 PC=④＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <code>0x401021</code>；② <code>0x5B</code>；③ <code>5b 00 00 00</code>；④ <code>0x401025</code>。</p>
+<p>核对说明：<code>0x401080-4-0x401021=0x5B</code>，<code>0x401025+0x5B=0x401080</code>。</p>
+</div></details>
+<h3 id="section-66">15.7 向后调用（填空；补充）<a class="anchor" href="#section-66" aria-label="链接到本节">#</a></h3>
+<p>opcode 在 <code>0x401040</code> 的 <code>call rel32</code> 调用 <code>0x401000</code>，指令长 5 字节。位移的十进制有符号值为 ①＿＿＿＿；32 位补码十六进制为 ②＿＿＿＿；小端字节为 ③＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① −69；② <code>0xFFFFFFBB</code>；③ <code>bb ff ff ff</code>。</p>
+</div></details>
+<h3 id="section-67">15.8 绝对重定位（填空；补充）<a class="anchor" href="#section-67" aria-label="链接到本节">#</a></h3>
+<p><code>R_X86_64_32</code> 引用的符号地址 S=<code>0x00602010</code>，addend A=8。写入值为 ①＿＿＿＿；小端字节为 ②＿＿＿＿。此类重定位的结果截到 32 位后，必须经 ③＿＿＿＿（零扩展／符号扩展）还原原值。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <code>0x00602018</code>；② <code>18 20 60 00</code>；③ 零扩展。</p>
+</div></details>
+<h3 id="section-68">15.9 未链接的 call（填空；往年题型改编）<a class="anchor" href="#section-68" aria-label="链接到本节">#</a></h3>
+<p>目标文件里的调用编码暂为 <code>e8 00 00 00 00</code>，反汇编显示跳到下一条。四个零字节通常是等待重定位的 ①＿＿＿＿；链接器依据 ②＿＿＿＿ 记录确定符号和修补位置；最终调用地址 ③＿＿＿＿（必然／不必然）仍是下一条。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 占位值；② 重定位；③ 不必然。</p>
+</div></details>
+<h3 id="section-69">15.10 静态库顺序（填空；补充）<a class="anchor" href="#section-69" aria-label="链接到本节">#</a></h3>
+<p><code>main.o</code> 引用 f；<code>libA.a</code> 的 a.o 定义 f、引用 g；<code>libB.a</code> 的 b.o 定义 g。其他符号均已解决，采用普通 GNU 归档按需搜索，不启用 group 或 whole-archive。</p>
+<p>命令 <code>gcc main.o -lA -lB</code> 的顺序 ①＿＿＿＿（可行／不可行）；<code>gcc -lB main.o -lA</code> 的顺序 ②＿＿＿＿，最终留下未解决名字 ③＿＿＿＿。（假设库路径已配置。）</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 可行；② 不可行；③ <code>g</code>。</p>
+</div></details>
+<h3 id="section-70">15.11 共享库接口（填空；补充）<a class="anchor" href="#section-70" aria-label="链接到本节">#</a></h3>
+<p>构建共享库时常用的位置无关代码选项为 ①＿＿＿＿；生成共享对象的 GCC 选项为 ②＿＿＿＿；运行时打开共享库、查找符号、释放句柄的函数依次为 ③＿＿＿＿、④＿＿＿＿、⑤＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <code>-fPIC</code>；② <code>-shared</code>；③ <code>dlopen</code>；④ <code>dlsym</code>；⑤ <code>dlclose</code>。</p>
+</div></details>
+<h3 id="section-71">15.12 三种插桩（填空；补充）<a class="anchor" href="#section-71" aria-label="链接到本节">#</a></h3>
+<p>宏改写函数名属于 ①＿＿＿＿ 时插桩；<code>-Wl,--wrap=malloc</code> 属于 ②＿＿＿＿ 时插桩，其包装函数名为 ③＿＿＿＿；通过环境变量 ④＿＿＿＿ 优先装入包装共享库，属于加载／运行时插桩；查找后续真实定义时 <code>dlsym</code> 常用句柄 ⑤＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 编译；② 链接；③ <code>__wrap_malloc</code>；④ <code>LD_PRELOAD</code>；⑤ <code>RTLD_NEXT</code>。</p>
+</div></details>
+<h3 id="section-72">15.13 静态局部变量（填空；补充）<a class="anchor" href="#section-72" aria-label="链接到本节">#</a></h3>
+<pre><code class="language-c"><span class="tok-k">static</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">5</span><span class="tok-p">;</span>
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-kt">void</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span><span class="tok-w"> </span><span class="tok-k">static</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">7</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-k">return</span><span class="tok-w"> </span><span class="tok-o">++</span><span class="tok-n">x</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-p">}</span>
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">g</span><span class="tok-p">(</span><span class="tok-kt">void</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span><span class="tok-w"> </span><span class="tok-k">static</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">9</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-k">return</span><span class="tok-w"> </span><span class="tok-o">++</span><span class="tok-n">x</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-p">}</span>
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">h</span><span class="tok-p">(</span><span class="tok-kt">void</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span><span class="tok-w"> </span><span class="tok-k">return</span><span class="tok-w"> </span><span class="tok-o">++</span><span class="tok-n">x</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-p">}</span>
+</code></pre>
+<p>在同一进程中先后调用 <code>f()</code>、<code>g()</code>、<code>f()</code>、<code>h()</code>，返回值依次为 ①＿＿＿＿、②＿＿＿＿、③＿＿＿＿、④＿＿＿＿；这三个 x 对象 ⑤＿＿＿＿（共享／不共享）同一个存储位置。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 8；② 10；③ 9；④ 6；⑤ 不共享。</p>
+</div></details>
+<h3 id="section-73">15.14 动态链接与共享（填空；补充）<a class="anchor" href="#section-73" aria-label="链接到本节">#</a></h3>
+<p>共享库的只读代码页 ①＿＿＿＿（可以／绝不可以）由多个进程共享；各进程的普通可写全局变量 ②＿＿＿＿（必然共享／通常独立）。程序首次调用函数才解析其地址的机制称为 ③＿＿＿＿；它 ④＿＿＿＿（等于／不等于）每次调用都重新加载整个库。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 可以；② 通常独立；③ 延迟绑定；④ 不等于。</p>
+</div></details>
+</section><section class="quiz-chapter" data-chapter="section-74"><h2 id="section-74">第 16 讲 · 异常控制流与进程<a class="anchor" href="#section-74" aria-label="链接到本节">#</a></h2>
+<p>回查：<a href="16-ecf-processes.html">异常控制流与进程</a>。本讲代码题均假设单线程、fork 与等待调用成功，完整头文件已提供；若题干未另行说明，输出无缓冲，每次整行输出视为不可分事件，不考虑外部信号干扰。</p>
+<h3 id="section-75">16.1 异常分类（填空；补充）<a class="anchor" href="#section-75" aria-label="链接到本节">#</a></h3>
+<p>外部时钟到期产生的异常属于 ①＿＿＿＿（Interrupt/Trap/Fault/Abort）；有意执行系统调用按本讲模型属于 ②＿＿＿＿；合法页面缺页、经处理可重试的异常属于 ③＿＿＿＿；可恢复 fault 返回时应重新执行 ④＿＿＿＿（当前故障指令／下一条指令）。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① Interrupt；② Trap；③ Fault；④ 当前故障指令。</p>
+</div></details>
+<h3 id="section-76">16.2 syscall 与 C 函数约定（填空；补充）<a class="anchor" href="#section-76" aria-label="链接到本节">#</a></h3>
+<p>Linux x86-64 原始系统调用号放在 ①＿＿＿＿；第 4 个参数放在 ②＿＿＿＿；返回值放在 ③＿＿＿＿。C 库包装函数通常在失败时返回 ④＿＿＿＿，并设置 ⑤＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <code>%rax</code>；② <code>%r10</code>；③ <code>%rax</code>；④ −1；⑤ <code>errno</code>。</p>
+</div></details>
+<h3 id="section-77">16.3 进程与上下文（填空；补充）<a class="anchor" href="#section-77" aria-label="链接到本节">#</a></h3>
+<p>进程提供逻辑控制流和私有 ①＿＿＿＿ 两种关键抽象；一次系统调用进入内核 ②＿＿＿＿（必然／不必然）切换到另一个进程；单个逻辑 CPU 上多个进程交错执行可以构成 ③＿＿＿＿（并发／同时并行）。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 虚拟地址空间；② 不必然；③ 并发。</p>
+</div></details>
+<h3 id="section-78">16.4 fork 返回值与私有变量（填空；补充）<a class="anchor" href="#section-78" aria-label="链接到本节">#</a></h3>
+<pre><code class="language-c"><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">5</span><span class="tok-p">;</span>
+<span class="tok-kt">pid_t</span><span class="tok-w"> </span><span class="tok-n">pid</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-n">fork</span><span class="tok-p">();</span>
+<span class="tok-k">if</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-n">pid</span><span class="tok-w"> </span><span class="tok-o">==</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-n">printf</span><span class="tok-p">(</span><span class="tok-s">&quot;C:%d</span><span class="tok-se">\n</span><span class="tok-s">&quot;</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">+</span><span class="tok-w"> </span><span class="tok-mi">2</span><span class="tok-p">);</span>
+<span class="tok-k">else</span><span class="tok-w"> </span><span class="tok-n">printf</span><span class="tok-p">(</span><span class="tok-s">&quot;P:%d</span><span class="tok-se">\n</span><span class="tok-s">&quot;</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-n">x</span><span class="tok-w"> </span><span class="tok-o">-</span><span class="tok-w"> </span><span class="tok-mi">1</span><span class="tok-p">);</span>
+</code></pre>
+<p>父进程得到的 pid 是 ①＿＿＿＿，子进程得到 ②＿＿＿＿；C 行数值为 ③＿＿＿＿，P 行为 ④＿＿＿＿；两行先后顺序 ⑤＿＿＿＿（确定／不确定）。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 子进程 PID（正数）；② 0；③ 7；④ 4；⑤ 不确定。</p>
+</div></details>
+<h3 id="section-79">16.5 连续 fork 的计数（填空；补充）<a class="anchor" href="#section-79" aria-label="链接到本节">#</a></h3>
+<pre><code class="language-c"><span class="tok-n">puts</span><span class="tok-p">(</span><span class="tok-s">&quot;A&quot;</span><span class="tok-p">);</span>
+<span class="tok-n">fork</span><span class="tok-p">();</span>
+<span class="tok-n">puts</span><span class="tok-p">(</span><span class="tok-s">&quot;B&quot;</span><span class="tok-p">);</span>
+<span class="tok-n">fork</span><span class="tok-p">();</span>
+<span class="tok-n">puts</span><span class="tok-p">(</span><span class="tok-s">&quot;C&quot;</span><span class="tok-p">);</span>
+</code></pre>
+<p>最终进程总数（含原进程）为 ①＿＿＿＿；A、B、C 各输出 ②＿＿＿＿、③＿＿＿＿、④＿＿＿＿ 次；新创建子进程总数为 ⑤＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 4；② 1；③ 2；④ 4；⑤ 3。</p>
+</div></details>
+<h3 id="section-80">16.6 仅父分支再 fork（填空；2025 第 23 题同型改编）<a class="anchor" href="#section-80" aria-label="链接到本节">#</a></h3>
+<pre><code class="language-c"><span class="tok-n">puts</span><span class="tok-p">(</span><span class="tok-s">&quot;A&quot;</span><span class="tok-p">);</span>
+<span class="tok-k">if</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-n">fork</span><span class="tok-p">()</span><span class="tok-w"> </span><span class="tok-o">==</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-n">puts</span><span class="tok-p">(</span><span class="tok-s">&quot;B&quot;</span><span class="tok-p">);</span>
+<span class="tok-p">}</span><span class="tok-w"> </span><span class="tok-k">else</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-n">puts</span><span class="tok-p">(</span><span class="tok-s">&quot;C&quot;</span><span class="tok-p">);</span>
+<span class="tok-w">    </span><span class="tok-n">fork</span><span class="tok-p">();</span>
+<span class="tok-p">}</span>
+<span class="tok-n">puts</span><span class="tok-p">(</span><span class="tok-s">&quot;D&quot;</span><span class="tok-p">);</span>
+</code></pre>
+<p>总进程数为 ①＿＿＿＿；D 共输出 ②＿＿＿＿ 次；把各行连成字符串，<code>ACDBDD</code> ③＿＿＿＿（可能／不可能）出现；B 与 C 谁先输出 ④＿＿＿＿（确定／不确定）。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 3；② 3；③ 可能；④ 不确定。</p>
+</div></details>
+<h3 id="section-81">16.7 两条输出链（填空；补充）<a class="anchor" href="#section-81" aria-label="链接到本节">#</a></h3>
+<p>fork 后父依次输出 P1、P2，子依次输出 C1、C2，无其他同步。保持各进程内部顺序的完整输出序列共 ①＿＿＿＿ 种；<code>P1 C1 P2 C2</code> ②＿＿＿＿（可能／不可能）；<code>C2 P1 C1 P2</code> ③＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 6；② 可能；③ 不可能。C1 必须先于 C2。</p>
+</div></details>
+<h3 id="section-82">16.8 wait 建立的次序（填空；补充）<a class="anchor" href="#section-82" aria-label="链接到本节">#</a></h3>
+<pre><code class="language-c"><span class="tok-kt">pid_t</span><span class="tok-w"> </span><span class="tok-n">pid</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-n">fork</span><span class="tok-p">();</span>
+<span class="tok-k">if</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-n">pid</span><span class="tok-w"> </span><span class="tok-o">==</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-n">puts</span><span class="tok-p">(</span><span class="tok-s">&quot;C&quot;</span><span class="tok-p">);</span>
+<span class="tok-w">    </span><span class="tok-n">exit</span><span class="tok-p">(</span><span class="tok-mi">0</span><span class="tok-p">);</span>
+<span class="tok-p">}</span>
+<span class="tok-n">puts</span><span class="tok-p">(</span><span class="tok-s">&quot;P&quot;</span><span class="tok-p">);</span>
+<span class="tok-n">waitpid</span><span class="tok-p">(</span><span class="tok-n">pid</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-nb">NULL</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">);</span>
+<span class="tok-n">puts</span><span class="tok-p">(</span><span class="tok-s">&quot;W&quot;</span><span class="tok-p">);</span>
+</code></pre>
+<p>W 必须晚于 ①＿＿＿＿（填写所有必须在前的输出字母）；完整输出序列共有 ②＿＿＿＿ 种；<code>P W C</code> ③＿＿＿＿（可能／不可能）。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① C、P；② 2；③ 不可能。两种序列是 C P W 和 P C W。</p>
+</div></details>
+<h3 id="section-83">16.9 退出状态与返回值（填空；补充）<a class="anchor" href="#section-83" aria-label="链接到本节">#</a></h3>
+<p>子 PID 为 4321，执行 <code>exit(7)</code>；父执行 <code>r=waitpid(4321,&amp;status,0)</code> 并成功返回。r=①＿＿＿＿；<code>WIFEXITED(status)</code> 为 ②＿＿＿＿（真／假）；<code>WEXITSTATUS(status)</code>=③＿＿＿＿；status 本身 ④＿＿＿＿（可以／不能）直接当作退出码 7 使用。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 4321；② 真；③ 7；④ 不能。</p>
+</div></details>
+<h3 id="section-84">16.10 僵尸与孤儿（填空；补充）<a class="anchor" href="#section-84" aria-label="链接到本节">#</a></h3>
+<p>子进程已终止、父尚未回收时，子通常处于 ①＿＿＿＿ 状态，它 ②＿＿＿＿（仍在／不再）执行用户代码；父先终止而子仍运行时，该子称为 ③＿＿＿＿；父调用一次普通 wait 通常最多回收 ④＿＿＿＿ 个子进程。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 僵尸；② 不再；③ 孤儿进程；④ 1。</p>
+</div></details>
+<h3 id="section-85">16.11 execve 参数与身份（填空；补充）<a class="anchor" href="#section-85" aria-label="链接到本节">#</a></h3>
+<p>PID 5000 的子进程执行 <code>execve(&quot;/bin/echo&quot;,argv,envp)</code>，其中 <code>argv={&quot;/bin/echo&quot;,&quot;ICS&quot;,NULL}</code>。成功后 PID 为 ①＿＿＿＿，新程序 argc=②＿＿＿＿，<code>argv[argc]</code> 为 ③＿＿＿＿；成功的 execve ④＿＿＿＿（返回／不返回）原调用点。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 5000；② 2；③ NULL；④ 不返回。</p>
+</div></details>
+<h3 id="section-86">16.12 创建、替换与回收（填空；补充）<a class="anchor" href="#section-86" aria-label="链接到本节">#</a></h3>
+<p>父进程要继续保留自身程序，同时让子进程执行另一可执行文件：先调用 ①＿＿＿＿ 创建子进程，在子分支调用 ②＿＿＿＿ 替换映像，父用 ③＿＿＿＿ 等待指定子 PID。若替换成功，替换调用之后的错误处理分支 ④＿＿＿＿（会／不会）执行。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① <code>fork</code>；② <code>execve</code>；③ <code>waitpid</code>；④ 不会。</p>
+</div></details>
+<h3 id="section-87">16.13 进程生命周期重叠（填空；补充）<a class="anchor" href="#section-87" aria-label="链接到本节">#</a></h3>
+<p>采用半开区间，A 的生命周期为 <code>[0,5)</code>，B 为 <code>[2,4)</code>，C 为 <code>[5,8)</code>，D 为 <code>[3,7)</code>。与 A 并发的进程名字为 ①＿＿＿＿；B 与 C ②＿＿＿＿（并发／不并发）；C 与 D ③＿＿＿＿。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① B、D；② 不并发；③ 并发。</p>
+</div></details>
+<h3 id="section-88">16.14 输出缓冲的复制（填空；补充）<a class="anchor" href="#section-88" aria-label="链接到本节">#</a></h3>
+<p>本题覆盖本节默认无缓冲约定：stdout 为全缓冲，下面 <code>printf</code> 的字符在 fork 前尚未刷新。父子均正常执行 exit，假设不发生写错误。</p>
+<pre><code class="language-c"><span class="tok-n">printf</span><span class="tok-p">(</span><span class="tok-s">&quot;X&quot;</span><span class="tok-p">);</span>
+<span class="tok-n">fork</span><span class="tok-p">();</span>
+<span class="tok-n">exit</span><span class="tok-p">(</span><span class="tok-mi">0</span><span class="tok-p">);</span>
+</code></pre>
+<p>最终 X 出现 ①＿＿＿＿ 次；若在 fork 前补 <code>fflush(stdout)</code>，则出现 ②＿＿＿＿ 次；复制的是用户态 ③＿＿＿＿，并不是子进程重新从 main 执行。</p>
+<details class="quiz-answer"><summary><span class="answer-show">显示答案</span><span class="answer-hide">隐藏答案</span></summary><div class="answer-body"><p><strong>答案</strong>：① 2；② 1；③ 标准 I/O 缓冲区。</p>
+</div></details>
+</section><div class="pager"><a href="14-coverage.html">上一章<br>附录 D · 课件覆盖索引与来源</a></div><footer>理解表示，追踪执行。<span><a href="14-coverage.html">资料来源与覆盖范围</a></span></footer></main><aside aria-label="本页目录"><div class="nav-label">选择习题章节</div><a class="quiz-chapter-link" href="#main" data-chapter="all" aria-current="true">全部章节 · 80 题</a><a class="quiz-chapter-link" href="#section-1" data-chapter="section-1">第 9 讲 · ISA 与逻辑设计</a><a class="quiz-chapter-link" href="#section-10" data-chapter="section-10">第 10 讲 · SEQ 顺序处理器</a><a class="quiz-chapter-link" href="#section-19" data-chapter="section-19">第 11 讲 · PIPE 流水线</a><a class="quiz-chapter-link" href="#section-28" data-chapter="section-28">第 12 讲 · 存储器层次结构</a><a class="quiz-chapter-link" href="#section-37" data-chapter="section-37">第 13 讲 · Cache</a><a class="quiz-chapter-link" href="#section-48" data-chapter="section-48">第 14 讲 · 程序优化</a><a class="quiz-chapter-link" href="#section-59" data-chapter="section-59">第 15 讲 · 链接与库</a><a class="quiz-chapter-link" href="#section-74" data-chapter="section-74">第 16 讲 · 异常控制流与进程</a><a href="#main">回到顶部 ↑</a></aside></div><script src="app.js?v=8c97512934a3"></script></body></html>

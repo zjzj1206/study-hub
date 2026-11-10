@@ -4,7 +4,7 @@
 独立仓库：https://github.com/zjzj1206/ics-review
 汇总仓库：https://github.com/zjzj1206/study-hub
 
-19 个阅读单元：范围说明、第 1～14 讲、第一次测验、往年题、小班研讨和覆盖索引。第13、14讲依据 2026-10-29 / 2026-11-02 课件整理Cache读写、存储山、矩阵分块、编译优化障碍、CPE、依赖链与SIMD，包含研讨逐问路线和可编译C/汇编示例。第一次测验原范围仍为第 1～8 讲。
+22 个阅读单元：范围说明、第 1～16 讲、第一次测验、往年题、小班研讨和覆盖索引。第13、14讲依据 2026-10-29 / 2026-11-02 课件整理Cache读写、存储山、矩阵分块、编译优化障碍、CPE、依赖链与SIMD，包含研讨逐问路线和可编译C/汇编示例。第一次测验原范围仍为第 1～8 讲。
 
 2026 第一次测验来源是 5 页纯答案版，缺题干和选项的小问明确标注资料限制。原创 Y86 示例 len.ys、汇编结果 len.yo 和官方 yis 实测输出随网站提供。课程 PDF 原件不上传公开仓库。
 
@@ -22,7 +22,7 @@ python3 checks/verify_code.py
 python3 -m http.server 8765 --directory dist
 ```
 
-修改 content/*.md 后重新构建。build.py 会重建 dist 并生成 source.zip 和复习资料汇总.md。表格必须包含表头分隔行；单元格中的 C 声明与表达式使用反引号，竖线即使在行内代码中也必须写成 \|。测验、往年题、研讨与覆盖索引的旧 URL 保留，显示为附录 A～D，排在课程主线之后；新课使用 11-pipeline.html、12-memory-hierarchy.html。
+修改 content/*.md 后重新构建。build.py 会重建 dist 并生成 source.zip 和复习资料汇总.md。表格必须包含表头分隔行；单元格中的 C 声明与表达式使用反引号，竖线即使在行内代码中也必须写成 \|。测验、往年题、研讨与覆盖索引的旧 URL 保留，显示为附录 A～E，排在课程主线之后；新课使用 11-pipeline.html、12-memory-hierarchy.html。
 
 ## 发布与同步
 
@@ -52,3 +52,5 @@ C、AT&T/x86/Y86 汇编与 HCL 代码在构建时由本地 Pygments 高亮，无
 ## 硬件总图与读图正文
 
 第 10、11 章分别以 `assets/hardware-seq.jpg`、`assets/hardware-pipe.jpg` 两张用户提供的原始照片为总图。图片点击打开原文件；稳定定位点为 `10-sequential.html#seq-hardware` 和 `11-pipeline.html#pipe-hardware`，整本阅读中也保留这两个锚点。正文围绕图内模块、字段、选择器、反馈与状态边界讲解，局部 SVG 作为辅助展开。两张 JPG 随 source.zip 一并提供，不压缩或改写原图。
+
+第15、16讲已按新课件与研讨单补齐；第二次测验共80道编号填空，按第9～16讲筛选，答案默认折叠。

@@ -1,0 +1,360 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>15 · 链接、目标文件与库 · ZJZJ / ICS</title><meta name="description" content="北京大学 ICS 复习手册：课程知识、公式推导、边界情况、小班拓展与往年题导航。"><link rel="stylesheet" href="katex/katex.min.css"><link rel="stylesheet" href="style.css?v=529276fe0694"><link rel="icon" href="favicon.svg" type="image/svg+xml"></head><body class=""><a class="skip" href="#main">跳到正文</a><header><a class="brand" href="index.html">ZJZJ<span> / ICS NOTES</span></a><div class="header-right"><a href="https://blog.zjzj.work/">学习空间</a><a href="all.html">整本阅读</a><button type="button" onclick="window.print()">打印</button><button id="menu" aria-expanded="false" aria-controls="chapters">目录</button></div></header><div class="layout"><nav id="chapters" aria-label="章节目录"><div class="nav-label">2026 · 复习手册</div><a  href="00-guide.html">复习范围与使用说明</a><a  href="01-overview.html">01 · 系统概述与基本模型</a><a  href="02-integers.html">02 · 位、字节与整数</a><a  href="03-floating-point.html">03 · 浮点表示、舍入与运算</a><a  href="04-assembly-basics.html">04 · 机器级编程基础</a><a  href="05-control.html">05 · 条件码、分支、循环与 switch</a><a  href="06-procedures.html">06 · 过程调用、栈与 ABI</a><a  href="07-data.html">07 · 数组、结构体、指针与浮点汇编</a><a  href="08-advanced.html">08 · 机器级进阶与内存安全</a><a  href="09-isa-logic.html">09 · Y86-64 指令集与逻辑设计</a><a  href="10-sequential.html">10 · SEQ 顺序处理器与 HCL 控制</a><a  href="11-pipeline.html">11 · PIPE 流水线与冒险控制</a><a  href="12-memory-hierarchy.html">12 · 存储技术、局部性与存储层次</a><a  href="13-cache-memories.html">13 · Cache 组织、访问与局部性优化</a><a  href="14-optimization.html">14 · 程序优化、依赖链与指令级并行</a><a aria-current=page href="15-linking.html">15 · 链接、目标文件与库</a><a  href="16-ecf-processes.html">16 · 异常控制流与进程</a><a  href="11-quiz01.html">附录 A · 第一次测验答案回查</a><a  href="12-past-papers.html">附录 B · 往年题与勘误</a><a  href="13-seminars.html">附录 C · 小班研讨与作业</a><a  href="14-coverage.html">附录 D · 课件覆盖索引与来源</a><a  href="15-quiz02.html">附录 E · 第二次测验分章习题</a><div class="nav-foot">依据本地课件与公开题库<br>更新于 2026.11.10</div></nav><main id="main"><div class="eyebrow">COMPUTER SYSTEMS · PEKING UNIVERSITY</div><h1>15 · 链接、目标文件与库</h1>
+<p>依据 2026-11-05 第 15 讲全部 65 页课件及本讲研讨单。主线是：源文件分别翻译为目标文件，链接器确定“名字指谁”，再修正“地址填什么”；程序装入后还可以动态装入库。练习见<a href="15-quiz02.html">第二次测验</a>，研讨与作业路线见<a href="13-seminars.html">附录 C</a>。</p>
+<h2 id="section-1">从源文件到运行：每个阶段解决什么<a class="anchor" href="#section-1" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>翻译单元</strong>：一个 C 源文件经过预处理后得到的编译输入，包括展开的头文件内容。不同翻译单元可以分别编译。</li>
+<li><strong>预处理</strong>：处理 <code>#include</code>、宏与条件编译，输出仍为 C 文本，常用后缀 <code>.i</code>。声明来自头文件并不意味着对应函数实现已被复制进来。</li>
+<li><strong>编译</strong>：进行语法、类型检查和优化，将 C 翻译成汇编 <code>.s</code>。</li>
+<li><strong>汇编</strong>：将汇编翻译为机器指令和数据，产生可重定位目标文件 <code>.o</code>；同时输出符号表与尚未确定引用的重定位记录。</li>
+<li><strong>链接</strong>：组合多个目标文件，进行符号解析、布局和重定位，产生可执行文件或共享对象。</li>
+<li><strong>加载</strong>：建立进程地址空间并映射程序及依赖库；动态链接器完成所需动态重定位，再经启动代码进入程序。链接器和加载器不是同一个概念。</li>
+<li><strong>GCC driver</strong>：<code>gcc</code> 是驱动程序，根据选项调用预处理器、编译器、汇编器与链接器；<code>gcc -c</code> 停在目标文件，尚未完成最终链接。</li>
+</ul>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>输入→输出</th>
+<th>观察命令</th>
+<th>应该观察什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>main.c</code>→<code>main.i</code></td>
+<td><code>gcc -E main.c -o main.i</code></td>
+<td>宏和包含文件展开</td>
+</tr>
+<tr>
+<td><code>main.i</code>→<code>main.s</code></td>
+<td><code>gcc -S -O0 main.i -o main.s</code></td>
+<td>调用和数据访问对应汇编</td>
+</tr>
+<tr>
+<td><code>main.s</code>→<code>main.o</code></td>
+<td><code>gcc -c main.s -o main.o</code></td>
+<td>二进制代码及未决引用</td>
+</tr>
+<tr>
+<td>多个 <code>.o</code>→程序</td>
+<td><code>gcc main.o sum.o -o demo</code></td>
+<td>外部引用被解析</td>
+</tr>
+<tr>
+<td>目标文件检查</td>
+<td><code>readelf -h -S -s -r main.o</code></td>
+<td>头、节、符号、重定位</td>
+</tr>
+<tr>
+<td>带重定位反汇编</td>
+<td><code>objdump -dr main.o</code></td>
+<td>占位字节与重定位字段对应</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="section-2">一个可以手算的双文件例子<a class="anchor" href="#section-2" aria-label="链接到本节">#</a></h3>
+<p><code>main.c</code>：</p>
+<pre><code class="language-c"><span class="tok-k">extern</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">sum</span><span class="tok-p">(</span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">a</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-p">);</span>
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">values</span><span class="tok-p">[</span><span class="tok-mi">3</span><span class="tok-p">]</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-p">{</span><span class="tok-mi">2</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-mi">4</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-mi">6</span><span class="tok-p">};</span>
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">main</span><span class="tok-p">(</span><span class="tok-kt">void</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-k">return</span><span class="tok-w"> </span><span class="tok-n">sum</span><span class="tok-p">(</span><span class="tok-n">values</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-mi">3</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-o">!=</span><span class="tok-w"> </span><span class="tok-mi">12</span><span class="tok-p">;</span>
+<span class="tok-p">}</span>
+</code></pre>
+<p><code>sum.c</code>：</p>
+<pre><code class="language-c"><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">sum</span><span class="tok-p">(</span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">a</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">total</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-k">for</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-n">i</span><span class="tok-w"> </span><span class="tok-o">&lt;</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-o">++</span><span class="tok-n">i</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-n">total</span><span class="tok-w"> </span><span class="tok-o">+=</span><span class="tok-w"> </span><span class="tok-n">a</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">];</span>
+<span class="tok-w">    </span><span class="tok-k">return</span><span class="tok-w"> </span><span class="tok-n">total</span><span class="tok-p">;</span>
+<span class="tok-p">}</span>
+</code></pre>
+<ul>
+<li><code>main.o</code> 定义 <code>main</code>、<code>values</code>，引用但不定义 <code>sum</code>；<code>sum.o</code> 定义 <code>sum</code>。只编译 <code>main.c</code> 成 <code>.o</code> 可以成功，只用它生成可执行程序则会因缺少 <code>sum</code> 的定义而失败。</li>
+<li><code>nm main.o</code> 常见 <code>T main</code>、<code>D values</code>、<code>U sum</code>；T 表示代码，D 表示已初始化数据，U 表示未定义引用。具体偏移受编译选项影响，不应背某次构建的地址。</li>
+<li>模块化使代码可以独立维护；只改一个模块通常只需重新编译该模块并重新链接。静态库按目标模块提取，动态库允许共享只读代码页，是空间复用的两种方式。</li>
+</ul>
+<h2 id="section-3">三类目标文件与 ELF 的两个视角<a class="anchor" href="#section-3" aria-label="链接到本节">#</a></h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>类别</th>
+<th>主要用途</th>
+<th>常见 ELF 类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>可重定位目标文件 <code>.o</code></td>
+<td>作为后续链接输入</td>
+<td><code>ET_REL</code></td>
+</tr>
+<tr>
+<td>可执行文件</td>
+<td>作为程序映像的加载来源</td>
+<td>传统非 PIE 为 <code>ET_EXEC</code></td>
+</tr>
+<tr>
+<td>共享对象 <code>.so</code></td>
+<td>加载时或运行时动态链接</td>
+<td><code>ET_DYN</code></td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>PIE 可执行文件也可使用 <code>ET_DYN</code>，因此 ELF 类型与文件后缀不是一一对应。</li>
+<li><strong>节（section）</strong> 是链接视角的组织单位，如 <code>.text</code>、<code>.data</code>；节头表记录节名、类型、文件偏移、大小及关联信息。</li>
+<li><strong>段（segment）</strong> 是加载视角的组织单位。程序头表描述映射范围、虚拟地址、文件大小、内存大小与权限；一个可加载段可包含多个节。</li>
+<li>不要把 ELF 文件偏移、输入节内偏移、链接后的虚拟地址混为一个数字。可重定位文件通常不需要用于建立进程映像的程序头表。</li>
+</ul>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>节／结构</th>
+<th>内容与作用</th>
+<th>常见误解</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ELF header</td>
+<td>位宽、字节序、文件类型、体系结构及表的位置</td>
+<td>不是只存入口地址</td>
+</tr>
+<tr>
+<td><code>.text</code></td>
+<td>机器指令</td>
+<td>不是 C 源码</td>
+</tr>
+<tr>
+<td><code>.rodata</code></td>
+<td>字符串常量、只读常量、部分跳转表</td>
+<td>并非所有常量都一定单独保留</td>
+</tr>
+<tr>
+<td><code>.data</code></td>
+<td>通常为非零初始化的静态存储期对象</td>
+<td>不是所有局部变量</td>
+</tr>
+<tr>
+<td><code>.bss</code></td>
+<td>通常为零初始化、未显式初始化的静态存储期对象</td>
+<td>运行时占空间；文件中不存对应整片零字节</td>
+</tr>
+<tr>
+<td><code>.symtab</code>、<code>.strtab</code></td>
+<td>链接符号表及名字字符串</td>
+<td>普通自动局部变量不靠它跨模块解析</td>
+</tr>
+<tr>
+<td><code>.rela.text</code>、<code>.rela.data</code></td>
+<td>代码／数据中的重定位位置、类型、符号、加数</td>
+<td>修补的是目标节，不是把地址写进重定位表</td>
+</tr>
+<tr>
+<td><code>.debug*</code></td>
+<td>调试信息</td>
+<td>调试变量信息不等于链接符号</td>
+</tr>
+<tr>
+<td><code>.interp</code></td>
+<td>动态解释器路径</td>
+<td>不是所有依赖库清单</td>
+</tr>
+<tr>
+<td><code>.dynamic</code>、<code>.dynsym</code></td>
+<td>动态链接信息与动态符号</td>
+<td>与完整静态符号表用途不同</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>x86-64 常见 <code>.rela.*</code> 显式保存 addend；课件概览中的 <code>.rel.*</code> 是泛称，<code>REL</code> 与 <code>RELA</code> 格式应区分。</li>
+<li><code>.bss</code> 常为 <code>SHT_NOBITS</code>：仍有节头和内存大小；“不占文件数据字节”不等于整个 ELF 中没有任何关于它的信息。</li>
+<li>装入后代码、数据、堆、共享库映射、栈构成虚拟地址空间；课件布局是概念图，ASLR、PIE 等会使实际地址改变。入口通常是启动例程，不是直接跳到 C 的 <code>main</code>。</li>
+</ul>
+<h2 id="section-4">符号：声明、定义、引用与可见性<a class="anchor" href="#section-4" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>定义</strong> 为对象分配存储或提供函数体；<strong>引用</strong> 使用某个名字对应的对象或函数；<strong>声明</strong> 告知类型与链接属性，不必产生实际引用。</li>
+<li><code>extern int x;</code> 通常只是声明；<code>int x=7;</code> 是定义；<code>extern int x=7;</code> 带初始化，仍是定义。不能把所有带 <code>extern</code> 的符号称为弱定义。</li>
+<li>非 <code>static</code> 的文件作用域对象和函数通常有外部链接；其他模块可引用它们。模块中未定义的被引用外部名字，需要由链接器寻找定义。</li>
+<li>文件作用域 <code>static</code> 对象／函数具有内部链接，是该模块的局部链接符号；不同模块可以各自有名为 <code>x</code> 的内部对象，不发生跨模块合并。</li>
+<li>函数内 <code>static</code> 对象有静态存储期，编译器可以为其生成独特局部符号，放入 <code>.data</code> 或 <code>.bss</code>；普通自动变量可在栈上、寄存器中或被优化掉，不应统一称为“局部链接符号”。</li>
+</ul>
+<pre><code class="language-c"><span class="tok-k">extern</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">remote</span><span class="tok-p">;</span>
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">initialized</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">7</span><span class="tok-p">;</span>
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">zero</span><span class="tok-p">;</span>
+<span class="tok-k">static</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">private_count</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">2</span><span class="tok-p">;</span>
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">next</span><span class="tok-p">(</span><span class="tok-kt">void</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-k">static</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">count</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">temporary</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-o">++</span><span class="tok-n">count</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-k">return</span><span class="tok-w"> </span><span class="tok-n">temporary</span><span class="tok-w"> </span><span class="tok-o">+</span><span class="tok-w"> </span><span class="tok-n">remote</span><span class="tok-w"> </span><span class="tok-o">+</span><span class="tok-w"> </span><span class="tok-n">private_count</span><span class="tok-p">;</span>
+<span class="tok-p">}</span>
+</code></pre>
+<ul>
+<li>在不优化掉有关实体的观察条件下，<code>initialized</code> 是外部定义；<code>remote</code> 是未定义外部引用；<code>private_count</code> 与 <code>count</code> 是内部对象；<code>temporary</code> 不需要链接器在其他模块中找定义。</li>
+<li>单独声明但从未使用的函数不一定产生 <code>U</code> 项。普通链接器也不等同于 C 类型检查器：跨文件把同名对象声明成不同类型，即使链接成功，也不意味着程序正确。</li>
+</ul>
+<h2 id="section-5">重复符号：传统教材规则与实际工具链<a class="anchor" href="#section-5" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>普通强定义</strong>：例如非弱属性的函数定义、已初始化外部对象定义。两个同名外部强定义通常造成重复定义错误。</li>
+<li><strong>显式弱符号</strong>：ELF 的 <code>STB_WEAK</code>；同名强定义可以覆盖弱定义。多个弱定义时，不应编写依赖某一个必然胜出的程序。</li>
+<li><strong>暂定定义</strong>：文件作用域的 <code>int x;</code>。教材用传统 <code>-fcommon</code> 模型把它解释为可合并的 COMMON，并常以“弱”概括；COMMON 与 ELF 的 <code>STB_WEAK</code> 不是同一个编码。</li>
+<li>在 <code>-fcommon</code> 教学模型下，同名 COMMON 可合并，普通强定义优先；合并大小、对齐由工具链规则处理，不应据此让不同类型对象共享一个名字。</li>
+<li>GCC 10 起默认 <code>-fno-common</code>，普通暂定定义通常落入 <code>.bss</code>，多文件重复 <code>int x;</code> 会报错。题目采用旧规则时须明示 <code>-fcommon</code>，复现实验也显式指定选项。<a href="https://gcc.gnu.org/gcc-10/porting_to.html">GCC 官方迁移说明</a></li>
+</ul>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>模块 A</th>
+<th>模块 B</th>
+<th>约定／结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>int x=7;</code></td>
+<td><code>int x=9;</code></td>
+<td>两个强定义，错误</td>
+</tr>
+<tr>
+<td><code>int x;</code></td>
+<td><code>int x;</code></td>
+<td><code>-fcommon</code> 下可合并；<code>-fno-common</code> 下通常重复定义错误</td>
+</tr>
+<tr>
+<td><code>int x=7;</code></td>
+<td><code>extern int x;</code> 并使用 x</td>
+<td>一个定义与一个声明，正常解析</td>
+</tr>
+<tr>
+<td><code>static int x=7;</code></td>
+<td><code>static int x=9;</code></td>
+<td>两个独立内部对象</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>规范组织：头文件放 <code>extern int x;</code>，恰好一个 <code>.c</code> 放 <code>int x=7;</code>；头文件也声明函数，并被定义和调用该函数的文件共同包含。</li>
+<li>使用 <code>int f(void)</code> 明确无参数；课程传统 C 模式下 <code>int f()</code> 表示未给出参数原型，不能拿它替代类型检查。注意语言版本差异。</li>
+</ul>
+<h2 id="section-6">重定位：先定位，再改引用<a class="anchor" href="#section-6" aria-label="链接到本节">#</a></h2>
+<ul>
+<li>第一步合并／布局输入节，给相关符号分配输出位置；第二步按重定位记录修补代码或数据中的引用。</li>
+<li><code>Elf64_Rela</code> 的 <code>r_offset</code> 指示待修补位置；在本讲 <code>ET_REL</code> 例子中，它是目标输入节内偏移。<code>r_info</code> 编码符号索引与重定位类型；<code>r_addend</code> 是带符号加数。</li>
+<li>设 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi></mrow><annotation encoding="application/x-tex">S</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span></span></span></span></span> 是符号最终地址，<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi></mrow><annotation encoding="application/x-tex">A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span></span></span></span></span> 是加数，<span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi></mrow><annotation encoding="application/x-tex">P</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span></span></span></span></span> 是<strong>被修补字段首字节</strong>的最终地址，下面给出本讲常见公式。</li>
+</ul>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>重定位类型</th>
+<th>写入表达式</th>
+<th>边界</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>R_X86_64_PC32</code></td>
+<td><span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>+</mo><mi>A</mi><mo>−</mo><mi>P</mi></mrow><annotation encoding="application/x-tex">S+A-P</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span></span></span></span></span></td>
+<td>32 位有符号相对位移</td>
+</tr>
+<tr>
+<td><code>R_X86_64_32</code></td>
+<td><span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>+</mo><mi>A</mi></mrow><annotation encoding="application/x-tex">S+A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span></span></span></span></span></td>
+<td>截为 32 位后零扩展必须还原该值</td>
+</tr>
+<tr>
+<td><code>R_X86_64_32S</code></td>
+<td><span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>+</mo><mi>A</mi></mrow><annotation encoding="application/x-tex">S+A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span></span></span></span></span></td>
+<td>截为 32 位后符号扩展必须还原该值</td>
+</tr>
+<tr>
+<td><code>R_X86_64_64</code>（补充）</td>
+<td><span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>+</mo><mi>A</mi></mrow><annotation encoding="application/x-tex">S+A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span></span></span></span></span></td>
+<td>64 位绝对引用</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="section-7">为什么 call 的 addend 常为 −4<a class="anchor" href="#section-7" aria-label="链接到本节">#</a></h3>
+<ul>
+<li><code>call rel32</code> 的 1 字节 opcode 后是 4 字节位移；CPU 使用<strong>下一条指令地址</strong>作为相对基准。</li>
+<li>若位移字段首地址是 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi></mrow><annotation encoding="application/x-tex">P</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span></span></span></span></span>，下一 PC 就是 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>+</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">P+4</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">4</span></span></span></span></span>。所需位移为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>−</mo><mo stretchy="false">(</mo><mi>P</mi><mo>+</mo><mn>4</mn><mo stretchy="false">)</mo><mo>=</mo><mi>S</mi><mo>−</mo><mn>4</mn><mo>−</mo><mi>P</mi></mrow><annotation encoding="application/x-tex">S-(P+4)=S-4-P</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">4</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">4</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span></span></span></span></span>，所以该布局中的 addend 为 −4。</li>
+<li>−4 不是所有 PC 相对指令的普适常数，应从字段位置和指令末尾的距离推导。不能把 <code>call</code> opcode 地址代替 P。</li>
+</ul>
+<h3 id="section-8">课件 p.36 的重定位完整计算<a class="anchor" href="#section-8" aria-label="链接到本节">#</a></h3>
+<ul>
+<li>已知 <code>main</code> 地址 <code>0xBABF18</code>，<code>sum</code> 地址 <code>0xBABF40</code>，<code>array</code> 地址 <code>0xCAFE10</code>。</li>
+<li><code>mov</code> 的地址立即数字段在 <code>main+0x15</code>，绝对重定位写入 <code>0x00CAFE10</code>，小端字节为 <code>10 fe ca 00</code>。</li>
+<li><code>call</code> 的 opcode 在 <code>main+0x19=0xBABF31</code>，位移字段在 <code>main+0x1A=0xBABF32</code>。</li>
+<li><span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>+</mo><mi>A</mi><mo>−</mo><mi>P</mi><mo>=</mo><mrow><mn mathvariant="monospace">0</mn><mi mathvariant="monospace">x</mi><mi mathvariant="monospace">B</mi><mi mathvariant="monospace">A</mi><mi mathvariant="monospace">B</mi><mi mathvariant="monospace">F</mi><mn mathvariant="monospace">40</mn></mrow><mo>−</mo><mn>4</mn><mo>−</mo><mrow><mn mathvariant="monospace">0</mn><mi mathvariant="monospace">x</mi><mi mathvariant="monospace">B</mi><mi mathvariant="monospace">A</mi><mi mathvariant="monospace">B</mi><mi mathvariant="monospace">F</mi><mn mathvariant="monospace">32</mn></mrow><mo>=</mo><mrow><mn mathvariant="monospace">0</mn><mi mathvariant="monospace">x</mi><mn mathvariant="monospace">0</mn><mi mathvariant="monospace">A</mi></mrow></mrow><annotation encoding="application/x-tex">S+A-P=\mathtt{0xBABF40}-4-\mathtt{0xBABF32}=\mathtt{0x0A}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6944em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord mathtt">0xBABF40</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">4</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6111em;"></span><span class="mord"><span class="mord mathtt">0xBABF32</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6111em;"></span><span class="mord"><span class="mord mathtt">0x0A</span></span></span></span></span></span>，写入 <code>0a 00 00 00</code>。</li>
+<li>CPU 执行时下一 PC 为 <code>0xBABF36</code>，加 <code>0x0A</code> 得 <code>0xBABF40</code>。必须同时用链接公式与 CPU 公式验算。</li>
+<li>未链接时 <code>e8 00 00 00 00</code> 反汇编成调用下一条，仅反映占位字节；链接器之后会修补，不能据此认定源程序真的调用了自己下一条指令。</li>
+<li>新工具链可能产生 <code>R_X86_64_PLT32</code> 而不是课件中的 <code>PC32</code>；它允许经 PLT 调用，也可能在最终链接时直接绑定。应阅读实际类型，不能强行套用某一版输出地址。</li>
+</ul>
+<h2 id="section-9">静态库：打包、提取与顺序<a class="anchor" href="#section-9" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><code>.a</code> 是多个目标模块的归档，不是简单把所有库函数事先揉成一个巨大函数。<code>ar rcs libvec.a add.o mul.o</code> 创建归档和索引；<code>ar t libvec.a</code> 列成员，<code>ar x libvec.a</code> 在实验目录提取成员。</li>
+<li>教材 GNU 链接模型从左到右处理输入：普通 <code>.o</code> 参与链接；归档按当前未解决引用提取需要的成员，并继续处理这些成员带来的引用。选择单位通常是目标成员，不一定精确到单个函数。</li>
+<li>未解决集合 U 随扫描而变化：某成员定义 U 中的符号时被提取；其定义从 U 消去，它的新外部引用加入 U；扫描结束仍有必需未定义符号则失败。</li>
+<li>若 <code>main.o</code> 用 A，库 A 的成员又用 B，应把提供者放在使用者后：<code>gcc main.o -L. -lA -lB -o demo</code>。把 <code>-lA</code> 放到尚无 A 引用的位置，通常不会自动为未来输入回头重扫。</li>
+<li>循环依赖可按需重复库，或用 <code>-Wl,--start-group ... -Wl,--end-group</code> 反复搜索；该规则限定普通归档搜索，不是说所有链接模式都一律只扫一次。<a href="https://sourceware.org/binutils/docs/ld/Options.html">GNU ld 文档</a></li>
+</ul>
+<h2 id="section-10">共享库与动态链接的三个时点<a class="anchor" href="#section-10" aria-label="链接到本节">#</a></h2>
+<ul>
+<li><strong>构建时</strong>：<code>gcc -fPIC -c add.c</code> 产生位置无关代码，<code>gcc -shared -o libvec.so add.o</code> 产生共享对象；链接应用时记录依赖和动态重定位信息，而非复制整个共享库实现。</li>
+<li><strong>加载时</strong>：内核加载程序与解释器，动态链接器映射所需共享库并完成必要重定位；相关信息来自 <code>.interp</code>、<code>.dynamic</code> 等。</li>
+<li><strong>运行时</strong>：程序主动调用 <code>dlopen</code> 装入插件，<code>dlsym</code> 获取地址，使用完后 <code>dlclose</code> 释放引用。<code>dlclose</code> 不保证在一切情况下立刻卸载。</li>
+<li><strong>延迟绑定</strong> 是部分函数符号首次调用才解析，不等于所有动态重定位都延迟；也不等于每个函数调用都重新装入库。</li>
+<li>GOT 可保存解析后的地址；PLT 是外部函数调用的跳转入口机制。本讲只需理解“间接引用使代码无需因加载基址不同而整体重写”，具体指令序列可后续展开。</li>
+<li><code>readelf -d demo</code> 查看 <code>NEEDED</code>，<code>readelf -l demo</code> 查看解释器和加载段；<code>ldd demo</code> 用于自己构建、可信程序的依赖观察。</li>
+</ul>
+<h3 id="section-11">dlsym 的检查顺序<a class="anchor" href="#section-11" aria-label="链接到本节">#</a></h3>
+<ul>
+<li><code>dlopen</code> 返回空句柄时，用 <code>dlerror</code> 获取诊断。</li>
+<li>查找符号前先调用 <code>dlerror()</code> 清除旧错误，再调用 <code>dlsym(handle,&quot;name&quot;)</code>，然后检查新的 <code>dlerror()</code>；仅凭符号地址为 NULL 不足以区分所有情况。</li>
+<li>得到函数地址后必须按正确函数原型调用。运行时查找绕过常规源文件类型关联，更需要一致的头文件接口。</li>
+<li>静态链接便于携带确定版本的实现，但程序体积和更新重链接成本较大；动态链接能共享只读代码页与集中更新库，但有运行时依赖和符号解析开销。不同进程的可写全局数据通常独立，不是因为使用同一 <code>.so</code> 就全部共享。</li>
+</ul>
+<h2 id="section-12">库插桩：在哪个环节拦截调用<a class="anchor" href="#section-12" aria-label="链接到本节">#</a></h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>时点</th>
+<th>方法</th>
+<th>需要什么</th>
+<th>转交原函数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>编译时</td>
+<td>宏把 <code>malloc</code> 改为 <code>mymalloc</code></td>
+<td>源代码可重新编译</td>
+<td>包装器自身不套该宏，调用真实 <code>malloc</code></td>
+</tr>
+<tr>
+<td>链接时</td>
+<td><code>-Wl,--wrap=malloc</code></td>
+<td>可重新链接的目标文件</td>
+<td><code>__wrap_malloc</code> 内调用 <code>__real_malloc</code></td>
+</tr>
+<tr>
+<td>加载／运行时</td>
+<td>共享对象与 <code>LD_PRELOAD</code></td>
+<td>适用的动态链接程序</td>
+<td><code>dlsym(RTLD_NEXT,&quot;malloc&quot;)</code> 获取后续定义</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>编译时方案改写源级调用，不是改系统库本身；不要让包装器调用又被宏替换而无限递归。</li>
+<li>链接时 GNU <code>--wrap</code> 改写未定义引用，已经在同一模块内部绑定的调用不一定被拦截。</li>
+<li>动态插桩依赖符号可插入性；静态链接、内部绑定、编译器内联以及安全执行模式等都可能使 <code>LD_PRELOAD</code> 不适用。课件“任意动态程序”是教学概括。</li>
+<li>插桩可用于调用次数、分配地址追踪、参数检查、故障注入。课件给出的 <code>malloc</code> 中直接 <code>printf</code> 示例可能因日志路径再次分配内存而递归；实际包装器需要处理重入、初始化、错误保存和线程安全，不能把演示代码直接当生产实现。</li>
+</ul>
+<h2 id="section-13">本讲自查顺序<a class="anchor" href="#section-13" aria-label="链接到本节">#</a></h2>
+<ul>
+<li>能从 C 声明判断定义、引用、内部符号和自动变量，而不把 <code>extern</code> 与“弱”画等号。</li>
+<li>能区分文件偏移、节内偏移、虚拟地址与下一 PC；重定位算出值后再写小端字节。</li>
+<li>能跟踪归档扫描中未解决集合，解释换个库顺序为什么失败。</li>
+<li>能对比静态／动态链接、加载／运行时解析、三种插桩方式。</li>
+<li>作业 7.6、7.8、7.12 的阅读顺序与前提见<a href="13-seminars.html">附录 C</a>。</li>
+</ul>
+<div class="pager"><a href="14-optimization.html">上一章<br>14 · 程序优化、依赖链与指令级并行</a><a href="16-ecf-processes.html">下一章<br>16 · 异常控制流与进程</a></div><footer>理解表示，追踪执行。<span><a href="14-coverage.html">资料来源与覆盖范围</a></span></footer></main><aside aria-label="本页目录"><div class="nav-label">本页内容</div><a href="#section-1">从源文件到运行：每个阶段解决什么</a><a href="#section-2">一个可以手算的双文件例子</a><a href="#section-3">三类目标文件与 ELF 的两个视角</a><a href="#section-4">符号：声明、定义、引用与可见性</a><a href="#section-5">重复符号：传统教材规则与实际工具链</a><a href="#section-6">重定位：先定位，再改引用</a><a href="#section-7">为什么 call 的 addend 常为 −4</a><a href="#section-8">课件 p.36 的重定位完整计算</a><a href="#section-9">静态库：打包、提取与顺序</a><a href="#section-10">共享库与动态链接的三个时点</a><a href="#section-11">dlsym 的检查顺序</a><a href="#section-12">库插桩：在哪个环节拦截调用</a><a href="#section-13">本讲自查顺序</a><a href="#main">回到顶部 ↑</a></aside></div><script src="app.js?v=8c97512934a3"></script></body></html>
