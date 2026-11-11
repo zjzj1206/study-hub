@@ -1,6 +1,9 @@
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>15 · 链接、目标文件与库 · ZJZJ / ICS</title><meta name="description" content="北京大学 ICS 复习手册：课程知识、公式推导、边界情况、小班拓展与往年题导航。"><link rel="stylesheet" href="katex/katex.min.css"><link rel="stylesheet" href="style.css?v=529276fe0694"><link rel="icon" href="favicon.svg" type="image/svg+xml"></head><body class=""><a class="skip" href="#main">跳到正文</a><header><a class="brand" href="index.html">ZJZJ<span> / ICS NOTES</span></a><div class="header-right"><a href="https://blog.zjzj.work/">学习空间</a><a href="all.html">整本阅读</a><button type="button" onclick="window.print()">打印</button><button id="menu" aria-expanded="false" aria-controls="chapters">目录</button></div></header><div class="layout"><nav id="chapters" aria-label="章节目录"><div class="nav-label">2026 · 复习手册</div><a  href="00-guide.html">复习范围与使用说明</a><a  href="01-overview.html">01 · 系统概述与基本模型</a><a  href="02-integers.html">02 · 位、字节与整数</a><a  href="03-floating-point.html">03 · 浮点表示、舍入与运算</a><a  href="04-assembly-basics.html">04 · 机器级编程基础</a><a  href="05-control.html">05 · 条件码、分支、循环与 switch</a><a  href="06-procedures.html">06 · 过程调用、栈与 ABI</a><a  href="07-data.html">07 · 数组、结构体、指针与浮点汇编</a><a  href="08-advanced.html">08 · 机器级进阶与内存安全</a><a  href="09-isa-logic.html">09 · Y86-64 指令集与逻辑设计</a><a  href="10-sequential.html">10 · SEQ 顺序处理器与 HCL 控制</a><a  href="11-pipeline.html">11 · PIPE 流水线与冒险控制</a><a  href="12-memory-hierarchy.html">12 · 存储技术、局部性与存储层次</a><a  href="13-cache-memories.html">13 · Cache 组织、访问与局部性优化</a><a  href="14-optimization.html">14 · 程序优化、依赖链与指令级并行</a><a aria-current=page href="15-linking.html">15 · 链接、目标文件与库</a><a  href="16-ecf-processes.html">16 · 异常控制流与进程</a><a  href="11-quiz01.html">附录 A · 第一次测验答案回查</a><a  href="12-past-papers.html">附录 B · 往年题与勘误</a><a  href="13-seminars.html">附录 C · 小班研讨与作业</a><a  href="14-coverage.html">附录 D · 课件覆盖索引与来源</a><a  href="15-quiz02.html">附录 E · 第二次测验分章习题</a><div class="nav-foot">依据本地课件与公开题库<br>更新于 2026.11.10</div></nav><main id="main"><div class="eyebrow">COMPUTER SYSTEMS · PEKING UNIVERSITY</div><h1>15 · 链接、目标文件与库</h1>
 <p>依据 2026-11-05 第 15 讲全部 65 页课件及本讲研讨单。主线是：源文件分别翻译为目标文件，链接器确定“名字指谁”，再修正“地址填什么”；程序装入后还可以动态装入库。练习见<a href="15-quiz02.html">第二次测验</a>，研讨与作业路线见<a href="13-seminars.html">附录 C</a>。</p>
-<h2 id="section-1">从源文件到运行：每个阶段解决什么<a class="anchor" href="#section-1" aria-label="链接到本节">#</a></h2>
+<h2 id="section-1">本章先解决什么问题<a class="anchor" href="#section-1" aria-label="链接到本节">#</a></h2>
+<p><strong>把“找名字”和“填地址”分成两遍。</strong> 先读编译链和 ELF，知道链接器拿到哪些材料；再判断每个名字在哪里定义；最后计算引用要填入的地址。库搜索和动态链接只是把“定义从哪里来、何时确定”进一步展开。</p>
+<p>阅读时可先看本章各节的分步例子，再回到信号表、公式和边界说明核对；最后用<a href="15-quiz02.html">第二次测验分章习题</a>检验能否独立填写。</p>
+<h2 id="section-2">从源文件到运行：每个阶段解决什么<a class="anchor" href="#section-2" aria-label="链接到本节">#</a></h2>
 <ul>
 <li><strong>翻译单元</strong>：一个 C 源文件经过预处理后得到的编译输入，包括展开的头文件内容。不同翻译单元可以分别编译。</li>
 <li><strong>预处理</strong>：处理 <code>#include</code>、宏与条件编译，输出仍为 C 文本，常用后缀 <code>.i</code>。声明来自头文件并不意味着对应函数实现已被复制进来。</li>
@@ -51,7 +54,7 @@
 </tr>
 </tbody>
 </table></div>
-<h3 id="section-2">一个可以手算的双文件例子<a class="anchor" href="#section-2" aria-label="链接到本节">#</a></h3>
+<h3 id="section-3">一个可以手算的双文件例子<a class="anchor" href="#section-3" aria-label="链接到本节">#</a></h3>
 <p><code>main.c</code>：</p>
 <pre><code class="language-c"><span class="tok-k">extern</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">sum</span><span class="tok-p">(</span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">a</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">n</span><span class="tok-p">);</span>
 <span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">values</span><span class="tok-p">[</span><span class="tok-mi">3</span><span class="tok-p">]</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-p">{</span><span class="tok-mi">2</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-mi">4</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-mi">6</span><span class="tok-p">};</span>
@@ -71,7 +74,7 @@
 <li><code>nm main.o</code> 常见 <code>T main</code>、<code>D values</code>、<code>U sum</code>；T 表示代码，D 表示已初始化数据，U 表示未定义引用。具体偏移受编译选项影响，不应背某次构建的地址。</li>
 <li>模块化使代码可以独立维护；只改一个模块通常只需重新编译该模块并重新链接。静态库按目标模块提取，动态库允许共享只读代码页，是空间复用的两种方式。</li>
 </ul>
-<h2 id="section-3">三类目标文件与 ELF 的两个视角<a class="anchor" href="#section-3" aria-label="链接到本节">#</a></h2>
+<h2 id="section-4">三类目标文件与 ELF 的两个视角<a class="anchor" href="#section-4" aria-label="链接到本节">#</a></h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -170,7 +173,7 @@
 <li><code>.bss</code> 常为 <code>SHT_NOBITS</code>：仍有节头和内存大小；“不占文件数据字节”不等于整个 ELF 中没有任何关于它的信息。</li>
 <li>装入后代码、数据、堆、共享库映射、栈构成虚拟地址空间；课件布局是概念图，ASLR、PIE 等会使实际地址改变。入口通常是启动例程，不是直接跳到 C 的 <code>main</code>。</li>
 </ul>
-<h2 id="section-4">符号：声明、定义、引用与可见性<a class="anchor" href="#section-4" aria-label="链接到本节">#</a></h2>
+<h2 id="section-5">符号：声明、定义、引用与可见性<a class="anchor" href="#section-5" aria-label="链接到本节">#</a></h2>
 <ul>
 <li><strong>定义</strong> 为对象分配存储或提供函数体；<strong>引用</strong> 使用某个名字对应的对象或函数；<strong>声明</strong> 告知类型与链接属性，不必产生实际引用。</li>
 <li><code>extern int x;</code> 通常只是声明；<code>int x=7;</code> 是定义；<code>extern int x=7;</code> 带初始化，仍是定义。不能把所有带 <code>extern</code> 的符号称为弱定义。</li>
@@ -192,7 +195,14 @@
 <li>在不优化掉有关实体的观察条件下，<code>initialized</code> 是外部定义；<code>remote</code> 是未定义外部引用；<code>private_count</code> 与 <code>count</code> 是内部对象；<code>temporary</code> 不需要链接器在其他模块中找定义。</li>
 <li>单独声明但从未使用的函数不一定产生 <code>U</code> 项。普通链接器也不等同于 C 类型检查器：跨文件把同名对象声明成不同类型，即使链接成功，也不意味着程序正确。</li>
 </ul>
-<h2 id="section-5">重复符号：传统教材规则与实际工具链<a class="anchor" href="#section-5" aria-label="链接到本节">#</a></h2>
+<h3 id="section-6">从两个文件理解为什么编译成功仍会链接失败<a class="anchor" href="#section-6" aria-label="链接到本节">#</a></h3>
+<ul>
+<li>main.c 声明 <code>int sum(const int *,int);</code>，编译器由此知道调用参数和返回类型，因此可以生成调用指令；它无需此时已经知道 sum 的最终地址。</li>
+<li>main.o 因为实际调用了 sum 而留下未定义引用。sum.c 编译出的 sum.o 则含 sum 的函数体与符号定义。</li>
+<li>链接器把 main.o 的引用关联到 sum.o 的定义，才解决“调用的是谁”。若缺少 sum.o 或提供该定义的库，前面的类型检查仍可通过，最后却出现 undefined reference。</li>
+<li>找到定义后还不够：多个模块代码被放进最终布局，sum 的位置可能变化，所以随后还要把调用位移修补正确。符号解析与重定位是连续但不同的问题。</li>
+</ul>
+<h2 id="section-7">重复符号：传统教材规则与实际工具链<a class="anchor" href="#section-7" aria-label="链接到本节">#</a></h2>
 <ul>
 <li><strong>普通强定义</strong>：例如非弱属性的函数定义、已初始化外部对象定义。两个同名外部强定义通常造成重复定义错误。</li>
 <li><strong>显式弱符号</strong>：ELF 的 <code>STB_WEAK</code>；同名强定义可以覆盖弱定义。多个弱定义时，不应编写依赖某一个必然胜出的程序。</li>
@@ -235,7 +245,7 @@
 <li>规范组织：头文件放 <code>extern int x;</code>，恰好一个 <code>.c</code> 放 <code>int x=7;</code>；头文件也声明函数，并被定义和调用该函数的文件共同包含。</li>
 <li>使用 <code>int f(void)</code> 明确无参数；课程传统 C 模式下 <code>int f()</code> 表示未给出参数原型，不能拿它替代类型检查。注意语言版本差异。</li>
 </ul>
-<h2 id="section-6">重定位：先定位，再改引用<a class="anchor" href="#section-6" aria-label="链接到本节">#</a></h2>
+<h2 id="section-8">重定位：先定位，再改引用<a class="anchor" href="#section-8" aria-label="链接到本节">#</a></h2>
 <ul>
 <li>第一步合并／布局输入节，给相关符号分配输出位置；第二步按重定位记录修补代码或数据中的引用。</li>
 <li><code>Elf64_Rela</code> 的 <code>r_offset</code> 指示待修补位置；在本讲 <code>ET_REL</code> 例子中，它是目标输入节内偏移。<code>r_info</code> 编码符号索引与重定位类型；<code>r_addend</code> 是带符号加数。</li>
@@ -272,13 +282,13 @@
 </tr>
 </tbody>
 </table></div>
-<h3 id="section-7">为什么 call 的 addend 常为 −4<a class="anchor" href="#section-7" aria-label="链接到本节">#</a></h3>
+<h3 id="section-9">为什么 call 的 addend 常为 −4<a class="anchor" href="#section-9" aria-label="链接到本节">#</a></h3>
 <ul>
 <li><code>call rel32</code> 的 1 字节 opcode 后是 4 字节位移；CPU 使用<strong>下一条指令地址</strong>作为相对基准。</li>
 <li>若位移字段首地址是 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi></mrow><annotation encoding="application/x-tex">P</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span></span></span></span></span>，下一 PC 就是 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>+</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">P+4</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">4</span></span></span></span></span>。所需位移为 <span class="math inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>−</mo><mo stretchy="false">(</mo><mi>P</mi><mo>+</mo><mn>4</mn><mo stretchy="false">)</mo><mo>=</mo><mi>S</mi><mo>−</mo><mn>4</mn><mo>−</mo><mi>P</mi></mrow><annotation encoding="application/x-tex">S-(P+4)=S-4-P</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">4</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">4</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span></span></span></span></span>，所以该布局中的 addend 为 −4。</li>
 <li>−4 不是所有 PC 相对指令的普适常数，应从字段位置和指令末尾的距离推导。不能把 <code>call</code> opcode 地址代替 P。</li>
 </ul>
-<h3 id="section-8">课件 p.36 的重定位完整计算<a class="anchor" href="#section-8" aria-label="链接到本节">#</a></h3>
+<h3 id="section-10">课件 p.36 的重定位完整计算<a class="anchor" href="#section-10" aria-label="链接到本节">#</a></h3>
 <ul>
 <li>已知 <code>main</code> 地址 <code>0xBABF18</code>，<code>sum</code> 地址 <code>0xBABF40</code>，<code>array</code> 地址 <code>0xCAFE10</code>。</li>
 <li><code>mov</code> 的地址立即数字段在 <code>main+0x15</code>，绝对重定位写入 <code>0x00CAFE10</code>，小端字节为 <code>10 fe ca 00</code>。</li>
@@ -288,7 +298,14 @@
 <li>未链接时 <code>e8 00 00 00 00</code> 反汇编成调用下一条，仅反映占位字节；链接器之后会修补，不能据此认定源程序真的调用了自己下一条指令。</li>
 <li>新工具链可能产生 <code>R_X86_64_PLT32</code> 而不是课件中的 <code>PC32</code>；它允许经 PLT 调用，也可能在最终链接时直接绑定。应阅读实际类型，不能强行套用某一版输出地址。</li>
 </ul>
-<h2 id="section-9">静态库：打包、提取与顺序<a class="anchor" href="#section-9" aria-label="链接到本节">#</a></h2>
+<h3 id="section-11">读题时先给每一个地址加上含义<a class="anchor" href="#section-11" aria-label="链接到本节">#</a></h3>
+<ul>
+<li>S 是被引用对象或函数最终放在哪里；P 是当前这段机器码中待修改字段放在哪里；A 是记录额外携带的常数修正。S 和 P 都是地址，A 则不是另一个符号地址。</li>
+<li>例如 opcode 在 <code>0x401020</code>，其后四字节位移从 <code>0x401021</code> 开始，目标在 <code>0x401080</code>。此时 P 必须取 <code>0x401021</code>，下一条指令地址却是 <code>0x401025</code>。</li>
+<li>CPU 需要的位移是目标减下一 PC：<code>0x401080-0x401025=0x5B</code>。链接记录用 P 表达同一件事，便写成 <code>S-4-P</code>；−4 把字段首地址调整成字段末尾之后。</li>
+<li>写入机器码的是数值 0x5B 的四字节表示 <code>5b 00 00 00</code>，不是目标地址的四字节表示。最后把下一 PC 加上位移再验一次，能同时检查符号、端序和减数是否正确。</li>
+</ul>
+<h2 id="section-12">静态库：打包、提取与顺序<a class="anchor" href="#section-12" aria-label="链接到本节">#</a></h2>
 <ul>
 <li><code>.a</code> 是多个目标模块的归档，不是简单把所有库函数事先揉成一个巨大函数。<code>ar rcs libvec.a add.o mul.o</code> 创建归档和索引；<code>ar t libvec.a</code> 列成员，<code>ar x libvec.a</code> 在实验目录提取成员。</li>
 <li>教材 GNU 链接模型从左到右处理输入：普通 <code>.o</code> 参与链接；归档按当前未解决引用提取需要的成员，并继续处理这些成员带来的引用。选择单位通常是目标成员，不一定精确到单个函数。</li>
@@ -296,7 +313,14 @@
 <li>若 <code>main.o</code> 用 A，库 A 的成员又用 B，应把提供者放在使用者后：<code>gcc main.o -L. -lA -lB -o demo</code>。把 <code>-lA</code> 放到尚无 A 引用的位置，通常不会自动为未来输入回头重扫。</li>
 <li>循环依赖可按需重复库，或用 <code>-Wl,--start-group ... -Wl,--end-group</code> 反复搜索；该规则限定普通归档搜索，不是说所有链接模式都一律只扫一次。<a href="https://sourceware.org/binutils/docs/ld/Options.html">GNU ld 文档</a></li>
 </ul>
-<h2 id="section-10">共享库与动态链接的三个时点<a class="anchor" href="#section-10" aria-label="链接到本节">#</a></h2>
+<h3 id="section-13">一次扫描中未解决集合怎样变化<a class="anchor" href="#section-13" aria-label="链接到本节">#</a></h3>
+<ul>
+<li>假设 main.o 需要 f；libA.a 中某成员定义 f 又调用 g；libB.a 定义 g。处理 main.o 后，未解决集合是 <code>{f}</code>。</li>
+<li>接着处理 libA.a，提取提供 f 的成员，f 被解决，同时引入 g，集合变成 <code>{g}</code>。再处理 libB.a，提取提供 g 的成员，集合变空。</li>
+<li>若先处理 libB.a，当时还没有 g 的需求，其成员不会因为未来可能需要就全部装入。后面处理完 main.o 和 libA.a 才出现 g；普通扫描不会自动回头，所以链接可能失败。</li>
+<li>“库放后面”不是需要死记的格式习惯，而是为了让需求先出现、提供者再接受搜索。有循环依赖时，这个一次扫描模型就需要重复库或 group 重扫来补足。</li>
+</ul>
+<h2 id="section-14">共享库与动态链接的三个时点<a class="anchor" href="#section-14" aria-label="链接到本节">#</a></h2>
 <ul>
 <li><strong>构建时</strong>：<code>gcc -fPIC -c add.c</code> 产生位置无关代码，<code>gcc -shared -o libvec.so add.o</code> 产生共享对象；链接应用时记录依赖和动态重定位信息，而非复制整个共享库实现。</li>
 <li><strong>加载时</strong>：内核加载程序与解释器，动态链接器映射所需共享库并完成必要重定位；相关信息来自 <code>.interp</code>、<code>.dynamic</code> 等。</li>
@@ -305,14 +329,14 @@
 <li>GOT 可保存解析后的地址；PLT 是外部函数调用的跳转入口机制。本讲只需理解“间接引用使代码无需因加载基址不同而整体重写”，具体指令序列可后续展开。</li>
 <li><code>readelf -d demo</code> 查看 <code>NEEDED</code>，<code>readelf -l demo</code> 查看解释器和加载段；<code>ldd demo</code> 用于自己构建、可信程序的依赖观察。</li>
 </ul>
-<h3 id="section-11">dlsym 的检查顺序<a class="anchor" href="#section-11" aria-label="链接到本节">#</a></h3>
+<h3 id="section-15">dlsym 的检查顺序<a class="anchor" href="#section-15" aria-label="链接到本节">#</a></h3>
 <ul>
 <li><code>dlopen</code> 返回空句柄时，用 <code>dlerror</code> 获取诊断。</li>
 <li>查找符号前先调用 <code>dlerror()</code> 清除旧错误，再调用 <code>dlsym(handle,&quot;name&quot;)</code>，然后检查新的 <code>dlerror()</code>；仅凭符号地址为 NULL 不足以区分所有情况。</li>
 <li>得到函数地址后必须按正确函数原型调用。运行时查找绕过常规源文件类型关联，更需要一致的头文件接口。</li>
 <li>静态链接便于携带确定版本的实现，但程序体积和更新重链接成本较大；动态链接能共享只读代码页与集中更新库，但有运行时依赖和符号解析开销。不同进程的可写全局数据通常独立，不是因为使用同一 <code>.so</code> 就全部共享。</li>
 </ul>
-<h2 id="section-12">库插桩：在哪个环节拦截调用<a class="anchor" href="#section-12" aria-label="链接到本节">#</a></h2>
+<h2 id="section-16">库插桩：在哪个环节拦截调用<a class="anchor" href="#section-16" aria-label="链接到本节">#</a></h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -349,7 +373,7 @@
 <li>动态插桩依赖符号可插入性；静态链接、内部绑定、编译器内联以及安全执行模式等都可能使 <code>LD_PRELOAD</code> 不适用。课件“任意动态程序”是教学概括。</li>
 <li>插桩可用于调用次数、分配地址追踪、参数检查、故障注入。课件给出的 <code>malloc</code> 中直接 <code>printf</code> 示例可能因日志路径再次分配内存而递归；实际包装器需要处理重入、初始化、错误保存和线程安全，不能把演示代码直接当生产实现。</li>
 </ul>
-<h2 id="section-13">本讲自查顺序<a class="anchor" href="#section-13" aria-label="链接到本节">#</a></h2>
+<h2 id="section-17">本讲自查顺序<a class="anchor" href="#section-17" aria-label="链接到本节">#</a></h2>
 <ul>
 <li>能从 C 声明判断定义、引用、内部符号和自动变量，而不把 <code>extern</code> 与“弱”画等号。</li>
 <li>能区分文件偏移、节内偏移、虚拟地址与下一 PC；重定位算出值后再写小端字节。</li>
@@ -357,4 +381,4 @@
 <li>能对比静态／动态链接、加载／运行时解析、三种插桩方式。</li>
 <li>作业 7.6、7.8、7.12 的阅读顺序与前提见<a href="13-seminars.html">附录 C</a>。</li>
 </ul>
-<div class="pager"><a href="14-optimization.html">上一章<br>14 · 程序优化、依赖链与指令级并行</a><a href="16-ecf-processes.html">下一章<br>16 · 异常控制流与进程</a></div><footer>理解表示，追踪执行。<span><a href="14-coverage.html">资料来源与覆盖范围</a></span></footer></main><aside aria-label="本页目录"><div class="nav-label">本页内容</div><a href="#section-1">从源文件到运行：每个阶段解决什么</a><a href="#section-2">一个可以手算的双文件例子</a><a href="#section-3">三类目标文件与 ELF 的两个视角</a><a href="#section-4">符号：声明、定义、引用与可见性</a><a href="#section-5">重复符号：传统教材规则与实际工具链</a><a href="#section-6">重定位：先定位，再改引用</a><a href="#section-7">为什么 call 的 addend 常为 −4</a><a href="#section-8">课件 p.36 的重定位完整计算</a><a href="#section-9">静态库：打包、提取与顺序</a><a href="#section-10">共享库与动态链接的三个时点</a><a href="#section-11">dlsym 的检查顺序</a><a href="#section-12">库插桩：在哪个环节拦截调用</a><a href="#section-13">本讲自查顺序</a><a href="#main">回到顶部 ↑</a></aside></div><script src="app.js?v=8c97512934a3"></script></body></html>
+<div class="pager"><a href="14-optimization.html">上一章<br>14 · 程序优化、依赖链与指令级并行</a><a href="16-ecf-processes.html">下一章<br>16 · 异常控制流与进程</a></div><footer>理解表示，追踪执行。<span><a href="14-coverage.html">资料来源与覆盖范围</a></span></footer></main><aside aria-label="本页目录"><div class="nav-label">本页内容</div><a href="#section-1">本章先解决什么问题</a><a href="#section-2">从源文件到运行：每个阶段解决什么</a><a href="#section-3">一个可以手算的双文件例子</a><a href="#section-4">三类目标文件与 ELF 的两个视角</a><a href="#section-5">符号：声明、定义、引用与可见性</a><a href="#section-6">从两个文件理解为什么编译成功仍会链接失败</a><a href="#section-7">重复符号：传统教材规则与实际工具链</a><a href="#section-8">重定位：先定位，再改引用</a><a href="#section-9">为什么 call 的 addend 常为 −4</a><a href="#section-10">课件 p.36 的重定位完整计算</a><a href="#section-11">读题时先给每一个地址加上含义</a><a href="#section-12">静态库：打包、提取与顺序</a><a href="#section-13">一次扫描中未解决集合怎样变化</a><a href="#section-14">共享库与动态链接的三个时点</a><a href="#section-15">dlsym 的检查顺序</a><a href="#section-16">库插桩：在哪个环节拦截调用</a><a href="#section-17">本讲自查顺序</a><a href="#main">回到顶部 ↑</a></aside></div><script src="app.js?v=8c97512934a3"></script></body></html>
