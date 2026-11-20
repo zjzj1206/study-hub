@@ -43,9 +43,11 @@ progress{display:block;width:100%;height:.6rem;margin:.65rem 0 1.1rem;accent-col
 progress::-webkit-progress-bar{background:var(--wash)}
 progress::-webkit-progress-value{background:var(--accent)}
 progress::-moz-progress-bar{background:var(--accent)}
-.line-card{background:var(--wash);border-left:4px solid var(--accent);padding:clamp(.85rem,3vw,1.35rem);border-radius:.5rem;margin-bottom:1rem}
+.reader{max-height:clamp(12rem,53vh,36rem);overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;border:1px solid var(--rule);border-radius:.7rem;background:#fbfdfb;margin:.55rem 0 1rem;padding:clamp(.45rem,2vw,1rem)}
+.reading-row{border-inline-start:3px solid transparent;border-radius:.35rem;padding:.25em .65em;color:#384e47;white-space:pre-wrap;overflow-wrap:anywhere;font-size:clamp(1.12rem,2.6vw,1.55rem);line-height:1.65;font-family:"Songti SC",SimSun,serif}
+.reading-row.paragraph-start:not(:first-child){margin-top:.55em}
+.reading-row[aria-current="step"]{background:#e0f2e7;border-inline-start-color:var(--accent);color:#102f25;font-weight:700}
 #line-label{color:var(--accent);font-weight:700}
-#line{white-space:pre-wrap;overflow-wrap:anywhere;font-size:clamp(1.5rem,4.4vw,2.35rem);line-height:1.65;margin-top:.25em;font-family:"Songti SC",SimSun,serif;letter-spacing:.035em}
 mark{background:#ffdfd5;color:var(--error);border-bottom:2px solid currentColor}
 #feedback{min-height:1.65em;font-size:.9rem;margin:.45rem 0 .75rem}
 [data-kind="error"]{color:var(--error)}
@@ -58,7 +60,7 @@ mark{background:#ffdfd5;color:var(--error);border-bottom:2px solid currentColor}
 <body>
 <header><nav aria-label="网站导航"><a class="brand" href="/">ZJZJ · 学习空间</a><a href="/">返回首页</a></nav></header>
 <main>
-  <div class="intro"><h1>誊抄工具</h1><p>一次看一行，抄完再换行。</p></div>
+  <div class="intro"><h1>誊抄工具</h1><p>全文对照，跟着高亮逐句誊抄。</p></div>
   <form id="setup" class="card">
     <label for="source">粘贴原文</label>
     <textarea id="source" required placeholder="把需要誊抄的文章粘贴到这里……" spellcheck="false"></textarea>
@@ -66,7 +68,7 @@ mark{background:#ffdfd5;color:var(--error);border-bottom:2px solid currentColor}
       <label for="mode">誊抄方式
         <select id="mode"><option value="paper">纸笔跟读</option><option value="typing">键入校对</option></select>
       </label>
-      <label for="width">每行最多
+      <label for="width">每行建议长度
         <select id="width"><option value="16">16 字</option><option value="24" selected>24 字</option><option value="32">32 字</option><option value="48">48 字</option></select>
       </label>
     </div>
@@ -75,10 +77,9 @@ mark{background:#ffdfd5;color:var(--error);border-bottom:2px solid currentColor}
   <section id="work" class="card" aria-label="誊抄工作区" hidden>
     <div class="spread"><h2 id="progress-label">誊抄进度</h2><button type="button" class="quiet" id="edit">编辑原文</button></div>
     <progress id="progress" aria-labelledby="progress-label"></progress>
+    <div class="spread"><h2 id="article-heading">原文</h2><p id="line-label" role="status"></p></div>
+    <article class="reader" id="article" aria-labelledby="article-heading" tabindex="0"></article>
     <form id="row-form">
-      <div class="line-card" id="focus-line" tabindex="-1">
-        <p id="line-label"></p><p id="line"></p>
-      </div>
       <div id="typing" hidden>
         <label for="draft">输入当前行</label>
         <input id="draft" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="feedback">
@@ -100,26 +101,113 @@ mark{background:#ffdfd5;color:var(--error);border-bottom:2px solid currentColor}
 </style>
 <script>
 const $ = id => document.getElementById(id);
-const storageKey = 'zjzj.transcribe.v1';
+const storageKey = 'zjzj.transcribe.v2';
+const legacyKey = 'zjzj.transcribe.v1';
 const segmenter = typeof Intl.Segmenter === 'function' ? new Intl.Segmenter('zh', {granularity: 'grapheme'}) : null;
 const characters = text => segmenter ? Array.from(segmenter.segment(text), part => part.segment) : Array.from(text);
 const widths = [16, 24, 32, 48];
 
-function splitLines(text, width) {
-  return text.split(/\r\n?|\n/).flatMap((paragraph, index) => {
-    const chars = characters(paragraph.trim());
+const closing = /^[」』”’"）)】\]〉》〕}]+$/u;
+const opening = /^[「『“‘（(【\[〈《〔{]+$/u;
+const clauseEnd = /^[，、；：,;:]+$/u;
+const wordChar = /^[\p{Script=Latin}\d]$/u;
+
+function sentenceEnd(chars, i) {
+  const char = chars[i];
+  if (/^[。！？!?…]$/u.test(char)) return true;
+  return char === '.' && (!chars[i + 1] || /\s/u.test(chars[i + 1]) || closing.test(chars[i + 1]));
+}
+
+function chooseBreak(chars, start, width) {
+  const limit = Math.min(start + width, chars.length);
+  let clause = 0;
+  let space = 0;
+  const earliest = start + Math.ceil(width / 2);
+  for (let i = start; i < limit; i++) {
+    if (sentenceEnd(chars, i)) {
+      let end = i + 1;
+      while (end < chars.length && (sentenceEnd(chars, end) || closing.test(chars[end]))) end++;
+      return end;
+    }
+    if (i + 1 >= earliest && clauseEnd.test(chars[i])) clause = i + 1;
+    if (i + 1 >= earliest && /\s/u.test(chars[i])) space = i + 1;
+  }
+  if (limit === chars.length) return limit;
+
+  let end = limit;
+  if (sentenceEnd(chars, end) || closing.test(chars[end]) || clauseEnd.test(chars[end])) {
+    while (end < chars.length && (sentenceEnd(chars, end) || closing.test(chars[end]) || clauseEnd.test(chars[end]))) end++;
+    return end;
+  }
+  if (clause) return clause;
+  if (wordChar.test(chars[end - 1]) && wordChar.test(chars[end]) && space) return space;
+  if (end > start + 1 && opening.test(chars[end - 1])) end--;
+  return end;
+}
+
+function legacyBreak(chars, start, width) {
+  const end = Math.min(start + width, chars.length);
+  const latinOrDigit = /[\p{Script=Latin}\d]/u;
+  if (end < chars.length && latinOrDigit.test(chars[end - 1]) && latinOrDigit.test(chars[end])) {
+    const space = chars.slice(start, end).findLastIndex(char => /\s/u.test(char));
+    if (space > 0) return start + space + 1;
+  }
+  return end;
+}
+
+function splitLines(text, width, cut = chooseBreak) {
+  let offset = 0;
+  return text.replace(/\r\n?/g, '\n').split('\n').flatMap((paragraph, index) => {
+    const trimmed = paragraph.trim();
+    const chars = characters(trimmed);
+    const indent = paragraph.length - paragraph.trimStart().length;
+    let position = offset + indent;
+    offset += paragraph.length + 1;
     const rows = [];
     for (let start = 0; start < chars.length;) {
-      let end = Math.min(start + width, chars.length);
-      if (end < chars.length && /[\p{Script=Latin}\d]/u.test(chars[end - 1]) && /[\p{Script=Latin}\d]/u.test(chars[end])) {
-        const space = chars.slice(start, end).findLastIndex(char => /\s/.test(char));
-        if (space > 0) end = start + space + 1;
+      const end = cut(chars, start, width);
+      const raw = chars.slice(start, end).join('');
+      if (raw.trim()) {
+        rows.push({
+          text: raw.trim(),
+          prefix: (start === 0 ? paragraph.slice(0, indent) : '') + raw.slice(0, raw.length - raw.trimStart().length),
+          suffix: raw.slice(raw.trimEnd().length),
+          start: position + raw.length - raw.trimStart().length,
+          end: position + raw.trimEnd().length,
+          sourceLine: index + 1
+        });
       }
-      rows.push({text: chars.slice(start, end).join('').trim(), sourceLine: index + 1});
+      position += raw.length;
       start = end;
+      if (cut === chooseBreak) {
+        while (start < chars.length && /\s/u.test(chars[start])) position += chars[start++].length;
+      }
     }
-    return rows.filter(row => row.text);
+    return rows;
   });
+}
+
+function migrateProgress(saved, nextRows) {
+  const oldRows = splitLines(saved.source, saved.width, legacyBreak);
+  if (!oldRows.length || !Number.isInteger(saved.index) || !Number.isInteger(saved.done) ||
+      saved.index < 0 || saved.index > saved.done || saved.done > oldRows.length) return null;
+
+  const completedEnd = oldRows[saved.done - 1]?.end ?? 0;
+  const done = nextRows.filter(row => row.end <= completedEnd).length;
+  const currentStart = oldRows[saved.index]?.start ?? Infinity;
+  const current = nextRows.findIndex(row => row.end > currentStart);
+  const index = current === -1 ? done : Math.min(current, done);
+  const drafts = {};
+  if (saved.mode === 'typing') {
+    const oldIndices = new Map(oldRows.map((row, i) => [row.start, i]));
+    nextRows.forEach((row, i) => {
+      const oldIndex = oldIndices.get(row.start);
+      const previousDraft = saved.drafts?.[oldIndex];
+      if (i < done) drafts[i] = row.text;
+      else if (oldRows[oldIndex]?.end === row.end && typeof previousDraft === 'string') drafts[i] = previousDraft;
+    });
+  }
+  return {...saved, index, done, drafts};
 }
 
 function difference(expected, actual) {
@@ -134,11 +222,46 @@ let state = null;
 let rows = [];
 let editing = true;
 let composing = false;
+let renderedRows = null;
+let rowElements = [];
+let activeRow = null;
+
+function renderArticle() {
+  if (renderedRows !== rows) {
+    const fragment = document.createDocumentFragment();
+    rowElements = rows.map((row, index) => {
+      const node = document.createElement('p');
+      node.className = 'reading-row';
+      if (rows[index - 1]?.sourceLine !== row.sourceLine) node.classList.add('paragraph-start');
+      node.textContent = row.prefix + row.text + row.suffix;
+      fragment.append(node);
+      return node;
+    });
+    $('article').replaceChildren(fragment);
+    renderedRows = rows;
+    activeRow = null;
+  }
+  const current = rowElements[state.index] ?? null;
+  if (current === activeRow) return;
+  if (activeRow) {
+    const previous = rows[rowElements.indexOf(activeRow)];
+    activeRow.textContent = previous.prefix + previous.text + previous.suffix;
+    activeRow.removeAttribute('aria-current');
+  }
+  activeRow = current;
+  if (!activeRow) return;
+  activeRow.setAttribute('aria-current', 'step');
+  const reader = $('article');
+  const viewport = reader.getBoundingClientRect();
+  const line = activeRow.getBoundingClientRect();
+  reader.scrollTop += line.top - viewport.top - (reader.clientHeight - line.height) / 2;
+}
 
 function save() {
   try {
     if (state) localStorage.setItem(storageKey, JSON.stringify(state));
     else localStorage.removeItem(storageKey);
+    localStorage.removeItem(legacyKey);
   } catch {
     $('storage-note').textContent = '浏览器无法保存进度，请保持此页面打开。';
   }
@@ -151,6 +274,7 @@ function render(focus = false) {
     if (focus) $('source').focus();
     return;
   }
+  renderArticle();
   const complete = state.index === rows.length;
   $('progress').max = rows.length;
   $('progress').value = state.done;
@@ -158,6 +282,7 @@ function render(focus = false) {
   $('finish').hidden = !complete;
   $('row-form').hidden = complete;
   if (complete) {
+    $('line-label').textContent = '';
     $('finish-summary').textContent = `已逐行完成，共 ${rows.length} 行。`;
     if (focus) $('finish-heading').focus();
     return;
@@ -170,14 +295,14 @@ function render(focus = false) {
   $('previous').disabled = state.index === 0;
   $('next').textContent = typing ? '校对并继续' : '抄完，下一行';
   showComparison();
-  if (focus) (typing ? $('draft') : $('focus-line')).focus();
+  if (focus) (typing ? $('draft') : $('next')).focus();
 }
 
 function showComparison(submitted = false) {
   const row = rows[state.index];
-  const line = $('line');
+  const line = activeRow;
   const feedback = $('feedback');
-  line.textContent = row.text;
+  line.textContent = row.prefix + row.text + row.suffix;
   feedback.dataset.kind = '';
   $('draft').removeAttribute('aria-invalid');
   if (state.mode === 'paper') {
@@ -195,9 +320,10 @@ function showComparison(submitted = false) {
     return false;
   }
   if (index < reference.length) {
+    const original = characters(row.text);
     const highlight = document.createElement('mark');
-    highlight.textContent = reference[index] === ' ' ? '␣' : reference[index];
-    line.replaceChildren(reference.slice(0, index).join(''), highlight, reference.slice(index + 1).join(''));
+    highlight.textContent = original[index] === ' ' ? '␣' : original[index];
+    line.replaceChildren(row.prefix + original.slice(0, index).join(''), highlight, original.slice(index + 1).join('') + row.suffix);
   }
   feedback.dataset.kind = 'error';
   $('draft').setAttribute('aria-invalid', 'true');
@@ -233,7 +359,7 @@ $('example').addEventListener('click', () => {
     $('source').focus();
     return;
   }
-  $('source').value = '山间的雾慢慢散开，天边亮了起来。\n清晨的风穿过树梢，几声鸟鸣落在石径上。';
+  $('source').value = '山间的雾慢慢散开，天边亮了起来。村庄还很安静。\n\n清晨的风穿过树梢，几声鸟鸣落在石径上，远处的炊烟也跟着晨光慢慢升起。';
   $('source').setCustomValidity('');
   $('source').focus();
 });
@@ -295,10 +421,12 @@ for (const id of ['source', 'mode', 'width']) {
 }
 
 try {
-  const saved = JSON.parse(localStorage.getItem(storageKey));
+  const stored = localStorage.getItem(storageKey);
+  let saved = JSON.parse(stored ?? localStorage.getItem(legacyKey));
   if (saved && typeof saved.source === 'string' && widths.includes(saved.width) && ['paper', 'typing'].includes(saved.mode)) {
     rows = splitLines(saved.source, saved.width);
-    if (rows.length && Number.isInteger(saved.index) && Number.isInteger(saved.done) &&
+    if (rows.length && stored === null) saved = migrateProgress(saved, rows);
+    if (saved && rows.length && Number.isInteger(saved.index) && Number.isInteger(saved.done) &&
         saved.index >= 0 && saved.index <= saved.done && saved.done <= rows.length &&
         saved.drafts && typeof saved.drafts === 'object') {
       state = saved;
@@ -306,6 +434,7 @@ try {
       $('mode').value = state.mode;
       $('width').value = state.width;
       editing = false;
+      if (stored === null) save();
     }
   }
 } catch {
