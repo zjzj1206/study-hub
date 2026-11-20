@@ -43,10 +43,8 @@ progress{display:block;width:100%;height:.6rem;margin:.65rem 0 1.1rem;accent-col
 progress::-webkit-progress-bar{background:var(--wash)}
 progress::-webkit-progress-value{background:var(--accent)}
 progress::-moz-progress-bar{background:var(--accent)}
-.reader{max-height:clamp(12rem,53vh,36rem);overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;border:1px solid var(--rule);border-radius:.7rem;background:#fbfdfb;margin:.55rem 0 1rem;padding:clamp(.45rem,2vw,1rem)}
-.reading-row{border-inline-start:3px solid transparent;border-radius:.35rem;padding:.25em .65em;color:#384e47;white-space:pre-wrap;overflow-wrap:anywhere;font-size:clamp(1.12rem,2.6vw,1.55rem);line-height:1.65;font-family:"Songti SC",SimSun,serif}
-.reading-row.paragraph-start:not(:first-child){margin-top:.55em}
-.reading-row[aria-current="step"]{background:#e0f2e7;border-inline-start-color:var(--accent);color:#102f25;font-weight:700}
+.reader{max-height:clamp(12rem,53vh,36rem);overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;border:1px solid var(--rule);border-radius:.7rem;background:#fbfdfb;margin:.55rem 0 1rem;padding:clamp(.85rem,3vw,1.5rem);color:#384e47;white-space:pre-wrap;overflow-wrap:anywhere;line-break:strict;font-size:clamp(1.12rem,2.6vw,1.55rem);line-height:1.9;font-family:"Songti SC",SimSun,serif}
+.reader [aria-current="step"]{background:#ccebd9;color:#102f25;text-decoration:underline;text-decoration-color:#4d8a70;text-underline-offset:.2em}
 #line-label{color:var(--accent);font-weight:700}
 mark{background:#ffdfd5;color:var(--error);border-bottom:2px solid currentColor}
 #feedback{min-height:1.65em;font-size:.9rem;margin:.45rem 0 .75rem}
@@ -68,7 +66,7 @@ mark{background:#ffdfd5;color:var(--error);border-bottom:2px solid currentColor}
       <label for="mode">誊抄方式
         <select id="mode"><option value="paper">纸笔跟读</option><option value="typing">键入校对</option></select>
       </label>
-      <label for="width">每行建议长度
+      <label for="width">高亮建议长度
         <select id="width"><option value="16">16 字</option><option value="24" selected>24 字</option><option value="32">32 字</option><option value="48">48 字</option></select>
       </label>
     </div>
@@ -81,16 +79,16 @@ mark{background:#ffdfd5;color:var(--error);border-bottom:2px solid currentColor}
     <article class="reader" id="article" aria-labelledby="article-heading" tabindex="0"></article>
     <form id="row-form">
       <div id="typing" hidden>
-        <label for="draft">输入当前行</label>
+        <label for="draft">输入高亮文字</label>
         <input id="draft" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="feedback">
       </div>
       <p id="feedback" role="status"></p>
-      <div class="actions"><button type="button" id="previous">上一行</button><button type="submit" class="primary" id="next">抄完，下一行</button></div>
+      <div class="actions"><button type="button" id="previous">上一处</button><button type="submit" class="primary" id="next">抄完，下一处</button></div>
     </form>
     <div id="finish" hidden>
       <h2 id="finish-heading" tabindex="-1">全文誊抄完成</h2>
       <p id="finish-summary"></p>
-      <div class="actions"><button type="button" id="review">查看最后一行</button><button type="button" class="primary" id="another">换一篇</button></div>
+      <div class="actions"><button type="button" id="review">回看最后一处</button><button type="button" class="primary" id="another">换一篇</button></div>
     </div>
   </section>
   <footer id="storage-note">原文和进度仅保存在此浏览器。</footer>
@@ -157,7 +155,7 @@ function legacyBreak(chars, start, width) {
 
 function splitLines(text, width, cut = chooseBreak) {
   let offset = 0;
-  return text.replace(/\r\n?/g, '\n').split('\n').flatMap((paragraph, index) => {
+  return text.replace(/\r\n?/g, '\n').split('\n').flatMap(paragraph => {
     const trimmed = paragraph.trim();
     const chars = characters(trimmed);
     const indent = paragraph.length - paragraph.trimStart().length;
@@ -170,11 +168,8 @@ function splitLines(text, width, cut = chooseBreak) {
       if (raw.trim()) {
         rows.push({
           text: raw.trim(),
-          prefix: (start === 0 ? paragraph.slice(0, indent) : '') + raw.slice(0, raw.length - raw.trimStart().length),
-          suffix: raw.slice(raw.trimEnd().length),
           start: position + raw.length - raw.trimStart().length,
-          end: position + raw.trimEnd().length,
-          sourceLine: index + 1
+          end: position + raw.trimEnd().length
         });
       }
       position += raw.length;
@@ -228,15 +223,17 @@ let activeRow = null;
 
 function renderArticle() {
   if (renderedRows !== rows) {
+    const source = state.source.replace(/\r\n?/g, '\n');
     const fragment = document.createDocumentFragment();
-    rowElements = rows.map((row, index) => {
-      const node = document.createElement('p');
-      node.className = 'reading-row';
-      if (rows[index - 1]?.sourceLine !== row.sourceLine) node.classList.add('paragraph-start');
-      node.textContent = row.prefix + row.text + row.suffix;
-      fragment.append(node);
+    let cursor = 0;
+    rowElements = rows.map(row => {
+      const node = document.createElement('span');
+      node.textContent = row.text;
+      fragment.append(source.slice(cursor, row.start), node);
+      cursor = row.end;
       return node;
     });
+    fragment.append(source.slice(cursor));
     $('article').replaceChildren(fragment);
     renderedRows = rows;
     activeRow = null;
@@ -244,8 +241,7 @@ function renderArticle() {
   const current = rowElements[state.index] ?? null;
   if (current === activeRow) return;
   if (activeRow) {
-    const previous = rows[rowElements.indexOf(activeRow)];
-    activeRow.textContent = previous.prefix + previous.text + previous.suffix;
+    activeRow.textContent = activeRow.textContent;
     activeRow.removeAttribute('aria-current');
   }
   activeRow = current;
@@ -278,22 +274,21 @@ function render(focus = false) {
   const complete = state.index === rows.length;
   $('progress').max = rows.length;
   $('progress').value = state.done;
-  $('progress-label').textContent = `已完成 ${state.done} / ${rows.length} 行`;
+  $('progress-label').textContent = `已完成 ${state.done} / ${rows.length} 处`;
   $('finish').hidden = !complete;
   $('row-form').hidden = complete;
   if (complete) {
     $('line-label').textContent = '';
-    $('finish-summary').textContent = `已逐行完成，共 ${rows.length} 行。`;
+    $('finish-summary').textContent = `已完成全部 ${rows.length} 处。`;
     if (focus) $('finish-heading').focus();
     return;
   }
-  const row = rows[state.index];
-  $('line-label').textContent = `第 ${state.index + 1} 行 · 原文第 ${row.sourceLine} 行`;
+  $('line-label').textContent = `当前第 ${state.index + 1} 处`;
   const typing = state.mode === 'typing';
   $('typing').hidden = !typing;
   $('draft').value = state.drafts[state.index] ?? '';
   $('previous').disabled = state.index === 0;
-  $('next').textContent = typing ? '校对并继续' : '抄完，下一行';
+  $('next').textContent = typing ? '校对并继续' : '抄完，下一处';
   showComparison();
   if (focus) (typing ? $('draft') : $('next')).focus();
 }
@@ -302,7 +297,7 @@ function showComparison(submitted = false) {
   const row = rows[state.index];
   const line = activeRow;
   const feedback = $('feedback');
-  line.textContent = row.prefix + row.text + row.suffix;
+  line.textContent = row.text;
   feedback.dataset.kind = '';
   $('draft').removeAttribute('aria-invalid');
   if (state.mode === 'paper') {
@@ -312,7 +307,7 @@ function showComparison(submitted = false) {
   const {reference, entered, index, exact} = difference(row.text, $('draft').value);
   if (exact) {
     feedback.dataset.kind = 'ok';
-    feedback.textContent = '本行一致，可以继续。';
+    feedback.textContent = '与原文一致，可以继续。';
     return true;
   }
   if (index === entered.length && !submitted) {
@@ -322,14 +317,14 @@ function showComparison(submitted = false) {
   if (index < reference.length) {
     const original = characters(row.text);
     const highlight = document.createElement('mark');
-    highlight.textContent = original[index] === ' ' ? '␣' : original[index];
-    line.replaceChildren(row.prefix + original.slice(0, index).join(''), highlight, original.slice(index + 1).join('') + row.suffix);
+    highlight.textContent = original[index];
+    line.replaceChildren(original.slice(0, index).join(''), highlight, original.slice(index + 1).join(''));
   }
   feedback.dataset.kind = 'error';
   $('draft').setAttribute('aria-invalid', 'true');
   const describe = char => char === ' ' ? '空格' : `「${char}」`;
-  if (index === reference.length) feedback.textContent = `行末多了 ${entered.length - index} 个字符。`;
-  else if (index === entered.length) feedback.textContent = `本行还没抄完，第 ${index + 1} 字是 ${describe(reference[index])}。`;
+  if (index === reference.length) feedback.textContent = `末尾多了 ${entered.length - index} 个字符。`;
+  else if (index === entered.length) feedback.textContent = `当前高亮还没抄完，第 ${index + 1} 字是 ${describe(reference[index])}。`;
   else feedback.textContent = `第 ${index + 1} 字不同：原文是 ${describe(reference[index])}，输入了 ${describe(entered[index])}。`;
   return false;
 }
@@ -369,7 +364,7 @@ function updateDraft() {
   if (state.index < state.done && !difference(rows[state.index].text, $('draft').value).exact) {
     state.done = state.index;
     $('progress').value = state.done;
-    $('progress-label').textContent = `已完成 ${state.done} / ${rows.length} 行`;
+    $('progress-label').textContent = `已完成 ${state.done} / ${rows.length} 处`;
   }
   save();
   showComparison();
