@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="粘贴文章，逐行誊抄。支持纸笔跟读和键入校对。">
+<title>誊抄工具 · ZJZJ 学习空间</title>
+<style>
+:root{color-scheme:light;--ink:#18322e;--muted:#536661;--accent:#17634f;--rule:#d7e3db;--paper:#fff;--wash:#edf5f0;--error:#9a251f}
+*{box-sizing:border-box}
+body{margin:0;background:#f3f7f4;color:var(--ink);font:1rem/1.65 system-ui,"PingFang SC","Microsoft YaHei",sans-serif}
+header{border-bottom:1px solid var(--rule);background:var(--paper)}
+header nav,main{max-width:60rem;margin:auto;padding-inline:clamp(1rem,5vw,2.5rem)}
+nav{display:flex;justify-content:space-between;align-items:center;gap:.75rem;padding-block:.9rem;font-size:.9rem}
+a{color:var(--accent);text-underline-offset:.25em}
+.brand{font-weight:750;text-decoration:none}
+main{padding-block:clamp(1.6rem,5vw,3.5rem)}
+h1,h2,p{margin:0}
+h1{font-family:"Songti SC",SimSun,serif;font-size:clamp(2.1rem,6vw,3.4rem);line-height:1.2;letter-spacing:.06em}
+h2{font-size:1.12rem}
+.intro{margin-bottom:1.5rem}
+.intro p,.hint,footer{color:var(--muted)}
+.intro p{margin-top:.5rem}
+.card{background:var(--paper);border:1px solid var(--rule);border-radius:1rem;padding:clamp(1rem,4vw,2rem);box-shadow:0 10px 30px #18322e09}
+label{font-weight:650}
+textarea{display:block;width:100%;margin-top:.55rem;border:1px solid #aebfb5;border-radius:.65rem;background:#fbfdfb;color:var(--ink);font:inherit;padding:.85rem;resize:vertical;min-height:6rem}
+#source{min-height:14rem}
+.controls,.actions,.spread{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem}
+.controls{margin:1rem 0}
+.controls label{display:flex;align-items:center;gap:.45rem;font-size:.9rem}
+.spread{justify-content:space-between}
+select,button{min-height:2.75rem;border:1px solid #aebfb5;border-radius:.55rem;background:white;color:var(--ink);font:inherit;padding:.4rem .85rem}
+button{cursor:pointer;font-weight:650}
+button:hover:not(:disabled){background:var(--wash)}
+button:disabled{opacity:.48;cursor:default}
+.primary,.primary:hover:not(:disabled){background:var(--accent);border-color:var(--accent);color:white}
+.primary:hover:not(:disabled){background:#124b3d}
+.quiet{border-color:transparent;color:var(--accent)}
+:focus-visible{outline:3px solid #218667;outline-offset:3px}
+.hint,footer,#line-label{font-size:.875rem}
+footer{margin-top:1rem}
+progress{display:block;width:100%;height:.6rem;margin:.65rem 0 1.1rem;accent-color:var(--accent);border:0;border-radius:1rem;overflow:hidden;background:var(--wash)}
+progress::-webkit-progress-bar{background:var(--wash)}
+progress::-webkit-progress-value{background:var(--accent)}
+progress::-moz-progress-bar{background:var(--accent)}
+.line-card{background:var(--wash);border-left:4px solid var(--accent);padding:clamp(.85rem,3vw,1.35rem);border-radius:.5rem;margin-bottom:1rem}
+#line-label{color:var(--accent);font-weight:700}
+#line{white-space:pre-wrap;overflow-wrap:anywhere;font-size:clamp(1.5rem,4.4vw,2.35rem);line-height:1.65;margin-top:.25em;font-family:"Songti SC",SimSun,serif;letter-spacing:.035em}
+mark{background:#ffdfd5;color:var(--error);border-bottom:2px solid currentColor}
+#feedback{min-height:1.65em;font-size:.9rem;margin:.45rem 0 .75rem}
+[data-kind="error"]{color:var(--error)}
+[data-kind="ok"]{color:var(--accent)}
+#finish p{margin:.5rem 0 1rem}
+[hidden]{display:none!important}
+@media(max-width:36rem){.controls label{justify-content:space-between;width:100%}.actions .primary{flex:1}.card{border-radius:.8rem}}
+</style>
+</head>
+<body>
+<header><nav aria-label="网站导航"><a class="brand" href="/">ZJZJ · 学习空间</a><a href="/">返回首页</a></nav></header>
+<main>
+  <div class="intro"><h1>誊抄工具</h1><p>一次看一行，抄完再换行。</p></div>
+  <form id="setup" class="card">
+    <label for="source">粘贴原文</label>
+    <textarea id="source" required placeholder="把需要誊抄的文章粘贴到这里……" spellcheck="false"></textarea>
+    <div class="controls">
+      <label for="mode">誊抄方式
+        <select id="mode"><option value="paper">纸笔跟读</option><option value="typing">键入校对</option></select>
+      </label>
+      <label for="width">每行最多
+        <select id="width"><option value="16">16 字</option><option value="24" selected>24 字</option><option value="32">32 字</option><option value="48">48 字</option></select>
+      </label>
+    </div>
+    <div class="actions"><button class="primary" id="start">开始誊抄</button><button type="button" class="quiet" id="example">填入示例</button></div>
+  </form>
+  <section id="work" class="card" aria-label="誊抄工作区" hidden>
+    <div class="spread"><h2 id="progress-label">誊抄进度</h2><button type="button" class="quiet" id="edit">编辑原文</button></div>
+    <progress id="progress" aria-labelledby="progress-label"></progress>
+    <form id="row-form">
+      <div class="line-card" id="focus-line" tabindex="-1">
+        <p id="line-label"></p><p id="line"></p>
+      </div>
+      <div id="typing" hidden>
+        <label for="draft">输入当前行</label>
+        <input id="draft" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="feedback">
+      </div>
+      <p id="feedback" role="status"></p>
+      <div class="actions"><button type="button" id="previous">上一行</button><button type="submit" class="primary" id="next">抄完，下一行</button></div>
+    </form>
+    <div id="finish" hidden>
+      <h2 id="finish-heading" tabindex="-1">全文誊抄完成</h2>
+      <p id="finish-summary"></p>
+      <div class="actions"><button type="button" id="review">查看最后一行</button><button type="button" class="primary" id="another">换一篇</button></div>
+    </div>
+  </section>
+  <footer id="storage-note">原文和进度仅保存在此浏览器。</footer>
+</main>
+<style>
+#draft{display:block;width:100%;margin-top:.5rem;border:1px solid #aebfb5;border-radius:.65rem;background:#fbfdfb;color:var(--ink);font:inherit;padding:.75rem}
+#draft[aria-invalid=true]{border-color:var(--error)}
+</style>
+<script>
+const $ = id => document.getElementById(id);
+const storageKey = 'zjzj.transcribe.v1';
+const segmenter = typeof Intl.Segmenter === 'function' ? new Intl.Segmenter('zh', {granularity: 'grapheme'}) : null;
+const characters = text => segmenter ? Array.from(segmenter.segment(text), part => part.segment) : Array.from(text);
+const widths = [16, 24, 32, 48];
+
+function splitLines(text, width) {
+  return text.split(/\r\n?|\n/).flatMap((paragraph, index) => {
+    const chars = characters(paragraph.trim());
+    const rows = [];
+    for (let start = 0; start < chars.length;) {
+      let end = Math.min(start + width, chars.length);
+      if (end < chars.length && /[\p{Script=Latin}\d]/u.test(chars[end - 1]) && /[\p{Script=Latin}\d]/u.test(chars[end])) {
+        const space = chars.slice(start, end).findLastIndex(char => /\s/.test(char));
+        if (space > 0) end = start + space + 1;
+      }
+      rows.push({text: chars.slice(start, end).join('').trim(), sourceLine: index + 1});
+      start = end;
+    }
+    return rows.filter(row => row.text);
+  });
+}
+
+function difference(expected, actual) {
+  const reference = characters(expected.normalize('NFC'));
+  const entered = characters(actual.normalize('NFC'));
+  let index = 0;
+  while (index < reference.length && reference[index] === entered[index]) index++;
+  return {reference, entered, index, exact: index === reference.length && index === entered.length};
+}
+
+let state = null;
+let rows = [];
+let editing = true;
+let composing = false;
+
+function save() {
+  try {
+    if (state) localStorage.setItem(storageKey, JSON.stringify(state));
+    else localStorage.removeItem(storageKey);
+  } catch {
+    $('storage-note').textContent = '浏览器无法保存进度，请保持此页面打开。';
+  }
+}
+
+function render(focus = false) {
+  $('setup').hidden = !editing;
+  $('work').hidden = editing;
+  if (editing) {
+    if (focus) $('source').focus();
+    return;
+  }
+  const complete = state.index === rows.length;
+  $('progress').max = rows.length;
+  $('progress').value = state.done;
+  $('progress-label').textContent = `已完成 ${state.done} / ${rows.length} 行`;
+  $('finish').hidden = !complete;
+  $('row-form').hidden = complete;
+  if (complete) {
+    $('finish-summary').textContent = `已逐行完成，共 ${rows.length} 行。`;
+    if (focus) $('finish-heading').focus();
+    return;
+  }
+  const row = rows[state.index];
+  $('line-label').textContent = `第 ${state.index + 1} 行 · 原文第 ${row.sourceLine} 行`;
+  const typing = state.mode === 'typing';
+  $('typing').hidden = !typing;
+  $('draft').value = state.drafts[state.index] ?? '';
+  $('previous').disabled = state.index === 0;
+  $('next').textContent = typing ? '校对并继续' : '抄完，下一行';
+  showComparison();
+  if (focus) (typing ? $('draft') : $('focus-line')).focus();
+}
+
+function showComparison(submitted = false) {
+  const row = rows[state.index];
+  const line = $('line');
+  const feedback = $('feedback');
+  line.textContent = row.text;
+  feedback.dataset.kind = '';
+  $('draft').removeAttribute('aria-invalid');
+  if (state.mode === 'paper') {
+    feedback.textContent = '请对照纸上的字和标点，核对后再继续。';
+    return true;
+  }
+  const {reference, entered, index, exact} = difference(row.text, $('draft').value);
+  if (exact) {
+    feedback.dataset.kind = 'ok';
+    feedback.textContent = '本行一致，可以继续。';
+    return true;
+  }
+  if (index === entered.length && !submitted) {
+    feedback.textContent = entered.length ? `已对上前 ${index} 字。` : '逐字核对，包含空格和标点。';
+    return false;
+  }
+  if (index < reference.length) {
+    const highlight = document.createElement('mark');
+    highlight.textContent = reference[index] === ' ' ? '␣' : reference[index];
+    line.replaceChildren(reference.slice(0, index).join(''), highlight, reference.slice(index + 1).join(''));
+  }
+  feedback.dataset.kind = 'error';
+  $('draft').setAttribute('aria-invalid', 'true');
+  const describe = char => char === ' ' ? '空格' : `「${char}」`;
+  if (index === reference.length) feedback.textContent = `行末多了 ${entered.length - index} 个字符。`;
+  else if (index === entered.length) feedback.textContent = `本行还没抄完，第 ${index + 1} 字是 ${describe(reference[index])}。`;
+  else feedback.textContent = `第 ${index + 1} 字不同：原文是 ${describe(reference[index])}，输入了 ${describe(entered[index])}。`;
+  return false;
+}
+
+$('setup').addEventListener('submit', event => {
+  event.preventDefault();
+  const source = $('source').value;
+  const width = Number($('width').value);
+  const mode = $('mode').value;
+  rows = splitLines(source, width);
+  if (!rows.length) {
+    $('source').setCustomValidity('请粘贴包含文字的原文。');
+    $('source').reportValidity();
+    return;
+  }
+  if (!state || state.source !== source || state.width !== width || state.mode !== mode) {
+    state = {source, width, mode, index: 0, done: 0, drafts: {}};
+  }
+  editing = false;
+  save();
+  render(true);
+});
+
+$('source').addEventListener('input', () => $('source').setCustomValidity(''));
+$('example').addEventListener('click', () => {
+  if ($('source').value.trim()) {
+    $('source').focus();
+    return;
+  }
+  $('source').value = '山间的雾慢慢散开，天边亮了起来。\n清晨的风穿过树梢，几声鸟鸣落在石径上。';
+  $('source').setCustomValidity('');
+  $('source').focus();
+});
+
+function updateDraft() {
+  state.drafts[state.index] = $('draft').value;
+  if (state.index < state.done && !difference(rows[state.index].text, $('draft').value).exact) {
+    state.done = state.index;
+    $('progress').value = state.done;
+    $('progress-label').textContent = `已完成 ${state.done} / ${rows.length} 行`;
+  }
+  save();
+  showComparison();
+}
+$('draft').addEventListener('compositionstart', () => { composing = true; });
+$('draft').addEventListener('compositionend', () => { composing = false; updateDraft(); });
+$('draft').addEventListener('input', event => { if (!composing && !event.isComposing) updateDraft(); });
+$('draft').addEventListener('keydown', event => {
+  if (event.key === 'Enter' && (event.isComposing || composing || event.keyCode === 229)) event.preventDefault();
+});
+
+$('row-form').addEventListener('submit', event => {
+  event.preventDefault();
+  if (composing) return;
+  if (!showComparison(true)) {
+    $('draft').focus();
+    return;
+  }
+  state.index++;
+  state.done = Math.max(state.done, state.index);
+  save();
+  render(true);
+});
+function back() {
+  state.index = Math.max(0, state.index - 1);
+  save();
+  render(true);
+}
+$('previous').addEventListener('click', back);
+$('review').addEventListener('click', back);
+$('edit').addEventListener('click', () => {
+  editing = true;
+  $('start').textContent = '继续誊抄';
+  render(true);
+});
+$('another').addEventListener('click', () => {
+  state = null;
+  editing = true;
+  $('source').value = '';
+  $('start').textContent = '开始誊抄';
+  save();
+  render(true);
+});
+for (const id of ['source', 'mode', 'width']) {
+  $(id).addEventListener('input', () => {
+    $('start').textContent = state && $('source').value === state.source && $('mode').value === state.mode && Number($('width').value) === state.width
+      ? '继续誊抄' : '开始誊抄';
+  });
+}
+
+try {
+  const saved = JSON.parse(localStorage.getItem(storageKey));
+  if (saved && typeof saved.source === 'string' && widths.includes(saved.width) && ['paper', 'typing'].includes(saved.mode)) {
+    rows = splitLines(saved.source, saved.width);
+    if (rows.length && Number.isInteger(saved.index) && Number.isInteger(saved.done) &&
+        saved.index >= 0 && saved.index <= saved.done && saved.done <= rows.length &&
+        saved.drafts && typeof saved.drafts === 'object') {
+      state = saved;
+      $('source').value = state.source;
+      $('mode').value = state.mode;
+      $('width').value = state.width;
+      editing = false;
+    }
+  }
+} catch {
+  // A blocked or invalid saved session cannot prevent a new session.
+}
+render();
+</script>
+</body>
+</html>
